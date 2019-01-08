@@ -22,15 +22,17 @@ package grakn.benchmark.runner.executionconfig;
 import grakn.core.Keyspace;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.apache.commons.cli.CommandLine;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
- *  Contains the configuration for an execution of the benchmarking system
+ * Contains the configuration for an execution of the benchmarking system
  */
 
 public class BenchmarkConfiguration {
@@ -43,27 +45,49 @@ public class BenchmarkConfiguration {
     private Path configFilePath;
     private String keyspace;
 
-    public BenchmarkConfiguration(Path configFilePath, BenchmarkConfigurationFile config) throws IOException {
+    public BenchmarkConfiguration(CommandLine arguments) {
 
-        this.configFilePath = configFilePath;
-        this.benchmarkConfigFile = config;
-
-        // read the queries file string and use them to load further YAML
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        Path queryFilePath = this.configFilePath.getParent().resolve(config.getRelativeQueriesYamlFile());
-        queries = mapper.readValue(queryFilePath.toFile(), QueriesConfigurationFile.class);
-
+        String configFileName = arguments.getOptionValue("config");
+        Path configFilePath = Paths.get(configFileName);
         try {
+            // parse config yaml file into object
+            ObjectMapper benchmarkConfigMapper = new ObjectMapper(new YAMLFactory());
+            BenchmarkConfigurationFile config = benchmarkConfigMapper.readValue(
+                    configFilePath.toFile(),
+                    BenchmarkConfigurationFile.class);
+
+            this.configFilePath = configFilePath;
+            this.benchmarkConfigFile = config;
+
+
+            // read the queries file string and use them to load further YAML
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            Path queryFilePath = this.configFilePath.getParent().resolve(config.getRelativeQueriesYamlFile());
+
+            queries = mapper.readValue(queryFilePath.toFile(), QueriesConfigurationFile.class);
             Path schemaFilePath = this.configFilePath.getParent().resolve(config.getRelativeSchemaFile());
             schemaGraql = Files.readAllLines(schemaFilePath, StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        this.setKeyspace(this.getName());
+        this.setKeyspace(this.getFileName());
+
+        // use given keyspace string if exists, otherwise use yaml file `name` tag
+        if (arguments.hasOption("keyspace")) {
+            this.setKeyspace(arguments.getOptionValue("keyspace"));
+        }
+
+        // loading a schema file, enabled by default
+        boolean noSchemaLoad = arguments.hasOption("no-schema-load");
+        this.setNoSchemaLoad(noSchemaLoad);
+
+        // generate data true/false, else default to do generate data
+        boolean noDataGeneration = arguments.hasOption("no-data-generation");
+        this.setNoDataGeneration(noDataGeneration);
     }
 
-    public String getName() {
+    public String getFileName() {
         return this.benchmarkConfigFile.getName();
     }
 
@@ -105,6 +129,7 @@ public class BenchmarkConfiguration {
     public void setNoSchemaLoad(boolean loadSchema) {
         this.noSchemaLoad = loadSchema;
     }
+
     public boolean noSchemaLoad() {
         // we also don't load the schema
         // if the data generation is disabled
@@ -114,6 +139,7 @@ public class BenchmarkConfiguration {
     public void setNoDataGeneration(boolean generateData) {
         this.noDataGeneration = generateData;
     }
+
     public boolean noDataGeneration() {
         return this.noDataGeneration;
     }

@@ -19,20 +19,16 @@
 package grakn.benchmark.runner;
 
 import grakn.benchmark.runner.executor.QueryExecutor;
+import grakn.core.Keyspace;
 import grakn.core.client.Grakn;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import grakn.benchmark.runner.executionconfig.BenchmarkConfiguration;
-import grakn.benchmark.runner.executionconfig.BenchmarkConfigurationFile;
 import grakn.benchmark.runner.generator.DataGenerator;
 import grakn.core.util.SimpleURI;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -52,8 +48,6 @@ import org.slf4j.LoggerFactory;
 import grakn.benchmark.runner.sharedconfig.Configs;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -62,7 +56,10 @@ import java.util.List;
 
 
 /**
- *
+ * Class in charge of
+ *  - initialising Benchmark dependencies and BenchmarkConfiguration
+ *  - run data generation (populate empty keyspace) (DataGenerator)
+ *  - run benchmark on queries (QueryExecutor)
  */
 public class BenchmarkRunner {
     private DataGenerator dataGenerator;
@@ -71,6 +68,65 @@ public class BenchmarkRunner {
     private BenchmarkConfiguration configuration;
 
     private static final Logger LOG = LoggerFactory.getLogger(BenchmarkRunner.class);
+    private static final String ES_SERVER_HOST = "localhost";
+    private static final int ES_SERVER_PORT = 9200;
+    private static final String ES_SERVER_PROTOCOL = "http";
+
+    /**
+     * Entry point invoked by runner.py
+     * Initialise dependencies and configurations.
+     */
+    public static void main(String[] args) {
+        try {
+            // Initialise Ignite and ElasticSearch
+            Ignite ignite = initIgniteServer();
+            initElasticSearch();
+
+            // Parse arguments from console
+            Options options = BenchmarkOptions.build();
+            CommandLineParser parser = new DefaultParser();
+            CommandLine arguments = parser.parse(options, args);
+
+            // Build benchmark configuration
+            BenchmarkConfiguration benchmarkConfiguration = new BenchmarkConfiguration(arguments);
+
+            String graknURI = (arguments.hasOption("uri")) ? arguments.getOptionValue("uri") : Configs.GRAKN_URI;
+
+            // generate a name for this specific execution of the benchmarking
+            String executionName = arguments.getOptionValue("execution-name", "");
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            String dateString = dateFormat.format(new Date());
+            executionName = String.join(" ", Arrays.asList(dateString, benchmarkConfiguration.getFileName(), executionName)).trim();
+
+            //Open new session to currentKeyspace
+            Keyspace currentKeyspace = benchmarkConfiguration.getKeyspace();
+            Grakn client = new Grakn(new SimpleURI(graknURI));
+            // TODO fix sometime
+            // workaround to make deletions work...
+            if (!benchmarkConfiguration.noSchemaLoad()) {
+                System.out.println("Deleting keyspace `" + currentKeyspace + "`");
+                client.keyspaces().delete(currentKeyspace);
+            }
+
+            Grakn.Session session = client.session(currentKeyspace);
+
+            // Initialise DataGenerator if needed (no data generation means NEITHER schema load NOR data generate)
+            DataGenerator dataGenerator = null;
+            if(!benchmarkConfiguration.noDataGeneration()){
+                int randomSeed = 0;
+                dataGenerator = new DataGenerator(session, benchmarkConfiguration.getFileName(), benchmarkConfiguration.getSchemaGraql(), randomSeed);
+            }
+
+            QueryExecutor queryExecutor = new QueryExecutor(currentKeyspace, graknURI, executionName, benchmarkConfiguration.getQueries());
+            BenchmarkRunner runner = new BenchmarkRunner(benchmarkConfiguration, dataGenerator, queryExecutor);
+            runner.run();
+
+            ignite.close();
+        } catch (Exception e) {
+            LOG.error("Unable to start Grakn Benchmark", e);
+        }
+    }
+
 
     public BenchmarkRunner(BenchmarkConfiguration configuration, DataGenerator dataGenerator, QueryExecutor queryExecutor) {
         this.dataGenerator = dataGenerator;
@@ -105,6 +161,7 @@ public class BenchmarkRunner {
     /**
      * Given a list of database sizes to perform profiling at,
      * Populate the DB to a given size, then run the benchmark
+     *
      * @param numConceptsInRun
      */
     private void runAtConcepts(List<Integer> numConceptsInRun) {
@@ -116,7 +173,7 @@ public class BenchmarkRunner {
     }
 
 
-    public static boolean indexTemplateExists(RestClient esClient, String indexTemplateName) throws IOException {
+    private static boolean indexTemplateExists(RestClient esClient, String indexTemplateName) throws IOException {
         try {
             Request templateExistsRequest = new Request(
                     "GET",
@@ -132,7 +189,7 @@ public class BenchmarkRunner {
         }
     }
 
-    public static void putIndexTemplate(RestClient esClient, String indexTemplateName, String indexTemplate) throws IOException {
+    private static void putIndexTemplate(RestClient esClient, String indexTemplateName, String indexTemplate) throws IOException {
         Request putTemplateRequest = new Request(
                 "PUT",
                 "/_template/" + indexTemplateName
@@ -143,11 +200,8 @@ public class BenchmarkRunner {
         LOG.info("Created index template `" + indexTemplateName + "`");
     }
 
-    public static void initElasticSearch() throws IOException {
-        String esServerHost = "localhost";
-        int esServerPort = 9200;
-        String esServerProtocol = "http";
-        RestClientBuilder esRestClientBuilder = RestClient.builder(new HttpHost(esServerHost, esServerPort, esServerProtocol));
+    private static void initElasticSearch() throws IOException {
+        RestClientBuilder esRestClientBuilder = RestClient.builder(new HttpHost(ES_SERVER_HOST, ES_SERVER_PORT, ES_SERVER_PROTOCOL));
         esRestClientBuilder.setDefaultHeaders(new Header[]{new BasicHeader("header", "value")});
         RestClient restClient = esRestClientBuilder.build();
 
@@ -159,132 +213,64 @@ public class BenchmarkRunner {
         restClient.close();
     }
 
-    public static Ignite initIgniteServer() throws IgniteException {
+    private static Ignite initIgniteServer() throws IgniteException {
         return Ignition.start();
     }
 
-    public static void main(String[] args) throws IOException {
+    private static class BenchmarkOptions {
 
-        Ignite ignite = initIgniteServer();
-        initElasticSearch();
+        static Options build() {
 
-        Option configFileOption = Option.builder("c")
-                .longOpt("config")
-                .hasArg(true)
-                .desc("Benchmarking YAML file (required)")
-                .required(true)
-                .type(String.class)
-                .build();
+            Option configFileOption = Option.builder("c")
+                    .longOpt("config")
+                    .hasArg(true)
+                    .desc("Benchmarking YAML file (required)")
+                    .required(true)
+                    .type(String.class)
+                    .build();
 
-        Option graknAddressOption = Option.builder("u")
-                .longOpt("uri")
-                .hasArg(true)
-                .desc("Address of the grakn cluster (default: localhost:48555)")
-                .required(false)
-                .type(String.class)
-                .build();
+            Option graknAddressOption = Option.builder("u")
+                    .longOpt("uri")
+                    .hasArg(true)
+                    .desc("Address of the grakn cluster (default: localhost:48555)")
+                    .required(false)
+                    .type(String.class)
+                    .build();
 
-        Option keyspaceOption = Option.builder("k")
-                .longOpt("keyspace")
-                .required(false)
-                .hasArg(true)
-                .desc("Specific keyspace to utilize (default: `name` in config yaml")
-                .type(String.class)
-                .build();
-        Option noDataGenerationOption = Option.builder("ng")
-                .longOpt("no-data-generation")
-                .required(false)
-                .desc("Disable data generation")
-                .type(Boolean.class)
-                .build();
-        Option noSchemaLoadOption = Option.builder("ns")
-                .longOpt("no-schema-load")
-                .required(false)
-                .desc("Disable loading a schema")
-                .type(Boolean.class)
-                .build();
-        Option executionNameOption = Option.builder("n")
-                .longOpt("execution-name")
-                .hasArg(true)
-                .required(false)
-                .desc("Name for specific execution of the config file")
-                .type(String.class)
-                .build();
-        Options options = new Options();
-        options.addOption(configFileOption);
-        options.addOption(graknAddressOption);
-        options.addOption(keyspaceOption);
-        options.addOption(noDataGenerationOption);
-        options.addOption(noSchemaLoadOption);
-        options.addOption(executionNameOption);
-        CommandLineParser parser = new DefaultParser();
-        CommandLine arguments;
-        try {
-            arguments = parser.parse(options, args);
-        } catch (ParseException e) {
-            (new HelpFormatter()).printHelp("Benchmarking options", options);
-            throw new RuntimeException(e.getMessage());
+            Option keyspaceOption = Option.builder("k")
+                    .longOpt("keyspace")
+                    .required(false)
+                    .hasArg(true)
+                    .desc("Specific keyspace to utilize (default: `name` in config yaml")
+                    .type(String.class)
+                    .build();
+            Option noDataGenerationOption = Option.builder("ng")
+                    .longOpt("no-data-generation")
+                    .required(false)
+                    .desc("Disable data generation")
+                    .type(Boolean.class)
+                    .build();
+            Option noSchemaLoadOption = Option.builder("ns")
+                    .longOpt("no-schema-load")
+                    .required(false)
+                    .desc("Disable loading a schema")
+                    .type(Boolean.class)
+                    .build();
+            Option executionNameOption = Option.builder("n")
+                    .longOpt("execution-name")
+                    .hasArg(true)
+                    .required(false)
+                    .desc("Name for specific execution of the config file")
+                    .type(String.class)
+                    .build();
+            Options options = new Options();
+            options.addOption(configFileOption);
+            options.addOption(graknAddressOption);
+            options.addOption(keyspaceOption);
+            options.addOption(noDataGenerationOption);
+            options.addOption(noSchemaLoadOption);
+            options.addOption(executionNameOption);
+            return options;
         }
-
-        String configFileName = arguments.getOptionValue("config");
-        Path configFilePath = Paths.get(configFileName);
-
-        // parse config yaml file into object
-        ObjectMapper benchmarkConfigMapper = new ObjectMapper(new YAMLFactory());
-        BenchmarkConfigurationFile configFile = benchmarkConfigMapper.readValue(
-                configFilePath.toFile(),
-                BenchmarkConfigurationFile.class);
-        BenchmarkConfiguration benchmarkConfiguration = new BenchmarkConfiguration(configFilePath, configFile);
-
-        // override the URI of grakn, if one has been set
-        if (arguments.hasOption("uri")) {
-            String grakn_uri = arguments.getOptionValue("uri");
-            Configs.GRAKN_URI = grakn_uri;
-        }
-
-        // use given keyspace string if exists, otherwise use yaml file `name` tag
-        if (arguments.hasOption("keyspace")) {
-            benchmarkConfiguration.setKeyspace(arguments.getOptionValue("keyspace"));
-        }
-
-        // loading a schema file, enabled by default
-        boolean noSchemaLoad = arguments.hasOption("no-schema-load") ? true : false;
-        benchmarkConfiguration.setNoSchemaLoad(noSchemaLoad);
-
-        // generate data true/false, else default to do generate data
-        boolean noDataGeneration = arguments.hasOption("no-data-generation") ? true : false;
-        benchmarkConfiguration.setNoDataGeneration(noDataGeneration);
-
-        // generate a name for this specific execution of the benchmarking
-        String executionName = arguments.getOptionValue("execution-name", "");
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        String dateString = dateFormat.format(new Date());
-        executionName = String.join(" ", Arrays.asList(dateString, benchmarkConfiguration.getName(), executionName)).trim();
-
-        Grakn client = new Grakn(new SimpleURI(Configs.GRAKN_URI));
-
-        // TODO fix sometime
-        // workaround to make deletions work...
-        if (!benchmarkConfiguration.noSchemaLoad()) {
-            System.out.println("Deleting keyspace `" + benchmarkConfiguration.getKeyspace() + "`");
-            client.keyspaces().delete(benchmarkConfiguration.getKeyspace());
-        }
-
-        Grakn.Session session = client.session(benchmarkConfiguration.getKeyspace());
-        int randomSeed = 0;
-
-        // no data generation means NEITHER schema load NOR data generate
-        DataGenerator dataGenerator = benchmarkConfiguration.noDataGeneration() ?
-                null :
-                new DataGenerator(session, benchmarkConfiguration.getName(), benchmarkConfiguration.getSchemaGraql(), randomSeed);
-
-        QueryExecutor queryExecutor = new QueryExecutor(benchmarkConfiguration.getKeyspace(),
-                                            Configs.GRAKN_URI,
-                                            executionName,
-                                            benchmarkConfiguration.getQueries());
-        BenchmarkRunner runner = new BenchmarkRunner(benchmarkConfiguration, dataGenerator, queryExecutor);
-        runner.run();
-
-        ignite.close();
     }
 }

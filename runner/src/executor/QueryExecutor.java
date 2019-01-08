@@ -85,6 +85,14 @@ public class QueryExecutor {
         }
     }
 
+    /**
+     *
+     * @param queryStream stream of Graql queries
+     * @param numRepeats
+     * @param numConcepts
+     * @param msg
+     * @throws Exception
+     */
     void processQueries(Stream<Query> queryStream, int numRepeats, int numConcepts, String msg) throws Exception {
         // instantiate grakn client
         Grakn client = new Grakn(new SimpleURI(uri), true);
