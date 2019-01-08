@@ -18,17 +18,21 @@
 
 package grakn.benchmark.runner;
 
+import grakn.benchmark.runner.executionconfig.BenchmarkConfiguration;
 import grakn.benchmark.runner.executor.QueryExecutor;
+import grakn.benchmark.runner.generator.DataGenerator;
+import grakn.benchmark.runner.sharedconfig.Configs;
+import grakn.benchmark.runner.usecase.BenchmarkExistingKeyspace;
+import grakn.benchmark.runner.usecase.GenerateAndBenchmark;
 import grakn.core.Keyspace;
 import grakn.core.client.Grakn;
-import grakn.benchmark.runner.executionconfig.BenchmarkConfiguration;
-import grakn.benchmark.runner.generator.DataGenerator;
 import grakn.core.util.SimpleURI;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -45,7 +49,6 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import grakn.benchmark.runner.sharedconfig.Configs;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -57,20 +60,24 @@ import java.util.List;
 
 /**
  * Class in charge of
- *  - initialising Benchmark dependencies and BenchmarkConfiguration
- *  - run data generation (populate empty keyspace) (DataGenerator)
- *  - run benchmark on queries (QueryExecutor)
+ * - initialising Benchmark dependencies and BenchmarkConfiguration
+ * - run data generation (populate empty keyspace) (DataGenerator)
+ * - run benchmark on queries (QueryExecutor)
  */
-public class BenchmarkRunner {
-    private DataGenerator dataGenerator;
-    private QueryExecutor queryExecutor;
-    private int numQueryRepetitions;
-    private BenchmarkConfiguration configuration;
-
-    private static final Logger LOG = LoggerFactory.getLogger(BenchmarkRunner.class);
+public class GraknBenchmark {
+    private static final Logger LOG = LoggerFactory.getLogger(GraknBenchmark.class);
     private static final String ES_SERVER_HOST = "localhost";
     private static final int ES_SERVER_PORT = 9200;
     private static final String ES_SERVER_PROTOCOL = "http";
+    private static final String USECASE_GENERATE = "generate";
+    private static final String USECASE_EXISTING = "existing";
+
+    private final BenchmarkConfiguration configuration;
+    private final int repetitionsPerQuery;
+    private final String uri;
+    private final String executionName;
+    private final Keyspace currentKeyspace;
+    private final String usecase;
 
     /**
      * Entry point invoked by runner.py
@@ -81,82 +88,93 @@ public class BenchmarkRunner {
             // Initialise Ignite and ElasticSearch
             Ignite ignite = initIgniteServer();
             initElasticSearch();
-
-            // Parse arguments from console
-            Options options = BenchmarkOptions.build();
-            CommandLineParser parser = new DefaultParser();
-            CommandLine arguments = parser.parse(options, args);
-
-            // Build benchmark configuration
-            BenchmarkConfiguration benchmarkConfiguration = new BenchmarkConfiguration(arguments);
-
-            String graknURI = (arguments.hasOption("uri")) ? arguments.getOptionValue("uri") : Configs.GRAKN_URI;
-
-            // generate a name for this specific execution of the benchmarking
-            String executionName = arguments.getOptionValue("execution-name", "");
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-            String dateString = dateFormat.format(new Date());
-            executionName = String.join(" ", Arrays.asList(dateString, benchmarkConfiguration.getFileName(), executionName)).trim();
-
-            //Open new session to currentKeyspace
-            Keyspace currentKeyspace = benchmarkConfiguration.getKeyspace();
-            Grakn client = new Grakn(new SimpleURI(graknURI));
-            // TODO fix sometime
-            // workaround to make deletions work...
-            if (!benchmarkConfiguration.noSchemaLoad()) {
-                System.out.println("Deleting keyspace `" + currentKeyspace + "`");
-                client.keyspaces().delete(currentKeyspace);
-            }
-
-            Grakn.Session session = client.session(currentKeyspace);
-
-            // Initialise DataGenerator if needed (no data generation means NEITHER schema load NOR data generate)
-            DataGenerator dataGenerator = null;
-            if(!benchmarkConfiguration.noDataGeneration()){
-                int randomSeed = 0;
-                dataGenerator = new DataGenerator(session, benchmarkConfiguration.getFileName(), benchmarkConfiguration.getSchemaGraql(), randomSeed);
-            }
-
-            QueryExecutor queryExecutor = new QueryExecutor(currentKeyspace, graknURI, executionName, benchmarkConfiguration.getQueries());
-            BenchmarkRunner runner = new BenchmarkRunner(benchmarkConfiguration, dataGenerator, queryExecutor);
-            runner.run();
-
+            GraknBenchmark benchmark = new GraknBenchmark(args);
+            benchmark.start();
             ignite.close();
         } catch (Exception e) {
             LOG.error("Unable to start Grakn Benchmark", e);
         }
     }
 
+    public GraknBenchmark(String[] args) {
 
-    public BenchmarkRunner(BenchmarkConfiguration configuration, DataGenerator dataGenerator, QueryExecutor queryExecutor) {
-        this.dataGenerator = dataGenerator;
-        this.queryExecutor = queryExecutor;
-        this.numQueryRepetitions = configuration.numQueryRepetitions();
-        this.configuration = configuration;
+        // Parse arguments from console
+        Options options = BenchmarkOptions.build();
+        CommandLineParser parser = new DefaultParser();
+        CommandLine arguments = null;
+        try {
+            arguments = parser.parse(options, args);
+        } catch (ParseException e) {
+            throw new RuntimeException("Exception while parsing arguments", e);
+        }
+
+        this.usecase = args[0];
+
+        // Build benchmark configuration
+        this.configuration = new BenchmarkConfiguration(arguments);
+        this.repetitionsPerQuery = configuration.numQueryRepetitions();
+        this.uri = (arguments.hasOption("uri")) ? arguments.getOptionValue("uri") : Configs.DEFAULT_GRAKN_URI;
+
+        // generate a name for this specific execution of the benchmarking
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        String dateString = dateFormat.format(new Date());
+        this.executionName = String.join(" ", Arrays.asList(dateString, configuration.getConfigName(), arguments.getOptionValue("execution-name", ""))).trim();
+
+        //Open new session to currentKeyspace
+        this.currentKeyspace = configuration.getKeyspace();
     }
 
-    public void run() {
-        // load schema if not disabled
-        if (!this.configuration.noSchemaLoad()) {
-            this.dataGenerator.loadSchema();
+    public void start() {
+
+        switch (usecase) {
+            case USECASE_EXISTING:
+                BenchmarkExistingKeyspace existingUseCase = new BenchmarkExistingKeyspace();
+                existingUseCase.start();
+                break;
+            case USECASE_GENERATE:
+                GenerateAndBenchmark generateUseCase = new GenerateAndBenchmark();
+                generateUseCase.start();
+                break;
+            default:
+                throw new RuntimeException("Use case " + usecase + " not recognised.");
         }
 
-        // initialize data generation if not disabled
-        if (!this.configuration.noDataGeneration()) {
-            this.dataGenerator.initializeGeneration();
+        Grakn client = new Grakn(new SimpleURI(uri));
+        // TODO fix sometime
+        // workaround to make deletions work...
+        if (configuration.schemaLoad()) {
+            System.out.println("Deleting keyspace `" + currentKeyspace + "`");
+            client.keyspaces().delete(currentKeyspace);
         }
 
-        // run a variable dataset size or the pre-initialized one
-        if (this.configuration.noDataGeneration()) {
-            // count the current size of the DB
-            int numConcepts = this.queryExecutor.aggregateCount();
-            // only 1 point to profile at
-            this.queryExecutor.processStaticQueries(numQueryRepetitions, numConcepts, "Preconfigured DB - no data gen");
+        Grakn.Session session = client.session(currentKeyspace);
+
+        QueryExecutor queryExecutor = new QueryExecutor(currentKeyspace, uri, executionName, configuration.getQueries());
+        int repetitionsPerQuery = configuration.numQueryRepetitions();
+
+
+        // No data generation means NEITHER schema load NOR data generate
+        if (configuration.dataGeneration()) {
+            int randomSeed = 0;
+            generateData(session, configuration, randomSeed, queryExecutor);
         } else {
-            this.runAtConcepts(this.configuration.getConceptsToBenchmark());
+            int numConcepts = queryExecutor.aggregateCount();
+            // only 1 point to profile at
+            queryExecutor.processStaticQueries(repetitionsPerQuery, numConcepts, "Preconfigured DB - no data gen");
         }
 
     }
+
+    private static void generateData(Grakn.Session session, BenchmarkConfiguration config, int randomSeed, QueryExecutor queryExecutor) {
+        DataGenerator dataGenerator = new DataGenerator(session, config.getConfigName(), config.getSchemaGraql(), randomSeed);
+        // load schema if not disabled
+        if (config.schemaLoad()) {
+            dataGenerator.loadSchema();
+        }
+        List<Integer> numConceptsInRun = config.getConceptsToBenchmark();
+        runAtConcepts(numConceptsInRun, dataGenerator, queryExecutor);
+    }
+
 
     /**
      * Given a list of database sizes to perform profiling at,
@@ -164,11 +182,11 @@ public class BenchmarkRunner {
      *
      * @param numConceptsInRun
      */
-    private void runAtConcepts(List<Integer> numConceptsInRun) {
+    private static void runAtConcepts(List<Integer> numConceptsInRun, DataGenerator dataGenerator, QueryExecutor queryExecutor) {
         for (int numConcepts : numConceptsInRun) {
             LOG.info("Running queries with " + Integer.toString(numConcepts) + " concepts");
-            this.dataGenerator.generate(numConcepts);
-            this.queryExecutor.processStaticQueries(numQueryRepetitions, numConcepts);
+            dataGenerator.generate(numConcepts);
+            queryExecutor.processStaticQueries(repetitionsPerQuery, numConcepts);
         }
     }
 

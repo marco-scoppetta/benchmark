@@ -54,7 +54,6 @@ public class DataGenerator {
     private int iteration = 0;
     private Random rand;
 
-    private boolean initialized = false;
     private ConceptStore storage;
 
     private SpecificStrategy dataStrategies;
@@ -65,6 +64,7 @@ public class DataGenerator {
         this.rand = new Random(randomSeed);
         this.iteration = 0;
         this.schemaDefinition = schemaDefinition;
+        initializeGeneration();
     }
 
     public void loadSchema() {
@@ -73,7 +73,7 @@ public class DataGenerator {
         System.out.println("done");
     }
 
-    public void initializeGeneration() {
+    private void initializeGeneration() {
         try (Grakn.Transaction tx = session.transaction(GraknTxType.READ)) {
             HashSet<EntityType> entityTypes = SchemaManager.getTypesOfMetaType(tx, "entity");
             HashSet<RelationshipType> relationshipTypes = SchemaManager.getTypesOfMetaType(tx, "relationship");
@@ -82,13 +82,9 @@ public class DataGenerator {
         }
 
         this.dataStrategies = SpecificStrategyFactory.getSpecificStrategy(this.executionName, this.rand, this.storage);
-        this.initialized = true;
     }
 
     public void generate(int numConceptsLimit) {
-        if (!this.initialized) {
-            throw new GeneratorUninitializedException("generate() can only be called after initializing the generation strategies");
-        }
 
         RouletteWheel<RouletteWheel<TypeStrategyInterface>> operationStrategies = this.dataStrategies.getStrategy();
         /*

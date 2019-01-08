@@ -39,8 +39,8 @@ public class BenchmarkConfiguration {
 
     private QueriesConfigurationFile queries;
     private List<String> schemaGraql;
-    private boolean noSchemaLoad = true;
-    private boolean noDataGeneration = true;
+    private boolean schemaLoad = true;
+    private boolean dataGeneration = true;
     private BenchmarkConfigurationFile benchmarkConfigFile;
     private Path configFilePath;
     private String keyspace;
@@ -71,23 +71,20 @@ public class BenchmarkConfiguration {
             throw new RuntimeException(e);
         }
 
-        this.setKeyspace(this.getFileName());
-
         // use given keyspace string if exists, otherwise use yaml file `name` tag
-        if (arguments.hasOption("keyspace")) {
-            this.setKeyspace(arguments.getOptionValue("keyspace"));
-        }
+        String keyspace = arguments.hasOption("keyspace") ? arguments.getOptionValue("keyspace") : this.getConfigName();
+        this.setKeyspace(keyspace);
 
         // loading a schema file, enabled by default
         boolean noSchemaLoad = arguments.hasOption("no-schema-load");
-        this.setNoSchemaLoad(noSchemaLoad);
+        this.setSchemaLoad(!noSchemaLoad);
 
         // generate data true/false, else default to do generate data
         boolean noDataGeneration = arguments.hasOption("no-data-generation");
-        this.setNoDataGeneration(noDataGeneration);
+        this.setDataGeneration(!noDataGeneration);
     }
 
-    public String getFileName() {
+    public String getConfigName() {
         return this.benchmarkConfigFile.getName();
     }
 
@@ -107,7 +104,7 @@ public class BenchmarkConfiguration {
     }
 
     public List<String> getSchemaGraql() {
-        if (this.noSchemaLoad) {
+        if (this.schemaLoad) {
             return null;
         } else {
             return this.schemaGraql;
@@ -119,29 +116,26 @@ public class BenchmarkConfiguration {
     }
 
     public List<Integer> getConceptsToBenchmark() {
-        if (this.noDataGeneration) {
-            return null;
-        } else {
-            return this.benchmarkConfigFile.getConceptsToBenchmark();
-        }
+        if (this.dataGeneration) { return this.benchmarkConfigFile.getConceptsToBenchmark(); }
+        return null;
     }
 
-    public void setNoSchemaLoad(boolean loadSchema) {
-        this.noSchemaLoad = loadSchema;
+    public void setSchemaLoad(boolean loadSchema) {
+        this.schemaLoad = loadSchema;
     }
 
-    public boolean noSchemaLoad() {
+    public boolean schemaLoad() {
         // we also don't load the schema
         // if the data generation is disabled
-        return this.noDataGeneration || this.noSchemaLoad;
+        return this.dataGeneration || this.schemaLoad;
     }
 
-    public void setNoDataGeneration(boolean generateData) {
-        this.noDataGeneration = generateData;
+    public void setDataGeneration(boolean generateData) {
+        this.dataGeneration = generateData;
     }
 
-    public boolean noDataGeneration() {
-        return this.noDataGeneration;
+    public boolean dataGeneration() {
+        return this.dataGeneration;
     }
 
     public int numQueryRepetitions() {
