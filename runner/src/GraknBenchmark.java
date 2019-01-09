@@ -73,7 +73,6 @@ public class GraknBenchmark {
     private static final String USECASE_EXISTING = "existing";
 
     private final BenchmarkConfiguration configuration;
-    private final int repetitionsPerQuery;
     private final String uri;
     private final String executionName;
     private final Keyspace currentKeyspace;
@@ -81,15 +80,16 @@ public class GraknBenchmark {
 
     /**
      * Entry point invoked by runner.py
-     * Initialise dependencies and configurations.
      */
     public static void main(String[] args) {
         try {
             // Initialise Ignite and ElasticSearch
             Ignite ignite = initIgniteServer();
             initElasticSearch();
+
             GraknBenchmark benchmark = new GraknBenchmark(args);
             benchmark.start();
+
             ignite.close();
         } catch (Exception e) {
             LOG.error("Unable to start Grakn Benchmark", e);
@@ -99,20 +99,12 @@ public class GraknBenchmark {
     public GraknBenchmark(String[] args) {
 
         // Parse arguments from console
-        Options options = BenchmarkOptions.build();
-        CommandLineParser parser = new DefaultParser();
-        CommandLine arguments = null;
-        try {
-            arguments = parser.parse(options, args);
-        } catch (ParseException e) {
-            throw new RuntimeException("Exception while parsing arguments", e);
-        }
+        CommandLine arguments = BenchmarkOptions.parseArguments(args);
 
         this.usecase = args[0];
 
         // Build benchmark configuration
         this.configuration = new BenchmarkConfiguration(arguments);
-        this.repetitionsPerQuery = configuration.numQueryRepetitions();
         this.uri = (arguments.hasOption("uri")) ? arguments.getOptionValue("uri") : Configs.DEFAULT_GRAKN_URI;
 
         // generate a name for this specific execution of the benchmarking
@@ -125,70 +117,29 @@ public class GraknBenchmark {
     }
 
     public void start() {
+        QueryExecutor queryExecutor = new QueryExecutor(currentKeyspace, uri, executionName, configuration.getQueries());
+        Grakn client = new Grakn(new SimpleURI(uri));
 
+        //TODO add check to make sure currentKeyspace does not exist, if it does throw exception
+        // this can be done once we implement keyspaces().retrieve() on the client Java (issue #4675)
+
+        Grakn.Session session = client.session(currentKeyspace);
         switch (usecase) {
             case USECASE_EXISTING:
-                BenchmarkExistingKeyspace existingUseCase = new BenchmarkExistingKeyspace();
+                BenchmarkExistingKeyspace existingUseCase = new BenchmarkExistingKeyspace(queryExecutor, configuration.numQueryRepetitions());
                 existingUseCase.start();
                 break;
             case USECASE_GENERATE:
-                GenerateAndBenchmark generateUseCase = new GenerateAndBenchmark();
+                int randomSeed = 0;
+                DataGenerator dataGenerator = new DataGenerator(session, configuration.getConfigName(), configuration.getSchemaGraql(), randomSeed);
+                GenerateAndBenchmark generateUseCase = new GenerateAndBenchmark(queryExecutor, dataGenerator, configuration);
                 generateUseCase.start();
                 break;
             default:
                 throw new RuntimeException("Use case " + usecase + " not recognised.");
         }
-
-        Grakn client = new Grakn(new SimpleURI(uri));
-        // TODO fix sometime
-        // workaround to make deletions work...
-        if (configuration.schemaLoad()) {
-            System.out.println("Deleting keyspace `" + currentKeyspace + "`");
-            client.keyspaces().delete(currentKeyspace);
-        }
-
-        Grakn.Session session = client.session(currentKeyspace);
-
-        QueryExecutor queryExecutor = new QueryExecutor(currentKeyspace, uri, executionName, configuration.getQueries());
-        int repetitionsPerQuery = configuration.numQueryRepetitions();
-
-
-        // No data generation means NEITHER schema load NOR data generate
-        if (configuration.dataGeneration()) {
-            int randomSeed = 0;
-            generateData(session, configuration, randomSeed, queryExecutor);
-        } else {
-            int numConcepts = queryExecutor.aggregateCount();
-            // only 1 point to profile at
-            queryExecutor.processStaticQueries(repetitionsPerQuery, numConcepts, "Preconfigured DB - no data gen");
-        }
-
     }
 
-    private static void generateData(Grakn.Session session, BenchmarkConfiguration config, int randomSeed, QueryExecutor queryExecutor) {
-        DataGenerator dataGenerator = new DataGenerator(session, config.getConfigName(), config.getSchemaGraql(), randomSeed);
-        // load schema if not disabled
-        if (config.schemaLoad()) {
-            dataGenerator.loadSchema();
-        }
-        List<Integer> numConceptsInRun = config.getConceptsToBenchmark();
-        runAtConcepts(numConceptsInRun, dataGenerator, queryExecutor);
-    }
-
-
-    /**
-     * Given a list of database sizes to perform profiling at,
-     * Populate the DB to a given size, then run the benchmark
-     *
-     * @param numConceptsInRun
-     */
-    private static void runAtConcepts(List<Integer> numConceptsInRun, DataGenerator dataGenerator, QueryExecutor queryExecutor) {
-        for (int numConcepts : numConceptsInRun) {
-            LOG.info("Running queries with " + Integer.toString(numConcepts) + " concepts");
-            dataGenerator.generate(numConcepts);
-            queryExecutor.processStaticQueries(repetitionsPerQuery, numConcepts);
-        }
-    }
 
 
     private static boolean indexTemplateExists(RestClient esClient, String indexTemplateName) throws IOException {
@@ -236,6 +187,17 @@ public class GraknBenchmark {
     }
 
     private static class BenchmarkOptions {
+
+        static CommandLine parseArguments(String[] args){
+            Options options = BenchmarkOptions.build();
+            CommandLineParser parser = new DefaultParser();
+            try {
+                CommandLine arguments = parser.parse(options, args);
+                return arguments;
+            } catch (ParseException e) {
+                throw new RuntimeException("Exception while parsing arguments", e);
+            }
+        }
 
         static Options build() {
 
