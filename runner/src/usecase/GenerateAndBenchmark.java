@@ -1,6 +1,6 @@
 package grakn.benchmark.runner.usecase;
 
-import grakn.benchmark.runner.executionconfig.BenchmarkConfiguration;
+import grakn.benchmark.runner.util.BenchmarkConfiguration;
 import grakn.benchmark.runner.executor.QueryExecutor;
 import grakn.benchmark.runner.generator.DataGenerator;
 import org.slf4j.Logger;

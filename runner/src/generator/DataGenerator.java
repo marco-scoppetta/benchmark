@@ -46,12 +46,10 @@ import java.util.stream.Stream;
  */
 public class DataGenerator {
 
-    Grakn.Session session;
-    String executionName;
-    List<String> schemaDefinition;
-
-
-    private int iteration = 0;
+    private final Grakn.Session session;
+    private final String executionName;
+    private final List<String> schemaDefinition;
+    private int iteration;
     private Random rand;
 
     private ConceptStore storage;

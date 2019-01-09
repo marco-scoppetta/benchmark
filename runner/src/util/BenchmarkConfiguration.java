@@ -16,12 +16,12 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.runner.executionconfig;
+package grakn.benchmark.runner.util;
 
 
-import grakn.core.Keyspace;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import grakn.core.Keyspace;
 import org.apache.commons.cli.CommandLine;
 
 import java.io.IOException;
@@ -37,6 +37,7 @@ import java.util.List;
 
 public class BenchmarkConfiguration {
 
+    public static final String DEFAULT_GRAKN_URI = "localhost:48555";
     private QueriesConfigurationFile queries;
     private List<String> schemaGraql;
     private boolean schemaLoad = true;
@@ -44,6 +45,16 @@ public class BenchmarkConfiguration {
     private BenchmarkConfigurationFile benchmarkConfigFile;
     private Path configFilePath;
     private String keyspace;
+
+    public String uri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
+
+    private String uri;
 
     public BenchmarkConfiguration(CommandLine arguments) {
 
@@ -82,6 +93,9 @@ public class BenchmarkConfiguration {
         // generate data true/false, else default to do generate data
         boolean noDataGeneration = arguments.hasOption("no-data-generation");
         this.setDataGeneration(!noDataGeneration);
+
+        String uri = (arguments.hasOption("uri")) ? arguments.getOptionValue("uri") : DEFAULT_GRAKN_URI;
+        this.setUri(uri);
     }
 
     public String getConfigName() {
@@ -134,9 +148,6 @@ public class BenchmarkConfiguration {
         this.dataGeneration = generateData;
     }
 
-    public boolean dataGeneration() {
-        return this.dataGeneration;
-    }
 
     public int numQueryRepetitions() {
         return this.benchmarkConfigFile.getRepeatsPerQuery();

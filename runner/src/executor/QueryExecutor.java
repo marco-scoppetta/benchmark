@@ -18,17 +18,15 @@
 
 package grakn.benchmark.runner.executor;
 
+import brave.Span;
+import brave.Tracer;
+import brave.Tracing;
 import grakn.core.GraknTxType;
-import grakn.core.Keyspace;
 import grakn.core.client.Grakn;
 import grakn.core.graql.Graql;
 import grakn.core.graql.Query;
 import grakn.core.graql.answer.Answer;
 import grakn.core.graql.answer.Value;
-import grakn.core.util.SimpleURI;
-import brave.Span;
-import brave.Tracer;
-import brave.Tracing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,17 +42,15 @@ import static grakn.core.graql.Graql.var;
  */
 public class QueryExecutor {
 
-    private final String uri;
-    private final String executionName;
-    private final Keyspace keyspace;
-
-    final List<Query> queries;
-
     private static final Logger LOG = LoggerFactory.getLogger(QueryExecutor.class);
 
-    public QueryExecutor(Keyspace keyspace, String uri, String executionName, List<String> queryStrings) {
-        this.keyspace = keyspace;
-        this.uri = uri;
+    private final String executionName;
+    private final List<Query> queries;
+    private final Grakn.Session session;
+
+    public QueryExecutor(Grakn.Session session, String executionName, List<String> queryStrings) {
+        this.session = session;
+
         this.executionName = executionName;
 
         // convert Graql strings into Query types
@@ -76,9 +72,6 @@ public class QueryExecutor {
     }
 
     public int aggregateCount() {
-        Grakn client = new Grakn(new SimpleURI(uri), true);
-        Grakn.Session session = client.session(keyspace);
-
         try (Grakn.Transaction tx = session.transaction(GraknTxType.READ)) {
             List<Value> count = tx.graql().match(var("x").isa("thing")).aggregate(Graql.count()).execute();
             return count.get(0).number().intValue();
@@ -94,13 +87,8 @@ public class QueryExecutor {
      * @throws Exception
      */
     void processQueries(Stream<Query> queryStream, int numRepeats, int numConcepts, String msg) throws Exception {
-        // instantiate grakn client
-        Grakn client = new Grakn(new SimpleURI(uri), true);
-        Grakn.Session session = client.session(keyspace);
 
         try (Grakn.Transaction tx = session.transaction(GraknTxType.WRITE)) {
-
-
             Tracer tracer = Tracing.currentTracer();
 
             Iterator<Query> queryIterator = queryStream.iterator();
@@ -119,7 +107,6 @@ public class QueryExecutor {
                     batchSpan.tag("extraTag", msg);
                 }
                 batchSpan.start();
-
 
                 for (int i = 0; i < numRepeats; i++) {
 
@@ -143,6 +130,5 @@ public class QueryExecutor {
             Thread.sleep(1500);
             System.out.println(counter);
         }
-        session.close();
     }
 }
