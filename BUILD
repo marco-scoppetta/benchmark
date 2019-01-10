@@ -17,3 +17,33 @@
 #
 
 exports_files(["VERSION", "deployment.properties"], visibility = ["//visibility:public"])
+
+# TODO: the distribution only includes 'benchmark-runner'. Need to add 'benchmark-dashboard'.
+load("@graknlabs_rules_deployment//distribution:rules.bzl", distribution = "distribution")
+distribution(
+    name = "distribution",
+    targets = {
+        "//runner:benchmark-runner": "runner/services/lib/",
+    },
+    additional_files = {
+        "//runner:runner.sh": "runner/runner.sh",
+        "//runner:conf/societal_model/queries.yml": "runner/conf/societal_model/queries.yml",
+        "//runner:conf/societal_model/societal_config_1.yml": "runner/conf/societal_model/societal_config_1.yml",
+        "//runner:conf/societal_model/societal_model.gql": "runner/conf/societal_model/societal_model.gql",
+        "//runner:conf/web_content/queries.yml": "runner/conf/web_content/queries.yml",
+        "//runner:conf/web_content/web_content_config.yml": "runner/conf/web_content/web_content_config.yml",
+        "//runner:conf/web_content/web_content_schema.gql": "runner/conf/web_content/web_content_schema.gql",
+        
+        # External dependencies: Elasticsearch and Zipkin
+        "@external-dependencies-zipkin//file": "external-dependencies/zipkin.jar",
+        "@external-dependencies-elasticsearch//file": "external-dependencies/elasticsearch.zip"
+    },
+    empty_directories = [
+        "data/logs",
+        "data/data"
+    ],
+    permissions = {
+        "runner/runner.sh": "0755"
+    },
+    output_filename = "benchmark-runner",
+)

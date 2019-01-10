@@ -16,6 +16,14 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
+exports_files(glob(["conf/**/*"]) + ["runner.sh"], visibility = ["//visibility:public"])
+
+java_binary(
+    name = "benchmark-runner-binary",
+    main_class = "grakn.benchmark.runner.BenchmarkRunner",
+    runtime_deps = ["//runner:benchmark-runner"],
+    visibility = ["//visibility:public"]
+ )
 
 java_library(
     name = "benchmark-runner",
@@ -51,15 +59,6 @@ java_library(
     ],
     visibility = ["//visibility:public"]
 )
-
-java_binary(
-    name = "benchmark-runner-binary",
-    main_class = "grakn.benchmark.runner.BenchmarkRunner",
-    runtime_deps = ["//runner:benchmark-runner"],
-    visibility = ["//visibility:public"]
-)
-
-
 
 java_test(
     name = "ignite-conceptid-store-test",

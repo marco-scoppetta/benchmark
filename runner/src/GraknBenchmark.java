@@ -106,7 +106,7 @@ public class GraknBenchmark {
                 break;
             case USECASE_GENERATE:
                 int randomSeed = 0;
-                DataGenerator dataGenerator = new DataGenerator(session, configuration.getConfigName(), configuration.getSchemaGraql(), randomSeed);
+                DataGenerator dataGenerator = new DataGenerator(session, configuration.getConfigName(), configuration.getGraqlSchema(), randomSeed);
                 GenerateAndBenchmark generateUseCase = new GenerateAndBenchmark(queryExecutor, dataGenerator, configuration);
                 generateUseCase.start();
                 break;

@@ -18,6 +18,26 @@
 
 workspace(name = "benchmark")
 
+############################
+# Load Common Dependencies #
+############################
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+
+####################
+# Load Build Tools #
+####################
+# Load additional build tools, such bazel-deps and unused-deps
+load("//dependencies/tools:dependencies.bzl", "tools_dependencies")
+tools_dependencies()
+
+
+#####################################
+# Load Java dependencies from Maven #
+#####################################
+load("//dependencies/maven:dependencies.bzl", "maven_dependencies")
+maven_dependencies()
+
 # TODO remove this when graknlabs/benchmark issue #58 is resolved
 # (this shouldn't have to be stated here?)
 git_repository(
@@ -26,18 +46,33 @@ git_repository(
     tag = "0.1.0",  # change this to use a different release
 )
 
-# Load additional build tools, such bazel-deps and unused-deps
-load("//dependencies/tools:dependencies.bzl", "tools_dependencies")
-tools_dependencies()
-
-
-load("//dependencies/maven:dependencies.bzl", "maven_dependencies")
-maven_dependencies()
-
+##############################################
+# Load External Dependencies - ES and Zipkin #
+##############################################
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+http_file(
+  name = "external-dependencies-zipkin",
+  sha256 = "0c7374621e751b6f5b70b3bc6cf43f2d105f3e2337c78a0fa571b2263704c9e5",
+  urls = [
+    "https://dl.bintray.com/openzipkin/maven/io/zipkin/java/zipkin-server/2.11.12/zipkin-server-2.11.12-exec.jar"
+  ],
+)
+http_file(
+  name = "external-dependencies-elasticsearch",
+  sha256 = "126b83ec1163dba1551491828b9b5f5c456d62f6e731159da045b46570295e38",
+  urls = [
+    "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.3.2.zip"
+  ],
+)
 
 ########################################
 #     Load Deployment Dependencies     #
 ########################################
+git_repository(
+    name="graknlabs_rules_deployment",
+    remote="https://github.com/graknlabs/deployment",
+    commit="1fd6f328d55b28ca70b047894917cb169d5f028e",
+)
 
 load("//dependencies/deployment/maven:dependencies.bzl", maven_dependencies_for_deployment = "maven_dependencies")
 maven_dependencies_for_deployment()

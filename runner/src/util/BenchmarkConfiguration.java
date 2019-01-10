@@ -30,7 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Contains the configuration for an execution of the benchmarking system
@@ -39,109 +38,120 @@ import java.util.Objects;
 public class BenchmarkConfiguration {
 
     private static final String DEFAULT_GRAKN_URI = "localhost:48555";
-    private QueriesConfigurationFile queries;
-    private List<String> schemaGraql;
-    private boolean schemaLoad = true;
-    private boolean dataGeneration = true;
+    private List<String> queries;
+    private List<String> graqlSchema;
+    private boolean schemaLoad;
     private BenchmarkConfigurationFile benchmarkConfigFile;
     private String keyspace;
-
-    public String uri() {
-        return uri;
-    }
-
-    public void setUri(String uri) {
-        this.uri = uri;
-    }
-
     private String uri;
 
     public BenchmarkConfiguration(CommandLine arguments) {
-        Path workingDirectory = Paths.get((System.getProperty("working.dir"));
-        String configFileName = arguments.getOptionValue("config");
-        Path configFilePath = Paths.get(configFileName);
-        if(!configFilePath.isAbsolute()) configFilePath = workingDirectory.resolve(configFilePath);
-        try {
-            // parse config yaml file into object
-            ObjectMapper benchmarkConfigMapper = new ObjectMapper(new YAMLFactory());
-            this.benchmarkConfigFile = benchmarkConfigMapper.readValue(
-                    configFilePath.toFile(),
-                    BenchmarkConfigurationFile.class);
+        Path configFilePath = getConfigFilePath(arguments);
 
-            // read the queries file string and use them to load further YAML
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            Path queryFilePath = configFilePath.getParent().resolve(benchmarkConfigFile.getRelativeQueriesYamlFile());
+        this.benchmarkConfigFile = parseConfigurationFile(configFilePath);
 
-            queries = mapper.readValue(queryFilePath.toFile(), QueriesConfigurationFile.class);
-            Path schemaFilePath = configFilePath.getParent().resolve(benchmarkConfigFile.getRelativeSchemaFile());
-            schemaGraql = Files.readAllLines(schemaFilePath, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this.queries = parseQueriesFile(configFilePath).getQueries();
+
+        this.graqlSchema = parseGraqlSchema(configFilePath);
+
 
         // use given keyspace string if exists, otherwise use yaml file `name` tag
-        String keyspace = arguments.hasOption("keyspace") ? arguments.getOptionValue("keyspace") : this.getConfigName();
-        this.setKeyspace(keyspace);
+        this.keyspace = arguments.hasOption("keyspace") ? arguments.getOptionValue("keyspace") : this.getConfigName();
+
+        this.uri = (arguments.hasOption("uri")) ? arguments.getOptionValue("uri") : DEFAULT_GRAKN_URI;
 
         // loading a schema file, enabled by default
         boolean noSchemaLoad = arguments.hasOption("no-schema-load");
-        this.setSchemaLoad(!noSchemaLoad);
-
-        // generate data true/false, else default to do generate data
-        boolean noDataGeneration = arguments.hasOption("no-data-generation");
-        this.setDataGeneration(!noDataGeneration);
-
-        String uri = (arguments.hasOption("uri")) ? arguments.getOptionValue("uri") : DEFAULT_GRAKN_URI;
-        this.setUri(uri);
+        this.schemaLoad = !noSchemaLoad;
     }
 
     public String getConfigName() {
         return this.benchmarkConfigFile.getName();
     }
 
-
-    public void setKeyspace(String keyspace) {
-        this.keyspace = keyspace;
+    public String uri() {
+        return uri;
     }
 
     public Keyspace getKeyspace() {
         return Keyspace.of(this.keyspace);
     }
 
-    public List<String> getSchemaGraql() {
-        if (this.schemaLoad) {
-            return null;
-        } else {
-            return this.schemaGraql;
-        }
+    public List<String> getGraqlSchema() {
+        return this.graqlSchema;
     }
 
     public List<String> getQueries() {
-        return this.queries.getQueries();
+        return this.queries;
     }
 
     public List<Integer> getConceptsToBenchmark() {
-        if (this.dataGeneration) { return this.benchmarkConfigFile.getConceptsToBenchmark(); }
-        return null;
-    }
-
-    public void setSchemaLoad(boolean loadSchema) {
-        this.schemaLoad = loadSchema;
+        return this.benchmarkConfigFile.getConceptsToBenchmark();
     }
 
     public boolean schemaLoad() {
-        // we also don't load the schema
-        // if the data generation is disabled
-        return this.dataGeneration && this.schemaLoad;
+        return this.schemaLoad;
     }
-
-    public void setDataGeneration(boolean generateData) {
-        this.dataGeneration = generateData;
-    }
-
 
     public int numQueryRepetitions() {
         return this.benchmarkConfigFile.getRepeatsPerQuery();
     }
 
+
+    /**
+     * Compute configuration file path, prepending path to working dir if relative path provided.
+     *
+     * @param arguments command line arguments
+     * @return absolute path to configuration file
+     */
+    private Path getConfigFilePath(CommandLine arguments) {
+        Path workingDirectory = Paths.get(System.getProperty("working.dir"));
+        String configFileName = arguments.getOptionValue("config");
+        Path configFilePath = Paths.get(configFileName);
+        if (!configFilePath.isAbsolute()) configFilePath = workingDirectory.resolve(configFilePath);
+        return configFilePath;
+    }
+
+    /**
+     * Parse configuration file to object
+     * @param configFilePath absolute path to configuration file
+     * @return Object representing yaml file
+     */
+    private BenchmarkConfigurationFile parseConfigurationFile(Path configFilePath) {
+        ObjectMapper benchmarkConfigMapper = new ObjectMapper(new YAMLFactory());
+        try {
+            return benchmarkConfigMapper.readValue(configFilePath.toFile(), BenchmarkConfigurationFile.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Exception parsing Benchmark configuration file", e);
+        }
+    }
+
+    /**
+     * Parse queries file to object
+     * @param configFilePath absolute path to configuration file
+     * @return Object that holds reference to array of queries
+     */
+    private QueriesConfigurationFile parseQueriesFile(Path configFilePath){
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        Path queryFilePath = configFilePath.getParent().resolve(benchmarkConfigFile.getQueriesFilePath());
+        try {
+            return mapper.readValue(queryFilePath.toFile(), QueriesConfigurationFile.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Exception parsing queries file", e);
+        }
+    }
+
+    /**
+     * Parse Graql schema file into a list of Strings
+     * @param configFilePath absolute path to configuration file
+     * @return List of string representing Graql schema declaration statements
+     */
+    private List<String> parseGraqlSchema(Path configFilePath){
+        Path schemaFilePath = configFilePath.getParent().resolve(benchmarkConfigFile.getRelativeSchemaFile());
+        try {
+            return Files.readAllLines(schemaFilePath, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException("Exception parsing Graql schema file", e);
+        }
+    }
 }

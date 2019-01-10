@@ -47,12 +47,6 @@ public class BenchmarkArguments {
                 .desc("Specific keyspace to utilize (default: `name` in config yaml")
                 .type(String.class)
                 .build();
-        Option noDataGenerationOption = Option.builder("ng")
-                .longOpt("no-data-generation")
-                .required(false)
-                .desc("Disable data generation")
-                .type(Boolean.class)
-                .build();
         Option noSchemaLoadOption = Option.builder("ns")
                 .longOpt("no-schema-load")
                 .required(false)
@@ -70,7 +64,6 @@ public class BenchmarkArguments {
         options.addOption(configFileOption);
         options.addOption(graknAddressOption);
         options.addOption(keyspaceOption);
-        options.addOption(noDataGenerationOption);
         options.addOption(noSchemaLoadOption);
         options.addOption(executionNameOption);
         return options;

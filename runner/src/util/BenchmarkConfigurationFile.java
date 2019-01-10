@@ -49,7 +49,7 @@ public class BenchmarkConfigurationFile {
     public void setQueries(String queriesYaml) {
         this.queries = queriesYaml;
     }
-    public String getRelativeQueriesYamlFile() {
+    public String getQueriesFilePath() {
         return this.queries;
     }
 
