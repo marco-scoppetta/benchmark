@@ -78,7 +78,6 @@ public class ElasticSearchManager {
         LOG.info("Created index template `" + indexTemplateName + "`");
     }
 
-
     private static boolean indexTemplateExists(RestClient esClient, String indexTemplateName) throws IOException {
         try {
             Request templateExistsRequest = new Request("GET", "/_template/" + indexTemplateName);

@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Contains the configuration for an execution of the benchmarking system
@@ -37,13 +38,12 @@ import java.util.List;
 
 public class BenchmarkConfiguration {
 
-    public static final String DEFAULT_GRAKN_URI = "localhost:48555";
+    private static final String DEFAULT_GRAKN_URI = "localhost:48555";
     private QueriesConfigurationFile queries;
     private List<String> schemaGraql;
     private boolean schemaLoad = true;
     private boolean dataGeneration = true;
     private BenchmarkConfigurationFile benchmarkConfigFile;
-    private Path configFilePath;
     private String keyspace;
 
     public String uri() {
@@ -57,26 +57,23 @@ public class BenchmarkConfiguration {
     private String uri;
 
     public BenchmarkConfiguration(CommandLine arguments) {
-
+        Path workingDirectory = Paths.get((System.getProperty("working.dir"));
         String configFileName = arguments.getOptionValue("config");
         Path configFilePath = Paths.get(configFileName);
+        if(!configFilePath.isAbsolute()) configFilePath = workingDirectory.resolve(configFilePath);
         try {
             // parse config yaml file into object
             ObjectMapper benchmarkConfigMapper = new ObjectMapper(new YAMLFactory());
-            BenchmarkConfigurationFile config = benchmarkConfigMapper.readValue(
+            this.benchmarkConfigFile = benchmarkConfigMapper.readValue(
                     configFilePath.toFile(),
                     BenchmarkConfigurationFile.class);
 
-            this.configFilePath = configFilePath;
-            this.benchmarkConfigFile = config;
-
-
             // read the queries file string and use them to load further YAML
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            Path queryFilePath = this.configFilePath.getParent().resolve(config.getRelativeQueriesYamlFile());
+            Path queryFilePath = configFilePath.getParent().resolve(benchmarkConfigFile.getRelativeQueriesYamlFile());
 
             queries = mapper.readValue(queryFilePath.toFile(), QueriesConfigurationFile.class);
-            Path schemaFilePath = this.configFilePath.getParent().resolve(config.getRelativeSchemaFile());
+            Path schemaFilePath = configFilePath.getParent().resolve(benchmarkConfigFile.getRelativeSchemaFile());
             schemaGraql = Files.readAllLines(schemaFilePath, StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -104,13 +101,7 @@ public class BenchmarkConfiguration {
 
 
     public void setKeyspace(String keyspace) {
-        String name = keyspace;
-        // remove spaces
-        name = name.replace(' ', '_');
-        if (name.length() > 48) {
-            name = name.substring(0, 48);
-        }
-        this.keyspace = name;
+        this.keyspace = keyspace;
     }
 
     public Keyspace getKeyspace() {
@@ -141,7 +132,7 @@ public class BenchmarkConfiguration {
     public boolean schemaLoad() {
         // we also don't load the schema
         // if the data generation is disabled
-        return this.dataGeneration || this.schemaLoad;
+        return this.dataGeneration && this.schemaLoad;
     }
 
     public void setDataGeneration(boolean generateData) {

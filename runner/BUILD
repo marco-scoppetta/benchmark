@@ -42,17 +42,14 @@ java_library(
 
         "//dependencies/maven/artifacts/commons-cli",
         "//dependencies/maven/artifacts/org/apache/commons:commons-math3",
-
-        "//dependencies/maven/artifacts/junit:junit",
-        "//dependencies/maven/artifacts/org/mockito:mockito-core"
     ],
     runtime_deps = [
         "//dependencies/maven/artifacts/io/grpc:grpc-netty-shaded"
     ],
-
     resources = [
         "//runner:src/logback.xml"
-    ]
+    ],
+    visibility = ["//visibility:public"]
 )
 
 java_binary(
