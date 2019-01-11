@@ -32,7 +32,7 @@ queries:
   # -- Linear Multi-hop queries with specific labeled targets --
   # 4 relationship hops, including one nested relationship
   - "match $p isa person;
-      (member: $p, group: $employer) isa employment;
+      (member: $p, group_: $employer) isa employment;
       $employer isa organisation;
       (author: $p, authored-content: $ac) isa authorship;
       $ac isa publication;
@@ -42,7 +42,7 @@ queries:
 
   # same 4 hops with attributes
   - "match $p isa person, has name $person-name;
-      (member: $p, group: $employer) isa employment, has job-title $title;
+      (member: $p, group_: $employer) isa employment, has job-title $title;
       $employer isa organisation, has name $orgname;
       (author: $p, authored-content: $ac) isa authorship;
       $ac isa publication, has title $t;
@@ -62,12 +62,12 @@ queries:
   - "insert $x isa person;
       (employee: $x, employer: $y) isa ownership; $y isa university;
       (author: $x, authored-content: $ac) isa authorship; $ac isa publication;
-      (member: $x, group: $g) isa membership; $g isa project;"
+      (member: $x, group_: $g) isa membership; $g isa project;"
   # insert branching connected set of concepts (entity in >2 relationships required) with attributes
   - "insert $x isa person, has forename 'John', has surname 'Doe', has middle-name 'Billy';
       (employee: $x, employer: $y) isa ownership; $y isa university, has name 'Grakn University';
       (author: $x, authored-content: $ac) isa authorship; $ac isa publication;
-      (member: $x, group: $g) isa membership; $g isa project, has name 'graqlbot';"
+      (member: $x, group_: $g) isa membership; $g isa project, has name 'graqlbot';"
 
 
   # TODO - one-hop match, insert

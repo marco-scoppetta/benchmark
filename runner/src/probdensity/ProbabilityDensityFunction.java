@@ -16,15 +16,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.runner.pdf;
+package grakn.benchmark.runner.probdensity;
 
 /**
  *
  */
-//TODO Should be/have an interface?
-public abstract class PDF {
-    /**
-     * @return
-     */
-    public abstract int next();
+public interface ProbabilityDensityFunction {
+    int sample();
 }

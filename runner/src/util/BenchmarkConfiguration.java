@@ -31,16 +31,23 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static grakn.benchmark.runner.util.BenchmarkArguments.KEYSPACE_ARGUMENT;
+import static grakn.benchmark.runner.util.BenchmarkArguments.NO_DATA_GENERATION_ARGUMENT;
+import static grakn.benchmark.runner.util.BenchmarkArguments.URI_ARGUMENT;
+
 /**
- * Contains the configuration for an execution of the benchmarking system
+ * This class parses multiple yaml files into object and wraps them
+ * making all the configurations needed for a benchmark execution
+ * available through a single facade.
  */
 
 public class BenchmarkConfiguration {
 
     private static final String DEFAULT_GRAKN_URI = "localhost:48555";
+
+    private final boolean generateData;
     private List<String> queries;
     private List<String> graqlSchema;
-    private boolean schemaLoad;
     private BenchmarkConfigurationFile benchmarkConfigFile;
     private String keyspace;
     private String uri;
@@ -48,21 +55,22 @@ public class BenchmarkConfiguration {
     public BenchmarkConfiguration(CommandLine arguments) {
         Path configFilePath = getConfigFilePath(arguments);
 
+        // Parse yaml file with generic configurations
         this.benchmarkConfigFile = parseConfigurationFile(configFilePath);
 
+        // Parse yaml file containing all the queries for Profiler
         this.queries = parseQueriesFile(configFilePath).getQueries();
 
+        // Parse yaml file containing Graql statements that define a schema, used by DataGenerator
         this.graqlSchema = parseGraqlSchema(configFilePath);
 
-
         // use given keyspace string if exists, otherwise use yaml file `name` tag
-        this.keyspace = arguments.hasOption("keyspace") ? arguments.getOptionValue("keyspace") : this.getConfigName();
+        this.keyspace = arguments.hasOption(KEYSPACE_ARGUMENT) ? arguments.getOptionValue(KEYSPACE_ARGUMENT) : this.getConfigName();
 
-        this.uri = (arguments.hasOption("uri")) ? arguments.getOptionValue("uri") : DEFAULT_GRAKN_URI;
+        this.uri = (arguments.hasOption(URI_ARGUMENT)) ? arguments.getOptionValue(URI_ARGUMENT) : DEFAULT_GRAKN_URI;
 
-        // loading a schema file, enabled by default
-        boolean noSchemaLoad = arguments.hasOption("no-schema-load");
-        this.schemaLoad = !noSchemaLoad;
+        // If --no-data-generator is specified, don't generate any data (work with existing keyspace)
+        this.generateData = !(arguments.hasOption(NO_DATA_GENERATION_ARGUMENT));
     }
 
     public String getConfigName() {
@@ -89,8 +97,8 @@ public class BenchmarkConfiguration {
         return this.benchmarkConfigFile.getConceptsToBenchmark();
     }
 
-    public boolean schemaLoad() {
-        return this.schemaLoad;
+    public boolean generateData() {
+        return generateData;
     }
 
     public int numQueryRepetitions() {

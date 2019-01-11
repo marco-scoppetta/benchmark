@@ -1,8 +1,6 @@
-package grakn.benchmark.runner.specificstrategies;
+package grakn.benchmark.runner.schemaspecific;
 
-import grakn.benchmark.runner.pdf.ConstantPDF;
-import grakn.benchmark.runner.pdf.DiscreteGaussianPDF;
-import grakn.benchmark.runner.pdf.UniformPDF;
+import grakn.benchmark.runner.probdensity.*;
 import grakn.benchmark.runner.pick.CentralStreamProvider;
 import grakn.benchmark.runner.storage.FromIdStorageConceptIdPicker;
 import grakn.benchmark.runner.pick.IntegerStreamGenerator;
@@ -10,7 +8,6 @@ import grakn.benchmark.runner.pick.NotInRelationshipConceptIdStream;
 import grakn.benchmark.runner.pick.PickableCollectionValuePicker;
 import grakn.benchmark.runner.pick.StreamProvider;
 import grakn.benchmark.runner.storage.ConceptStore;
-import grakn.benchmark.runner.storage.FromIdStorageStringAttrPicker;
 import grakn.benchmark.runner.storage.IdStoreInterface;
 import grakn.benchmark.runner.strategy.AttributeOwnerTypeStrategy;
 import grakn.benchmark.runner.strategy.AttributeStrategy;
@@ -24,7 +21,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-public class SocietalModelStrategy implements SpecificStrategy {
+public class SocietalModelGenerator implements SchemaSpecificDataGenerator {
 
     private Random random;
     private ConceptStore storage;
@@ -34,7 +31,7 @@ public class SocietalModelStrategy implements SpecificStrategy {
     private RouletteWheel<TypeStrategyInterface> attributeStrategies;
     private RouletteWheel<RouletteWheel<TypeStrategyInterface>> operationStrategies;
 
-    public SocietalModelStrategy(Random random, ConceptStore storage) {
+    public SocietalModelGenerator(Random random, ConceptStore storage) {
         this.random = random;
         this.storage = storage;
 
@@ -57,14 +54,14 @@ public class SocietalModelStrategy implements SpecificStrategy {
                 0.5,
                 new EntityStrategy(
                         "person",
-                        new UniformPDF(random, 20, 40)
+                        new FixedUniform(random, 20, 40)
                 ));
 
         this.entityStrategies.add(
                 0.5,
                 new EntityStrategy(
                         "company",
-                        new UniformPDF(random, 1, 5)
+                        new FixedUniform(random, 1, 5)
                 )
         );
 
@@ -74,7 +71,7 @@ public class SocietalModelStrategy implements SpecificStrategy {
                 new RolePlayerTypeStrategy(
                         "employee",
                         "person",
-                        new ConstantPDF(1),
+                        new FixedConstant(1),
                         new StreamProvider<>(
                                 new FromIdStorageConceptIdPicker(
                                         random,
@@ -88,7 +85,7 @@ public class SocietalModelStrategy implements SpecificStrategy {
                 new RolePlayerTypeStrategy(
                         "employer",
                         "company",
-                        new ConstantPDF(1),
+                        new FixedConstant(1),
                         new CentralStreamProvider<>(
                                 new NotInRelationshipConceptIdStream(
                                         "employment",
@@ -107,7 +104,7 @@ public class SocietalModelStrategy implements SpecificStrategy {
                 0.3,
                 new RelationshipStrategy(
                         "employment",
-                        new DiscreteGaussianPDF(random, 30.0, 30.0),
+                        new ScalingDiscreteGaussian(random, ()->storage.totalEntities(), 0.5, 0.25),
                         employmentRoleStrategies)
         );
 
@@ -129,7 +126,7 @@ public class SocietalModelStrategy implements SpecificStrategy {
                 1.0,
                 new AttributeStrategy<>(
                         "name",
-                        new UniformPDF(random, 3, 100),
+                        new ScalingUniform(random, ()->storage.totalEntities(), 0.75,1.25),
                         new AttributeOwnerTypeStrategy<>(
                                 "company",
                                 new StreamProvider<>(
@@ -155,7 +152,7 @@ public class SocietalModelStrategy implements SpecificStrategy {
 //                    1.0,
 //                    new AttributeStrategy<String>(
 //                            schemaManager.getTypeFromString("gender", this.attributeTypes),
-//                            new UniformPDF(this.rand, 3, 20),
+//                            new FixedUniform(this.rand, 3, 20),
 //                            new AttributeOwnerTypeStrategy<>(
 //                                    schemaManager.getTypeFromString("name", this.attributeTypes),
 //                                    new StreamProvider<>(
@@ -185,32 +182,32 @@ public class SocietalModelStrategy implements SpecificStrategy {
 //            .add(0.5, 10);
 
 
-        this.attributeStrategies.add(
-                1.0,
-                new AttributeStrategy<>(
-                        "rating",
-                        new UniformPDF(random, 10, 20),
-                        new AttributeOwnerTypeStrategy<>(
-                                "name",
-                                new StreamProvider<>(
-                                        new FromIdStorageStringAttrPicker(
-                                                random,
-                                                (IdStoreInterface) this.storage,
-                                                "name")
-                                )
-                        ),
-                        new StreamProvider<>(
-                                new IntegerStreamGenerator(random, 0, 100)
-                        )
-                )
-        );
+//        this.attributeStrategies.add(
+//                1.0,
+//                new AttributeStrategy<>(
+//                        "rating",
+//                        new ScalingUniform(random, ()->storage.totalEntities(), 0.33, 0.50),
+//                        new AttributeOwnerTypeStrategy<>(
+//                                "name",
+//                                new StreamProvider<>(
+//                                        new FromIdStorageStringAttrPicker(
+//                                                random,
+//                                                (IdStoreInterface) this.storage,
+//                                                "name")
+//                                )
+//                        ),
+//                        new StreamProvider<>(
+//                                new IntegerStreamGenerator(random, 0, 100)
+//                        )
+//                )
+//        );
 
 
         this.attributeStrategies.add(
                 5.0,
                 new AttributeStrategy<>(
                         "rating",
-                        new UniformPDF(random, 3, 40),
+                        new ScalingUniform(random, ()->storage.totalEntities(),0.1, 1.0),
                         new AttributeOwnerTypeStrategy<>(
                                 "company",
                                 new StreamProvider<>(
@@ -227,25 +224,25 @@ public class SocietalModelStrategy implements SpecificStrategy {
         );
 
 
-        this.attributeStrategies.add(
-                3.0,
-                new AttributeStrategy<>(
-                        "rating",
-                        new UniformPDF(random, 40, 60),
-                        new AttributeOwnerTypeStrategy<>(
-                                "employment",
-                                new StreamProvider<>(
-                                        new FromIdStorageConceptIdPicker(
-                                                random,
-                                                (IdStoreInterface) this.storage,
-                                                "employment")
-                                )
-                        ),
-                        new StreamProvider<>(
-                                new IntegerStreamGenerator(random, 1, 10)
-                        )
-                )
-        );
+//        this.attributeStrategies.add(
+//                3.0,
+//                new AttributeStrategy<>(
+//                        "rating",
+//                        new ScalingUniform(random, ()->storage.totalEntities(), 1.0, 1.5),
+//                        new AttributeOwnerTypeStrategy<>(
+//                                "employment",
+//                                new StreamProvider<>(
+//                                        new FromIdStorageConceptIdPicker(
+//                                                random,
+//                                                (IdStoreInterface) this.storage,
+//                                                "employment")
+//                                )
+//                        ),
+//                        new StreamProvider<>(
+//                                new IntegerStreamGenerator(random, 1, 10)
+//                        )
+//                )
+//        );
 
         this.operationStrategies.add(0.6, this.entityStrategies);
         this.operationStrategies.add(0.2, this.relationshipStrategies);

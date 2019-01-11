@@ -47,12 +47,8 @@ import java.util.Date;
 public class GraknBenchmark {
     private static final Logger LOG = LoggerFactory.getLogger(GraknBenchmark.class);
 
-    private static final String USECASE_GENERATE = "generate";
-    private static final String USECASE_EXISTING = "existing";
-
     private final BenchmarkConfiguration configuration;
     private final String executionName;
-    private final String useCase;
 
     /**
      * Entry point invoked by benchmark.sh script
@@ -77,9 +73,6 @@ public class GraknBenchmark {
         // Parse arguments from console
         CommandLine arguments = BenchmarkArguments.parse(args);
 
-        // Set use case using first argument passed from console (existing or generate)
-        this.useCase = args[0];
-
         // Build benchmark configuration
         this.configuration = new BenchmarkConfiguration(arguments);
 
@@ -98,20 +91,14 @@ public class GraknBenchmark {
         //TODO add check to make sure currentKeyspace does not exist, if it does throw exception
         // this can be done once we implement keyspaces().retrieve() on the client Java (issue #4675)
 
-        // Start a UseCase based on user input
-        switch (useCase) {
-            case USECASE_EXISTING:
-                BenchmarkExistingKeyspace existingUseCase = new BenchmarkExistingKeyspace(queryExecutor, configuration.numQueryRepetitions());
-                existingUseCase.start();
-                break;
-            case USECASE_GENERATE:
-                int randomSeed = 0;
-                DataGenerator dataGenerator = new DataGenerator(session, configuration.getConfigName(), configuration.getGraqlSchema(), randomSeed);
-                GenerateAndBenchmark generateUseCase = new GenerateAndBenchmark(queryExecutor, dataGenerator, configuration);
-                generateUseCase.start();
-                break;
-            default:
-                throw new RuntimeException("Use case " + useCase + " not recognised.");
+        if (configuration.generateData()) {
+            int randomSeed = 0;
+            DataGenerator dataGenerator = new DataGenerator(session, configuration.getConfigName(), configuration.getGraqlSchema(), randomSeed);
+            GenerateAndBenchmark generateUseCase = new GenerateAndBenchmark(queryExecutor, dataGenerator, configuration);
+            generateUseCase.start();
+        } else {
+            BenchmarkExistingKeyspace existingUseCase = new BenchmarkExistingKeyspace(queryExecutor, configuration.numQueryRepetitions());
+            existingUseCase.start();
         }
 
         session.close();

@@ -16,32 +16,27 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.runner.pick;
-
-import grakn.core.client.Grakn;
-import grakn.benchmark.runner.storage.ConceptTypeCountStore;
-
-import java.util.Random;
-
-import static grakn.core.graql.Graql.var;
+package grakn.benchmark.runner.probdensity;
 
 /**
  *
  */
-@Deprecated
-public class IsaTypeConceptIdPicker extends ConceptIdPicker {
+public class FixedConstant implements ProbabilityDensityFunction {
 
-    private ConceptTypeCountStore conceptTypeCountStore;
-    private String typeLabel;
+    private int constant;
 
-    public IsaTypeConceptIdPicker(Random rand, ConceptTypeCountStore conceptTypeCountStore, String typeLabel) {
-        super(rand, var("x").isa(typeLabel), var("x"));
-        this.conceptTypeCountStore = conceptTypeCountStore;
-        this.typeLabel = typeLabel;
+    /**
+     * @param constant
+     */
+    public FixedConstant(int constant) {
+        this.constant = constant;
     }
 
+    /**
+     * @return
+     */
     @Override
-    public Integer getConceptCount(Grakn.Transaction tx) {
-        return conceptTypeCountStore.get(this.typeLabel);
+    public int sample() {
+        return this.constant;
     }
 }

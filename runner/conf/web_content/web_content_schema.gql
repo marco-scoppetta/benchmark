@@ -7,7 +7,7 @@ url sub attribute datatype string;
 title sub attribute datatype string;
 #date-published sub attribute datatype date;
 num-citations sub attribute datatype long;
-abstract sub attribute datatype string;
+text-abstract sub attribute datatype string;
 tag sub attribute datatype string;
 subject-matter sub attribute datatype string;
 notes sub attribute datatype string;
@@ -40,10 +40,10 @@ affiliation sub relationship,
     relates party;
 membership sub affiliation,
     relates member as party,
-    relates group as party;
+    relates group_ as party;
 employment sub affiliation,
     relates employee as member,
-    relates employer as group,
+    relates employer as group_,
     has job-title;
 ##################################################################
 # Ownership - this is quite a generic relationship
@@ -63,7 +63,7 @@ when {
 ##################################################################
 organisation sub entity,
     plays member,
-    plays group,
+    plays group_,
     plays property,
     plays owner,
     plays party,
@@ -79,15 +79,15 @@ transitive-organisation-membership sub rule,
 when {
     $top isa organisation;
     (owner: $top, property: $bottom) isa ownership;
-    (group: $bottom, member: $memb) isa membership;
+    (group_: $bottom, member: $memb) isa membership;
 } then {
-    (group: $top, member: $memb) isa membership;
+    (group_: $top, member: $memb) isa membership;
 };
 ##################################################################
 # Projects
 ##################################################################
 project sub entity,
-    plays group,
+    plays group_,
     plays property,
     plays owner,
     has name;
@@ -101,7 +101,7 @@ publication sub entity,
 #    has date-published,
     has tag,
     has author-name,
-    has abstract,
+    has text-abstract,
     plays content,
     plays authored-content;
 scientific-publication sub publication,

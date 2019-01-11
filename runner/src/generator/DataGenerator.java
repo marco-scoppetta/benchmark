@@ -18,6 +18,8 @@
 
 package grakn.benchmark.runner.generator;
 
+import grakn.benchmark.runner.schemaspecific.SchemaSpecificDataGenerator;
+import grakn.benchmark.runner.schemaspecific.SchemaSpecificDataGeneratorFactory;
 import grakn.core.GraknTxType;
 import grakn.core.client.Grakn;
 import grakn.core.concept.AttributeType;
@@ -27,8 +29,6 @@ import grakn.core.concept.RelationshipType;
 import grakn.core.graql.InsertQuery;
 import grakn.core.graql.Query;
 import grakn.core.graql.answer.ConceptMap;
-import grakn.benchmark.runner.specificstrategies.SpecificStrategy;
-import grakn.benchmark.runner.specificstrategies.SpecificStrategyFactory;
 import grakn.benchmark.runner.storage.ConceptStore;
 import grakn.benchmark.runner.storage.IgniteConceptIdStore;
 import grakn.benchmark.runner.storage.InsertionAnalysis;
@@ -54,7 +54,7 @@ public class DataGenerator {
 
     private ConceptStore storage;
 
-    private SpecificStrategy dataStrategies;
+    private SchemaSpecificDataGenerator dataStrategies;
 
     public DataGenerator(Grakn.Session session, String executionName, List<String> schemaDefinition, int randomSeed) {
         this.session = session;
@@ -79,7 +79,7 @@ public class DataGenerator {
             this.storage = new IgniteConceptIdStore(entityTypes, relationshipTypes, attributeTypes);
         }
 
-        this.dataStrategies = SpecificStrategyFactory.getSpecificStrategy(this.executionName, this.rand, this.storage);
+        this.dataStrategies = SchemaSpecificDataGeneratorFactory.getSpecificStrategy(this.executionName, this.rand, this.storage);
     }
 
     public void generate(int numConceptsLimit) {
@@ -94,7 +94,7 @@ public class DataGenerator {
         int conceptTotal = this.storage.total();
 
         while (conceptTotal < numConceptsLimit) {
-            System.out.printf("---- Iteration %d ----\n", this.iteration);
+            System.out.printf("\n---- Iteration %d ----\n", this.iteration);
             try (Grakn.Transaction tx = session.transaction(GraknTxType.WRITE)) {
 
                 //TODO Deal with this being an Object. TypeStrategy should be/have an interface for this purpose?
@@ -110,7 +110,11 @@ public class DataGenerator {
 
                 iteration++;
                 conceptTotal = this.storage.total();
-                System.out.printf(String.format("---- %d concepts ----\n", conceptTotal), this.iteration);
+                System.out.printf(String.format("---- %d concepts (based on ignite data):----\n", conceptTotal), this.iteration);
+                System.out.println(String.format("   %d entities", this.storage.totalEntities()));
+                System.out.println(String.format("   %d relationships", this.storage.totalRelationships()));
+                System.out.println(String.format("   %d attributes", this.storage.totalAttributes()));
+
                 tx.commit();
             }
         }

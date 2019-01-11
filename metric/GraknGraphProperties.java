@@ -19,16 +19,30 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static grakn.core.graql.Graql.count;
 import static grakn.core.graql.Graql.var;
 
 public class GraknGraphProperties implements GraphProperties {
 
+    String uri;
+    String keyspace;
     Grakn client;
     Grakn.Session session;
 
     public GraknGraphProperties(String uri, String keyspace) {
+        this.uri = uri;
+        this.keyspace = keyspace;
         this.client = new Grakn(new SimpleURI(uri));
         this.session = client.session(Keyspace.of(keyspace));
+    }
+
+    public GraknGraphProperties copy() {
+        return new GraknGraphProperties(uri, keyspace);
+    }
+
+
+    public void close() {
+        this.session.close();
     }
 
     private Grakn.Transaction getTx(boolean useWriteTx) {
@@ -43,7 +57,7 @@ public class GraknGraphProperties implements GraphProperties {
     public long maxDegree() {
         // TODO do we need inference here?
         try (Grakn.Transaction tx = getTx(false)) {
-            ComputeQuery<ConceptSetMeasure> query = tx.graql().compute(Syntax.Compute.Method.CENTRALITY).of("vertex");
+            ComputeQuery<ConceptSetMeasure> query = tx.graql().compute(Syntax.Compute.Method.CENTRALITY).of("entity");
             return query.stream().
                     map(conceptSetMeasure -> conceptSetMeasure.measurement().longValue()).
                     max(Comparator.naturalOrder())
@@ -87,12 +101,12 @@ public class GraknGraphProperties implements GraphProperties {
                                 .collect(Collectors.toSet());
 
                         return new Pair<>(edge1, edge2);
-                    }
-            );
+                    });
 
             if (edgeCardinalitesGreaterThanOne) {
-                // filter out edge pairs that don't touch at least 3 vertices (for instance)
+                // filter out edge pairs that don't touch at least 3 vertices
                 // we use a slightly stronger condition: each edge needs to touch more than 1 vertex each
+                // this also eliminates
                 edgePairsStream = edgePairsStream.filter(
                         pair -> (pair.getFirst().size() > 1 && pair.getSecond().size() > 1)
                 );
@@ -112,7 +126,7 @@ public class GraknGraphProperties implements GraphProperties {
             // compute degree of each  entitiy
             // returns mapping { deg_n : set(entity ids) }
             // does NOT return degree 0 entity IDs
-            ComputeQuery<ConceptSetMeasure> computeQuery = tx.graql().compute(Syntax.Compute.Method.CENTRALITY).of("entity");
+            ComputeQuery<ConceptSetMeasure> computeQuery = tx.graql().compute(Syntax.Compute.Method.CENTRALITY).of("entity").in("relationship");
 
             // create a mapping from ID -> degree (not containing 0 degree entities)
             Map<String, Long> entityDegreeMap = computeQuery.stream()
@@ -124,13 +138,13 @@ public class GraknGraphProperties implements GraphProperties {
                     .collect(Collectors.toMap(pair->pair.getFirst(), pair->pair.getSecond()));
 
             // query for all connected entities, which by definition never have degree 0
-            GetQuery allEntitiesQuery = tx.graql().match(
+            GetQuery edgeList = tx.graql().match(
                     var("x").isa("entity"),
                     var("y").isa("entity"),
                     var().isa("relationship").rel(var("x")).rel(var("y"))
             ).get("x", "y");
 
-            connectedVertexDegrees = allEntitiesQuery.stream()
+            connectedVertexDegrees = edgeList.stream()
                     .map(conceptMap -> new Pair<>(
                                 entityDegreeMap.get(conceptMap.get("x").id().toString()),
                                 entityDegreeMap.get(conceptMap.get("y").id().toString())
@@ -204,5 +218,11 @@ public class GraknGraphProperties implements GraphProperties {
             }
         }
         return neighborIds;
+    }
+
+    public long numVertices() {
+        try (Grakn.Transaction tx = getTx(false)) {
+            return tx.graql().compute(Syntax.Compute.Method.COUNT).in("entity").execute().stream().findFirst().get().number().longValue();
+        }
     }
 }

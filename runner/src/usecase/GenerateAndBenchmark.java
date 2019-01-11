@@ -26,9 +26,8 @@ public class GenerateAndBenchmark {
      * Populate the DB to a given size, then run the benchmark
      */
     public void start() {
-        if (config.schemaLoad()) {
-            dataGenerator.loadSchema();
-        }
+        dataGenerator.loadSchema();
+
         List<Integer> numConceptsInRun = config.getConceptsToBenchmark();
         for (int numConcepts : numConceptsInRun) {
             LOG.info("Running queries with " + Integer.toString(numConcepts) + " concepts");

@@ -12,6 +12,12 @@ import org.apache.commons.cli.ParseException;
  */
 public class BenchmarkArguments {
 
+    public final static String CONFIG_ARGUMENT = "config";
+    public final static String URI_ARGUMENT = "uri";
+    public final static String KEYSPACE_ARGUMENT = "keyspace";
+    public final static String NO_DATA_GENERATION_ARGUMENT = "no-data-generation";
+    public final static String EXECUTION_NAME_ARGUMENT = "execution-name";
+
     public static CommandLine parse(String[] args) {
         Options options = buildOptions();
         CommandLineParser parser = new DefaultParser();
@@ -25,7 +31,7 @@ public class BenchmarkArguments {
 
     private static Options buildOptions() {
         Option configFileOption = Option.builder("c")
-                .longOpt("config")
+                .longOpt(CONFIG_ARGUMENT)
                 .hasArg(true)
                 .desc("Benchmarking YAML file (required)")
                 .required(true)
@@ -33,7 +39,7 @@ public class BenchmarkArguments {
                 .build();
 
         Option graknAddressOption = Option.builder("u")
-                .longOpt("uri")
+                .longOpt(URI_ARGUMENT)
                 .hasArg(true)
                 .desc("Address of the grakn cluster (default: localhost:48555)")
                 .required(false)
@@ -41,20 +47,20 @@ public class BenchmarkArguments {
                 .build();
 
         Option keyspaceOption = Option.builder("k")
-                .longOpt("keyspace")
+                .longOpt(KEYSPACE_ARGUMENT)
                 .required(false)
                 .hasArg(true)
                 .desc("Specific keyspace to utilize (default: `name` in config yaml")
                 .type(String.class)
                 .build();
-        Option noSchemaLoadOption = Option.builder("ns")
-                .longOpt("no-schema-load")
+        Option noDataGenerationOption = Option.builder("ng")
+                .longOpt(NO_DATA_GENERATION_ARGUMENT)
                 .required(false)
-                .desc("Disable loading a schema")
+                .desc("Disable data generation")
                 .type(Boolean.class)
                 .build();
         Option executionNameOption = Option.builder("n")
-                .longOpt("execution-name")
+                .longOpt(EXECUTION_NAME_ARGUMENT)
                 .hasArg(true)
                 .required(false)
                 .desc("Name for specific execution of the config file")
@@ -64,7 +70,7 @@ public class BenchmarkArguments {
         options.addOption(configFileOption);
         options.addOption(graknAddressOption);
         options.addOption(keyspaceOption);
-        options.addOption(noSchemaLoadOption);
+        options.addOption(noDataGenerationOption);
         options.addOption(executionNameOption);
         return options;
     }

@@ -1,11 +1,7 @@
-package grakn.benchmark.runner.specificstrategies;
+package grakn.benchmark.runner.schemaspecific;
 
+import grakn.benchmark.runner.probdensity.*;
 import grakn.core.concept.ConceptId;
-import grakn.benchmark.runner.pdf.BoundedZipfPDF;
-import grakn.benchmark.runner.pdf.ConstantPDF;
-import grakn.benchmark.runner.pdf.DiscreteGaussianPDF;
-import grakn.benchmark.runner.pdf.PDF;
-import grakn.benchmark.runner.pdf.UniformPDF;
 import grakn.benchmark.runner.pick.CentralStreamProvider;
 import grakn.benchmark.runner.storage.FromIdStorageConceptIdPicker;
 import grakn.benchmark.runner.storage.FromIdStoragePicker;
@@ -31,7 +27,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-public class WebContentStrategies implements SpecificStrategy {
+public class WebContentGenerator implements SchemaSpecificDataGenerator {
 
     private Random random;
     private ConceptStore storage;
@@ -41,7 +37,7 @@ public class WebContentStrategies implements SpecificStrategy {
     private RouletteWheel<TypeStrategyInterface> attributeStrategies;
     private RouletteWheel<RouletteWheel<TypeStrategyInterface>> operationStrategies;
 
-    public WebContentStrategies(Random random, ConceptStore storage) {
+    public WebContentGenerator(Random random, ConceptStore storage) {
         this.random = random;
         this.storage = storage;
 
@@ -72,7 +68,6 @@ public class WebContentStrategies implements SpecificStrategy {
      * primary instances eg people/companies/employment etc.
      */
     private void primarySetup() {
-        // TODO needs tweaks to make nice outputs
 
         /*
 
@@ -84,7 +79,7 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "person",
-                        uniform(10, 70) // on avg, for every 40 people
+                        fixedUniform(10, 70) // on avg, for every 40 people
                 ));
 
         // --- company organisation ---
@@ -92,7 +87,7 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "company",
-                        uniform( 1, 5) // ...create 3 companies
+                        fixedUniform( 1, 5) // ...create 3 companies
                 ));
 
         // --- university organisation ---
@@ -100,7 +95,7 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "university",
-                        uniform( 1, 3) // ...2 universities
+                        fixedUniform( 1, 3) // ...2 universities
                 ));
 
         // --- department organisation ---
@@ -108,7 +103,7 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "department",
-                        uniform(3, 7) // 5 departments
+                        fixedUniform(3, 7) // 5 departments
                 ));
 
         // --- team organisation ---
@@ -116,7 +111,7 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "team",
-                        uniform( 4, 10) // 7 teams
+                        fixedUniform( 4, 10) // 7 teams
                 ));
 
         // --- project ---
@@ -124,7 +119,7 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "project",
-                        uniform( 5, 19) // 12 projects
+                        fixedUniform( 5, 19) // 12 projects
                 ));
 
         /*
@@ -142,17 +137,17 @@ public class WebContentStrategies implements SpecificStrategy {
         // but its too complicated to conditionally add new employees if the person is already a member etc.
         add(2, relationshipStrategy(
                 "employment",
-                zipf(2000,1.5),
+                scalingZipf(0.6,1.5),
                 rolePlayerTypeStrategy(
                         "employee",
                         "person",
-                        constant(1),
+                        fixedConstant(1),
                         new StreamProvider<>(fromIdStorageConceptIdPicker("person"))
                 ),
                 rolePlayerTypeStrategy(
                         "employer",
                         "company",
-                        constant(1),
+                        fixedConstant(1),
                         new CentralStreamProvider<>(
                                 new NotInRelationshipConceptIdStream(
                                         "employment",
@@ -168,17 +163,17 @@ public class WebContentStrategies implements SpecificStrategy {
         // people (any) - university employment (1 with no previous employments) (same as above)
         add(2, relationshipStrategy(
                 "employment",
-                zipf(1000, 1.6),
+                scalingZipf(0.1, 1.6),
                 rolePlayerTypeStrategy(
                         "employee",
                         "person",
-                        constant(1),
+                        fixedConstant(1),
                         new StreamProvider<>(fromIdStorageConceptIdPicker("person"))
                 ),
                 rolePlayerTypeStrategy(
                         "employer",
                         "university",
-                        constant(1),
+                        fixedConstant(1),
                         new CentralStreamProvider<>(
                                 new NotInRelationshipConceptIdStream(
                                         "employment",
@@ -190,39 +185,39 @@ public class WebContentStrategies implements SpecificStrategy {
          ));
 
         // person (any) - project (any) membership
-        // Normal, mu=9, sigma^2=5
+        // Normal, mu=9, sigma=2.5
         add(2, relationshipStrategy(
                 "membership",
-                gaussian(9, 5),
+                scalingGaussian(9/40.0, 2.5/40.0),
                 rolePlayerTypeStrategy(
                         "member",
                         "person",
-                        constant(1),
+                        fixedConstant(1),
                         new StreamProvider<>(fromIdStorageConceptIdPicker("person"))
                 ),
                 rolePlayerTypeStrategy(
-                        "group",
+                        "group_",
                         "project",
-                        constant(1),
+                        fixedConstant(1),
                         new CentralStreamProvider<>(fromIdStorageConceptIdPicker("project"))
                 )
         ));
 
         // person (any) - team membership (all to 1 (centralstream picker))
-        // Normal, mu=10, sigma^2=3^2
+        // Normal, mu=10, sigma=3 => fraction
         add(2, relationshipStrategy(
                 "membership",
-                gaussian(10, 9),
+                scalingGaussian( 10/40.0, 3/40.0),
                 rolePlayerTypeStrategy(
                         "member",
                         "person",
-                        constant(1),
+                        fixedConstant(1),
                         new StreamProvider<>(fromIdStorageConceptIdPicker("person"))
                 ),
                 rolePlayerTypeStrategy(
-                        "group",
+                        "group_",
                         "team",
-                        constant(1),
+                        fixedConstant(1),
                         new CentralStreamProvider<>(fromIdStorageConceptIdPicker("team"))
                 )
         ));
@@ -233,17 +228,17 @@ public class WebContentStrategies implements SpecificStrategy {
         // ie. pick any company, assign N unassigned departments to it
         add(1, relationshipStrategy(
                 "ownership",
-                uniform(1, 8),
+                scalingUniform( 1.0/40, 8/40.0),
                 rolePlayerTypeStrategy(
                         "owner",
                         "company",
-                        constant(1),
+                        fixedConstant(1),
                         new StreamProvider<>(fromIdStorageConceptIdPicker("company"))
                 ),
                 rolePlayerTypeStrategy(
                         "property",
                         "department",
-                        constant(1),
+                        fixedConstant(1),
                         new StreamProvider<>(
                                 new NotInRelationshipConceptIdStream(
                                         "ownership",
@@ -260,17 +255,17 @@ public class WebContentStrategies implements SpecificStrategy {
         // ie. pick a university, assign N unassigned departments to it
         add(1, relationshipStrategy(
                 "ownership",
-                uniform(1, 4),
+                scalingUniform( 1/40.0, 4/40.0),
                 rolePlayerTypeStrategy(
                         "owner",
                         "university",
-                        constant(1),
+                        fixedConstant(1),
                         new StreamProvider<>(fromIdStorageConceptIdPicker("company"))
                 ),
                 rolePlayerTypeStrategy(
                         "property",
                         "department",
-                        constant(1),
+                        fixedConstant(1),
                         new StreamProvider<>(
                                 new NotInRelationshipConceptIdStream(
                                         "ownership",
@@ -287,17 +282,17 @@ public class WebContentStrategies implements SpecificStrategy {
         // ie. pick a department, assign N teams that don't aren't owned yet
         add(1, relationshipStrategy(
                 "ownership",
-                gaussian(5, 1.5*1.5),
+                scalingGaussian( 5/40.0, 1.5/40.0),
                 rolePlayerTypeStrategy(
                         "owner",
                         "department",
-                        constant(1),  // pick 1 department for this n from uniform(2,10)
+                        fixedConstant(1),  // pick 1 department for this n from fixedUniform(2,10)
                         new CentralStreamProvider<>(fromIdStorageConceptIdPicker("department"))
                 ),
                 rolePlayerTypeStrategy(
                         "property",
                         "team",
-                        constant(1),
+                        fixedConstant(1),
                         new StreamProvider<>(
                                 new NotInRelationshipConceptIdStream(
                                         "ownership",
@@ -313,17 +308,17 @@ public class WebContentStrategies implements SpecificStrategy {
         // ie. pick some team and some project and assign ownership, teams can share projects OK
         add(1, relationshipStrategy(
                 "ownership",
-                uniform( 1, 3),
+                scalingUniform( 1/40.0, 3/40.0),
                 rolePlayerTypeStrategy(
                         "owner",
                         "team",
-                        constant(1),
+                        fixedConstant(1),
                         new StreamProvider<>(fromIdStorageConceptIdPicker("team"))
                 ),
                 rolePlayerTypeStrategy(
                         "property",
                         "project",
-                        constant(1),
+                        fixedConstant(1),
                         new StreamProvider<>(fromIdStorageConceptIdPicker("project"))
                 ))
         );
@@ -343,14 +338,14 @@ public class WebContentStrategies implements SpecificStrategy {
 
         StringStreamGenerator sixCharStringGenerator = new StringStreamGenerator(random, 6);
         // Populate 200 random names for use as forename/middle/surname, company name etc.
-        // all with equal weights (PDF = constant(1))
-        GrowableGeneratedRouletteWheel<String> names = new GrowableGeneratedRouletteWheel<>(random, sixCharStringGenerator, constant(1));
+        // all with equal weights (ProbabilityDensityFunction = fixedConstant(1))
+        GrowableGeneratedRouletteWheel<String> names = new GrowableGeneratedRouletteWheel<>(random, sixCharStringGenerator, fixedConstant(1));
         names.growTo(200);
 
         addAttributes(
                 1.0,
                 "forename",
-                uniform(5, 20),
+                scalingUniform(5/40.0, 20/40.0),
                 "person",
                 fromIdStorageConceptIdPicker("person"),
                 new StreamProvider<>(new PickableCollectionValuePicker<String>(names))
@@ -359,7 +354,7 @@ public class WebContentStrategies implements SpecificStrategy {
         addAttributes(
                 1.0,
                 "surname",
-                uniform(5, 20),
+                scalingUniform( 5/40.0, 20/40.0),
                 "person",
                 fromIdStorageConceptIdPicker("person"),
                 new StreamProvider<>(new PickableCollectionValuePicker<String>(names))
@@ -368,19 +363,19 @@ public class WebContentStrategies implements SpecificStrategy {
         addAttributes(
                 1.0,
                 "middle-name",
-                uniform(5, 20),
+                scalingUniform(5/40.0, 20/40.0),
                 "person",
                 fromIdStorageConceptIdPicker("person"),
                 new StreamProvider<>(new PickableCollectionValuePicker<String>(names))
         );
 
         // employment.job-title
-        GrowableGeneratedRouletteWheel<String> jobtitles = new GrowableGeneratedRouletteWheel<>(random, sixCharStringGenerator, constant(1));
+        GrowableGeneratedRouletteWheel<String> jobtitles = new GrowableGeneratedRouletteWheel<>(random, sixCharStringGenerator, fixedConstant(1));
         jobtitles.growTo(50);
         addAttributes(
                 1.0,
                 "job-title",
-                gaussian(20, 5*5),
+                scalingGaussian(20/40.0, 5/40.0),
                 "employment",
                 fromIdStorageConceptIdPicker("employment"),
                 new StreamProvider<>(new PickableCollectionValuePicker<String>(jobtitles))
@@ -388,12 +383,12 @@ public class WebContentStrategies implements SpecificStrategy {
 
         // job-title.abbreviation (job-title is a type of name, which `has abbreviation`
         StringStreamGenerator twoCharStringGenerator = new StringStreamGenerator(random, 2);
-        GrowableGeneratedRouletteWheel<String> jobtitleAbbrs = new GrowableGeneratedRouletteWheel<>(random, twoCharStringGenerator, constant(1));
+        GrowableGeneratedRouletteWheel<String> jobtitleAbbrs = new GrowableGeneratedRouletteWheel<>(random, twoCharStringGenerator, fixedConstant(1));
         jobtitleAbbrs.growTo(50);
         addAttributes(
                 1.0,
                 "abbreviation",
-                gaussian(20, 5*5),
+                scalingGaussian(20/40.0, 5/40.0),
                 "job-title",
                 fromIdStorageStringAttrPicker("job-title"), // NOTE we need to retrieve StringAttrs from storage!
                 new StreamProvider<>(new PickableCollectionValuePicker<String>(jobtitleAbbrs))
@@ -403,7 +398,7 @@ public class WebContentStrategies implements SpecificStrategy {
         addAttributes(
                 1.0,
                 "name",
-                uniform(1, 5),
+                scalingUniform(1/40.0, 5/40.0),
                 "company",
                 fromIdStorageConceptIdPicker("company"),
                 new StreamProvider<>(new PickableCollectionValuePicker<String>(names))
@@ -413,7 +408,7 @@ public class WebContentStrategies implements SpecificStrategy {
         addAttributes(
                 1.0,
                 "name",
-                uniform(1, 3),
+                scalingUniform(1/40.0, 3/40.0),
                 "university",
                 fromIdStorageConceptIdPicker("university"),
                 new StreamProvider<>(new PickableCollectionValuePicker<String>(names))
@@ -421,12 +416,12 @@ public class WebContentStrategies implements SpecificStrategy {
 
          // team.name
          StringStreamGenerator fourCharStringGenerator = new StringStreamGenerator(random, 4);
-         GrowableGeneratedRouletteWheel<String> shortNames = new GrowableGeneratedRouletteWheel<>(random, fourCharStringGenerator, constant(1));
+         GrowableGeneratedRouletteWheel<String> shortNames = new GrowableGeneratedRouletteWheel<>(random, fourCharStringGenerator, fixedConstant(1));
          shortNames.growTo(100);
          addAttributes(
                 1.0,
                 "name",
-                uniform(2, 5),
+                scalingUniform(2/40.0, 5/40.0),
                 "team",
                 fromIdStorageConceptIdPicker("team"),
                 new StreamProvider<>(new PickableCollectionValuePicker<String>(shortNames))
@@ -436,7 +431,7 @@ public class WebContentStrategies implements SpecificStrategy {
         addAttributes(
                 1.0,
                 "name",
-                uniform(3, 9),
+                scalingUniform(3/40.0, 9/40.0),
                 "department",
                 fromIdStorageConceptIdPicker("department"),
                 new StreamProvider<>(new PickableCollectionValuePicker<String>(shortNames))
@@ -446,7 +441,7 @@ public class WebContentStrategies implements SpecificStrategy {
         addAttributes(
                 1.0,
                 "name",
-                uniform(5, 20),
+                scalingUniform(5/40.0, 20/40.0),
                 "project",
                 fromIdStorageConceptIdPicker("project"),
                 new StreamProvider<>(new PickableCollectionValuePicker<String>(shortNames))
@@ -456,20 +451,36 @@ public class WebContentStrategies implements SpecificStrategy {
 
 
     // ---- helpers ----
-    private UniformPDF uniform(int lowerBound, int upperBound) {
-        return new UniformPDF(random, lowerBound, upperBound);
+    private FixedUniform fixedUniform(int lowerBound, int upperBound) {
+        return new FixedUniform(random, lowerBound, upperBound);
     }
 
-    private DiscreteGaussianPDF gaussian(double mean, double variance) {
-        return new DiscreteGaussianPDF(random, mean, variance);
+    private FixedDiscreteGaussian fixedGaussian(double mean, double stddev) {
+        return new FixedDiscreteGaussian(random, mean, stddev);
     }
 
-    private BoundedZipfPDF zipf(int rangeLimit, double exponent) {
-        return new BoundedZipfPDF(random, rangeLimit, exponent);
+    private FixedBoundedZipf fixedZipf(int rangeLimit, double exponent) {
+        return new FixedBoundedZipf(random, rangeLimit, exponent);
     }
 
-    private ConstantPDF constant(int constant) {
-        return new ConstantPDF(constant);
+    private FixedConstant fixedConstant(int constant) {
+        return new FixedConstant(constant);
+    }
+
+    private ScalingUniform scalingUniform(double lowerBoundFraction, double upperBoundFraction) {
+        return new ScalingUniform(random, () -> storage.totalEntities(), lowerBoundFraction, upperBoundFraction);
+    }
+
+    private ScalingDiscreteGaussian scalingGaussian(double meanScaleFraction, double stddevScaleFraction) {
+        return new ScalingDiscreteGaussian(random, () -> storage.totalEntities(), meanScaleFraction, stddevScaleFraction);
+    }
+
+    private ScalingBoundedZipf scalingZipf(double rangeLimitFraction, double initialExponentForScale40) {
+        return new ScalingBoundedZipf(random, () -> storage.totalEntities(), rangeLimitFraction, initialExponentForScale40);
+    }
+
+    private ScalingConstant scalingConstant(double constantFraction) {
+        return new ScalingConstant(() -> storage.totalEntities(), constantFraction);
     }
 
     private FromIdStoragePicker<ConceptId> fromIdStorageConceptIdPicker(String typeLabel) {
@@ -482,12 +493,12 @@ public class WebContentStrategies implements SpecificStrategy {
     private RolePlayerTypeStrategy rolePlayerTypeStrategy(
             String roleLabel,
             String rolePlayerLabel,
-            PDF pdf,
+            ProbabilityDensityFunction pdf,
             StreamProviderInterface<ConceptId> conceptIdProvider) {
         return new RolePlayerTypeStrategy(roleLabel, rolePlayerLabel, pdf, conceptIdProvider);
     }
 
-    private RelationshipStrategy relationshipStrategy(String relationshipTypeLabel, PDF pdf, RolePlayerTypeStrategy... roleStrategiesList) {
+    private RelationshipStrategy relationshipStrategy(String relationshipTypeLabel, ProbabilityDensityFunction pdf, RolePlayerTypeStrategy... roleStrategiesList) {
         Set<RolePlayerTypeStrategy> roleStrategies = new HashSet<>(Arrays.asList(roleStrategiesList));
         return new RelationshipStrategy(relationshipTypeLabel, pdf, roleStrategies);
     }
@@ -498,7 +509,7 @@ public class WebContentStrategies implements SpecificStrategy {
     }
 
 
-    private <C, T> void addAttributes(double weight, String attributeLabel, PDF quantityPDF, String ownerLabel, FromIdStoragePicker<C> ownerPicker, StreamProviderInterface<T> valueProvider) {
+    private <C, T> void addAttributes(double weight, String attributeLabel, ProbabilityDensityFunction quantityPDF, String ownerLabel, FromIdStoragePicker<C> ownerPicker, StreamProviderInterface<T> valueProvider) {
         this.attributeStrategies.add(
             weight,
             new AttributeStrategy<>(
@@ -527,7 +538,7 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "publication",
-                        new UniformPDF(random, 10, 50)
+                        new FixedUniform(random, 10, 50)
         ));
 
         // --- scientific-publication publication
@@ -535,7 +546,7 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "scientific-publication",
-                        new UniformPDF(random, 10, 50)
+                        new FixedUniform(random, 10, 50)
         ));
 
         // --- medium-post publication ---
@@ -543,7 +554,7 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "medium-post",
-                        new UniformPDF(random, 10, 50)
+                        new FixedUniform(random, 10, 50)
         ));
 
         // - article medium-post -
@@ -551,7 +562,7 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "article",
-                        new UniformPDF(random, 10, 50)
+                        new FixedUniform(random, 10, 50)
         ));
 
         // --- book publication ---
@@ -559,7 +570,7 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "book",
-                        new UniformPDF(random, 10, 50)
+                        new FixedUniform(random, 10, 50)
                 ));
 
         // --- scientific-journal publication ---
@@ -567,7 +578,7 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "scientific-journal",
-                        new UniformPDF(random, 10, 50)
+                        new FixedUniform(random, 10, 50)
                 ));
 
 
@@ -576,35 +587,35 @@ public class WebContentStrategies implements SpecificStrategy {
                 1,
                 new EntityStrategy(
                         "symposium",
-                        new UniformPDF(random, 1, 3)
+                        new FixedUniform(random, 1, 3)
         ));
 
         // ----- publishing-platform -----
         this.entityStrategies.add(
                 1,
                 new EntityStrategy("publishing-platform",
-                        new UniformPDF(random, 1, 3)
+                        new FixedUniform(random, 1, 3)
         ));
 
         // --- web-service publishing-platform ---
         this.entityStrategies.add(
                 1,
                 new EntityStrategy("web-service",
-                        new UniformPDF(random, 1, 3)
+                        new FixedUniform(random, 1, 3)
         ));
 
         // --- website publishing-platform
         this.entityStrategies.add(
                 1,
                 new EntityStrategy("website",
-                        new UniformPDF(random, 1, 3)
+                        new FixedUniform(random, 1, 3)
         ));
 
         // ----- Object -----
         this.entityStrategies.add(
                 1,
                 new EntityStrategy("object",
-                        new UniformPDF(random, 10, 100)
+                        new FixedUniform(random, 10, 100)
         ));
 
 
