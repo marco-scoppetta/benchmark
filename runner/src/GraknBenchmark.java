@@ -56,13 +56,8 @@ public class GraknBenchmark {
      * Entry point invoked by benchmark.sh script
      */
     public static void main(String[] args) {
-        IgniteConfiguration igniteConfig = new IgniteConfiguration();
-        IgniteLogger logger = new Slf4jLogger();
-        igniteConfig.setGridLogger(logger);
-        Ignite ignite = Ignition.start(igniteConfig);
+        Ignite ignite = initIgnite();
         try {
-//             Initialise Ignite and ElasticSearch
-
             ElasticSearchManager.init();
 
             GraknBenchmark benchmark = new GraknBenchmark(args);
@@ -122,5 +117,12 @@ public class GraknBenchmark {
         }
 
         session.close();
+    }
+
+    private static Ignite initIgnite(){
+        IgniteConfiguration igniteConfig = new IgniteConfiguration();
+        IgniteLogger logger = new Slf4jLogger();
+        igniteConfig.setGridLogger(logger);
+        return Ignition.start(igniteConfig);
     }
 }

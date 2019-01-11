@@ -99,13 +99,13 @@ dependencies:
   # -- Ignite --
   org.apache.ignite:
     ignite-core:
-      version: "2.6.0"
+      version: "2.7.0"
       lang: java
     ignite-indexing:
-      version: "2.6.0"
+      version: "2.7.0"
       lang: java
     ignite-slf4j:
-      version: "2.6.0"
+      version: "2.7.0"
       lang: java
 
   # -- Elasticsearch --
