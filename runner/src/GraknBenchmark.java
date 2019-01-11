@@ -107,7 +107,7 @@ public class GraknBenchmark {
 
             List<Integer> numConceptsInRun = config.getConceptsToBenchmark();
             for (int numConcepts : numConceptsInRun) {
-                LOG.info("Running queries with " + Integer.toString(numConcepts) + " concepts");
+                LOG.info("Running queries with " + numConcepts + " concepts");
                 dataGenerator.generate(numConcepts);
                 queryExecutor.processStaticQueries(repetitionsPerQuery, numConcepts);
             }
