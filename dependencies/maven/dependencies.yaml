@@ -91,12 +91,20 @@ dependencies:
       version: "1.7.25"
       lang: java
 
+  ch.qos.logback:
+    logback-classic:
+      version: "1.2.3"
+      lang: java
+
   # -- Ignite --
   org.apache.ignite:
     ignite-core:
       version: "2.6.0"
       lang: java
     ignite-indexing:
+      version: "2.6.0"
+      lang: java
+    ignite-slf4j:
       version: "2.6.0"
       lang: java
 

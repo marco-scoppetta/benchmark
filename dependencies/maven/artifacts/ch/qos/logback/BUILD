@@ -8,7 +8,7 @@ java_library(
         ":logback-core"
     ],
     visibility = [
-        "//dependencies/maven/artifacts:__subpackages__"
+        "//visibility:public"
     ]
 )
 

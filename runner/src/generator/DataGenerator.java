@@ -20,6 +20,7 @@ package grakn.benchmark.runner.generator;
 
 import grakn.benchmark.runner.schemaspecific.SchemaSpecificDataGenerator;
 import grakn.benchmark.runner.schemaspecific.SchemaSpecificDataGeneratorFactory;
+import grakn.benchmark.runner.util.BenchmarkConfiguration;
 import grakn.core.GraknTxType;
 import grakn.core.client.Grakn;
 import grakn.core.concept.AttributeType;
@@ -56,12 +57,12 @@ public class DataGenerator {
 
     private SchemaSpecificDataGenerator dataStrategies;
 
-    public DataGenerator(Grakn.Session session, String executionName, List<String> schemaDefinition, int randomSeed) {
+    public DataGenerator(Grakn.Session session, BenchmarkConfiguration config, int randomSeed) {
         this.session = session;
-        this.executionName = executionName;
+        this.executionName = config.getConfigName();
         this.rand = new Random(randomSeed);
         this.iteration = 0;
-        this.schemaDefinition = schemaDefinition;
+        this.schemaDefinition = config.getGraqlSchema();
         initializeGeneration();
     }
 

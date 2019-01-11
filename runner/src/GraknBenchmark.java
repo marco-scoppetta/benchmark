@@ -18,18 +18,19 @@
 
 package grakn.benchmark.runner;
 
-import grakn.benchmark.runner.util.BenchmarkConfiguration;
 import grakn.benchmark.runner.executor.QueryExecutor;
 import grakn.benchmark.runner.generator.DataGenerator;
-import grakn.benchmark.runner.usecase.BenchmarkExistingKeyspace;
-import grakn.benchmark.runner.usecase.GenerateAndBenchmark;
 import grakn.benchmark.runner.util.BenchmarkArguments;
+import grakn.benchmark.runner.util.BenchmarkConfiguration;
 import grakn.benchmark.runner.util.ElasticSearchManager;
 import grakn.core.client.Grakn;
 import grakn.core.util.SimpleURI;
 import org.apache.commons.cli.CommandLine;
 import org.apache.ignite.Ignite;
+import org.apache.ignite.IgniteLogger;
 import org.apache.ignite.Ignition;
+import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.logger.slf4j.Slf4jLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Class in charge of
@@ -47,24 +49,29 @@ import java.util.Date;
 public class GraknBenchmark {
     private static final Logger LOG = LoggerFactory.getLogger(GraknBenchmark.class);
 
-    private final BenchmarkConfiguration configuration;
+    private final BenchmarkConfiguration config;
     private final String executionName;
 
     /**
      * Entry point invoked by benchmark.sh script
      */
     public static void main(String[] args) {
+        IgniteConfiguration igniteConfig = new IgniteConfiguration();
+        IgniteLogger logger = new Slf4jLogger();
+        igniteConfig.setGridLogger(logger);
+        Ignite ignite = Ignition.start(igniteConfig);
         try {
-            // Initialise Ignite and ElasticSearch
-            Ignite ignite = Ignition.start();
+//             Initialise Ignite and ElasticSearch
+
             ElasticSearchManager.init();
 
             GraknBenchmark benchmark = new GraknBenchmark(args);
             benchmark.start();
 
-            ignite.close();
         } catch (Exception e) {
             LOG.error("Unable to start Grakn Benchmark", e);
+        } finally {
+            ignite.close();
         }
     }
 
@@ -73,32 +80,45 @@ public class GraknBenchmark {
         // Parse arguments from console
         CommandLine arguments = BenchmarkArguments.parse(args);
 
-        // Build benchmark configuration
-        this.configuration = new BenchmarkConfiguration(arguments);
+        // Build benchmark config
+        this.config = new BenchmarkConfiguration(arguments);
 
         // generate a name for this specific execution of the benchmarking
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         String dateString = dateFormat.format(new Date());
-        this.executionName = String.join(" ", Arrays.asList(dateString, configuration.getConfigName(), arguments.getOptionValue("execution-name", ""))).trim();
+        this.executionName = String.join(" ", Arrays.asList(dateString, config.getConfigName(), arguments.getOptionValue("execution-name", ""))).trim();
     }
 
-    public void start() {
-        Grakn client = new Grakn(new SimpleURI(configuration.uri()));
-        Grakn.Session session = client.session(configuration.getKeyspace());
 
-        QueryExecutor queryExecutor = new QueryExecutor(session, executionName, configuration.getQueries());
+    /**
+     * Start the Grakn Benchmark, which, based on arguments provided via console, will run one of the following use cases:
+     *  - generate synthetic data while profiling the graph at different sizes
+     *  - don't generate new data and only profile an existing keyspace
+     */
+    public void start() {
+        Grakn client = new Grakn(new SimpleURI(config.uri()));
+        Grakn.Session session = client.session(config.getKeyspace());
+
+        QueryExecutor queryExecutor = new QueryExecutor(session, executionName, config.getQueries());
+        int repetitionsPerQuery = config.numQueryRepetitions();
 
         //TODO add check to make sure currentKeyspace does not exist, if it does throw exception
         // this can be done once we implement keyspaces().retrieve() on the client Java (issue #4675)
 
-        if (configuration.generateData()) {
+        if (config.generateData()) {
             int randomSeed = 0;
-            DataGenerator dataGenerator = new DataGenerator(session, configuration.getConfigName(), configuration.getGraqlSchema(), randomSeed);
-            GenerateAndBenchmark generateUseCase = new GenerateAndBenchmark(queryExecutor, dataGenerator, configuration);
-            generateUseCase.start();
+            DataGenerator dataGenerator = new DataGenerator(session, config, randomSeed);
+            dataGenerator.loadSchema();
+
+            List<Integer> numConceptsInRun = config.getConceptsToBenchmark();
+            for (int numConcepts : numConceptsInRun) {
+                LOG.info("Running queries with " + Integer.toString(numConcepts) + " concepts");
+                dataGenerator.generate(numConcepts);
+                queryExecutor.processStaticQueries(repetitionsPerQuery, numConcepts);
+            }
         } else {
-            BenchmarkExistingKeyspace existingUseCase = new BenchmarkExistingKeyspace(queryExecutor, configuration.numQueryRepetitions());
-            existingUseCase.start();
+            int numConcepts = queryExecutor.aggregateCount();
+            queryExecutor.processStaticQueries(repetitionsPerQuery, numConcepts, "Preconfigured DB - no data gen");
         }
 
         session.close();

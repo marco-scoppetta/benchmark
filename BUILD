@@ -33,6 +33,7 @@ distribution(
         "//runner:conf/web_content/queries.yml": "runner/conf/web_content/queries.yml",
         "//runner:conf/web_content/web_content_config.yml": "runner/conf/web_content/web_content_config.yml",
         "//runner:conf/web_content/web_content_schema.gql": "runner/conf/web_content/web_content_schema.gql",
+        "//runner:logback": "runner/services/logback.xml",
         
         # External dependencies: Elasticsearch and Zipkin
         "@external-dependencies-zipkin//file": "external-dependencies/zipkin.jar",
@@ -45,5 +46,5 @@ distribution(
     permissions = {
         "runner/runner.sh": "0755"
     },
-    output_filename = "benchmark-runner",
+    output_filename = "benchmark",
 )

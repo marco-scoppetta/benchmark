@@ -58,7 +58,7 @@ public class BenchmarkConfiguration {
         // Parse yaml file with generic configurations
         this.benchmarkConfigFile = parseConfigurationFile(configFilePath);
 
-        // Parse yaml file containing all the queries for Profiler
+        // Parse yaml file containing all the queries for profiler (QueryExecutor)
         this.queries = parseQueriesFile(configFilePath).getQueries();
 
         // Parse yaml file containing Graql statements that define a schema, used by DataGenerator

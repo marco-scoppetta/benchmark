@@ -28,6 +28,7 @@ JAVA_BIN=java
 BENCHMARK_HOME=$(cd "$(dirname "${path}")/.." && pwd -P)
 BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR=external-dependencies
 BENCHMARK_RUNNER_SERVICE_LIB_CP="runner/services/lib/*"
+BENCHMARK_LOGBACK="runner/services/logback.xml"
 
 # ================================================
 # common helper functions
@@ -80,8 +81,8 @@ done
 echo
 
 echo "Starting Benchmark Runner"
-CLASSPATH="${BENCHMARK_HOME}/${BENCHMARK_RUNNER_SERVICE_LIB_CP}"
-java -cp "${CLASSPATH}" -Dworking.dir="${BENCHMARK_HOME}" grakn.benchmark.runner.BenchmarkRunner $@
+CLASSPATH="${BENCHMARK_HOME}/${BENCHMARK_RUNNER_SERVICE_LIB_CP}":"{BENCHMARK_LOGBACK}"
+java -cp "${CLASSPATH}" -Dworking.dir="${BENCHMARK_HOME}" grakn.benchmark.runner.GraknBenchmark $@
 
 exit_code=$?
 

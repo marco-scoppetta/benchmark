@@ -34,3 +34,19 @@ java_library(
 )
 
 
+
+java_library(
+    name = "ignite-slf4j",
+    exports = [
+        "//external:jar/org/apache/ignite/ignite-slf4j"
+    ],
+    runtime_deps = [
+        "//dependencies/maven/artifacts/org/slf4j:slf4j-api",
+        ":ignite-core"
+    ],
+    visibility = [
+        "//visibility:public"
+    ]
+)
+
+

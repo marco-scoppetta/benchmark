@@ -25,5 +25,11 @@
     </appender>
 
     <root level="INFO"/>
+    <logger name="grakn.benchmark" level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="org.apache.ignite" level="ERROR">
+        <appender-ref ref="STDOUT"/>
+    </logger>
 
 </configuration>
