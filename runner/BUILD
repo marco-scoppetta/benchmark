@@ -59,30 +59,6 @@ java_library(
     visibility = ["//visibility:public"]
 )
 
-java_test(
-    name = "ignite-conceptid-store-test",
-    test_class = "grakn.benchmark.runner.storage.IgniteConceptIdStoreTest",
-    srcs = ["test/storage/IgniteConceptIdStoreTest.java"],
-
-    deps = [
-        ":benchmark-runner",
-        "//dependencies/maven/artifacts/org/mockito:mockito-core",
-        "//dependencies/maven/artifacts/grakn/core:grakn-graql",
-    ]
-)
-
-java_test(
-    name = "insertion-analysis-test",
-    test_class = "grakn.benchmark.runner.storage.InsertionAnalysisTest",
-    srcs = ["test/storage/InsertionAnalysisTest.java"],
-    deps = [
-        ":benchmark-runner",
-        "//dependencies/maven/artifacts/org/mockito:mockito-core",
-        "//dependencies/maven/artifacts/grakn/core:grakn-graql",
-        "//dependencies/maven/artifacts/org/hamcrest:hamcrest-all"
-    ]
-)
-
 filegroup(
     name = "logback",
     srcs = ["src/logback.xml"],

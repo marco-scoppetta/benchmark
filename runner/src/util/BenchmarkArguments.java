@@ -1,5 +1,6 @@
 package grakn.benchmark.runner.util;
 
+import grakn.benchmark.runner.exception.BootupException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -25,7 +26,7 @@ public class BenchmarkArguments {
             CommandLine arguments = parser.parse(options, args);
             return arguments;
         } catch (ParseException e) {
-            throw new RuntimeException("Exception while parsing arguments", e);
+            throw new BootupException(e.getMessage(), e.getCause());
         }
     }
 

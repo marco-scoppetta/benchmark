@@ -21,6 +21,7 @@ package grakn.benchmark.runner.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import grakn.benchmark.runner.exception.BootupException;
 import grakn.core.Keyspace;
 import org.apache.commons.cli.CommandLine;
 
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static grakn.benchmark.runner.util.BenchmarkArguments.CONFIG_ARGUMENT;
 import static grakn.benchmark.runner.util.BenchmarkArguments.KEYSPACE_ARGUMENT;
 import static grakn.benchmark.runner.util.BenchmarkArguments.NO_DATA_GENERATION_ARGUMENT;
 import static grakn.benchmark.runner.util.BenchmarkArguments.URI_ARGUMENT;
@@ -113,15 +115,22 @@ public class BenchmarkConfiguration {
      * @return absolute path to configuration file
      */
     private Path getConfigFilePath(CommandLine arguments) {
-        Path workingDirectory = Paths.get(System.getProperty("working.dir"));
-        String configFileName = arguments.getOptionValue("config");
+        String configFileName = arguments.getOptionValue(CONFIG_ARGUMENT);
         Path configFilePath = Paths.get(configFileName);
-        if (!configFilePath.isAbsolute()) configFilePath = workingDirectory.resolve(configFilePath);
+        String workingDirectory = System.getProperty("working.dir");
+
+        if (!configFilePath.isAbsolute() && workingDirectory != null) {
+            configFilePath = Paths.get(workingDirectory).resolve(configFilePath);
+        }
+        if (!Files.exists(configFilePath)) {
+            throw new BootupException("The provided config file [" + configFilePath + "] does not exist.");
+        }
         return configFilePath;
     }
 
     /**
      * Parse configuration file to object
+     *
      * @param configFilePath absolute path to configuration file
      * @return Object representing yaml file
      */
@@ -136,10 +145,11 @@ public class BenchmarkConfiguration {
 
     /**
      * Parse queries file to object
+     *
      * @param configFilePath absolute path to configuration file
      * @return Object that holds reference to array of queries
      */
-    private QueriesConfigurationFile parseQueriesFile(Path configFilePath){
+    private QueriesConfigurationFile parseQueriesFile(Path configFilePath) {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         Path queryFilePath = configFilePath.getParent().resolve(benchmarkConfigFile.getQueriesFilePath());
         try {
@@ -151,10 +161,11 @@ public class BenchmarkConfiguration {
 
     /**
      * Parse Graql schema file into a list of Strings
+     *
      * @param configFilePath absolute path to configuration file
      * @return List of string representing Graql schema declaration statements
      */
-    private List<String> parseGraqlSchema(Path configFilePath){
+    private List<String> parseGraqlSchema(Path configFilePath) {
         Path schemaFilePath = configFilePath.getParent().resolve(benchmarkConfigFile.getRelativeSchemaFile());
         try {
             return Files.readAllLines(schemaFilePath, StandardCharsets.UTF_8);

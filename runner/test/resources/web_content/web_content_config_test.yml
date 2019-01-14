@@ -1,0 +1,6 @@
+name: "web_content"
+schema: "web_content_schema.gql"
+queries: "queries.yml"
+concepts:
+  - 20000
+repeatsPerQuery: 0

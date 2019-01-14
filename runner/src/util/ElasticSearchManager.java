@@ -96,9 +96,8 @@ public class ElasticSearchManager {
         esRestClientBuilder.setDefaultHeaders(new Header[]{new BasicHeader("header", "value")});
         RestClient restClient = esRestClientBuilder.build();
 
-        String indexTemplateName = ES_INDEX_TEMPLATE_NAME;
-        if (!indexTemplateExists(restClient, indexTemplateName)) {
-            putIndexTemplate(restClient, indexTemplateName, INDEX_TEMPLATE);
+        if (!indexTemplateExists(restClient, ES_INDEX_TEMPLATE_NAME)) {
+            putIndexTemplate(restClient, ES_INDEX_TEMPLATE_NAME, INDEX_TEMPLATE);
         }
         restClient.close();
     }
