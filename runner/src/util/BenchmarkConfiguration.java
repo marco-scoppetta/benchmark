@@ -71,7 +71,7 @@ public class BenchmarkConfiguration {
 
         this.uri = (arguments.hasOption(URI_ARGUMENT)) ? arguments.getOptionValue(URI_ARGUMENT) : DEFAULT_GRAKN_URI;
 
-        // If --no-data-generator is specified, don't generate any data (work with existing keyspace)
+        // If --no-data-generation is specified, don't generate any data (work with existing keyspace)
         this.generateData = !(arguments.hasOption(NO_DATA_GENERATION_ARGUMENT));
     }
 
@@ -155,7 +155,7 @@ public class BenchmarkConfiguration {
         try {
             return mapper.readValue(queryFilePath.toFile(), QueriesConfigurationFile.class);
         } catch (IOException e) {
-            throw new RuntimeException("Exception parsing queries file", e);
+            throw new BootupException("Exception parsing queries file", e);
         }
     }
 
@@ -170,7 +170,7 @@ public class BenchmarkConfiguration {
         try {
             return Files.readAllLines(schemaFilePath, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new RuntimeException("Exception parsing Graql schema file", e);
+            throw new BootupException("Exception parsing Graql schema file", e);
         }
     }
 }

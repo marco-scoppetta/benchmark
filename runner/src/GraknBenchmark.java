@@ -18,7 +18,7 @@
 
 package grakn.benchmark.runner;
 
-import grakn.benchmark.runner.executor.QueryExecutor;
+import grakn.benchmark.runner.executor.QueryProfiler;
 import grakn.benchmark.runner.generator.DataGenerator;
 import grakn.benchmark.runner.util.BenchmarkArguments;
 import grakn.benchmark.runner.util.BenchmarkConfiguration;
@@ -95,7 +95,7 @@ public class GraknBenchmark {
         Grakn client = new Grakn(new SimpleURI(config.uri()));
         Grakn.Session session = client.session(config.getKeyspace());
 
-        QueryExecutor queryExecutor = new QueryExecutor(session, executionName, config.getQueries());
+        QueryProfiler queryProfiler = new QueryProfiler(session, executionName, config.getQueries());
         int repetitionsPerQuery = config.numQueryRepetitions();
 
         //TODO add check to make sure currentKeyspace does not exist, if it does throw exception
@@ -110,11 +110,11 @@ public class GraknBenchmark {
             for (int numConcepts : numConceptsInRun) {
                 LOG.info("Running queries with " + numConcepts + " concepts");
                 dataGenerator.generate(numConcepts);
-                queryExecutor.processStaticQueries(repetitionsPerQuery, numConcepts);
+                queryProfiler.processStaticQueries(repetitionsPerQuery, numConcepts);
             }
         } else {
-            int numConcepts = queryExecutor.aggregateCount();
-            queryExecutor.processStaticQueries(repetitionsPerQuery, numConcepts, "Preconfigured DB - no data gen");
+            int numConcepts = queryProfiler.aggregateCount();
+            queryProfiler.processStaticQueries(repetitionsPerQuery, numConcepts, "Preconfigured DB - no data gen");
         }
 
         session.close();

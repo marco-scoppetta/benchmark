@@ -20,17 +20,15 @@
 # NOTE: use set -ex for debugging
 set -e
 
-trap on_receiving_ctrl_c INT
-
 # Benchmark global variables
 JAVA_BIN=java
 [[ $(readlink $0) ]] && path=$(readlink $0) || path=$0
-BENCHMARK_HOME=$(cd "$(dirname "${path}")/.." && pwd -P)
+WORKING_DIR=$(cd "$(dirname "${path}")" && pwd -P)
 BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR=external-dependencies
-BENCHMARK_RUNNER_SERVICE_LIB_CP="runner/services/lib/*"
-BENCHMARK_LOGBACK="runner/services"
+BENCHMARK_RUNNER_SERVICE_LIB_CP="services/lib/*"
+BENCHMARK_LOGBACK="services"
 
-exit_if_java_not_found() {
+exit_if_java_not_found(                                     ) {
   which "${JAVA_BIN}" > /dev/null
   exit_code=$?
 
@@ -45,13 +43,13 @@ exit_if_java_not_found() {
 # =============================================
 exit_code=0
 
-pushd "$BENCHMARK_HOME" > /dev/null
+pushd "$WORKING_DIR" > /dev/null
 exit_if_java_not_found
 
 
 echo "Starting Benchmark Runner"
-CLASSPATH="${BENCHMARK_HOME}/${BENCHMARK_RUNNER_SERVICE_LIB_CP}:${BENCHMARK_HOME}/${BENCHMARK_LOGBACK}"
-java -cp "${CLASSPATH}" -Dworking.dir="${BENCHMARK_HOME}" -Xms512m -Xmx512m grakn.benchmark.runner.GraknBenchmark $@
+CLASSPATH="${WORKING_DIR}/${BENCHMARK_RUNNER_SERVICE_LIB_CP}:${WORKING_DIR}/${BENCHMARK_LOGBACK}"
+java -cp "${CLASSPATH}" -Dworking.dir="${WORKING_DIR}" -Xms512m -Xmx512m grakn.benchmark.runner.GraknBenchmark $@
 
 exit_code=$?
 

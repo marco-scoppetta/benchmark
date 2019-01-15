@@ -40,15 +40,15 @@ import static grakn.core.graql.Graql.var;
 /**
  *
  */
-public class QueryExecutor {
+public class QueryProfiler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(QueryExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(QueryProfiler.class);
 
     private final String executionName;
     private final List<Query> queries;
     private final Grakn.Session session;
 
-    public QueryExecutor(Grakn.Session session, String executionName, List<String> queryStrings) {
+    public QueryProfiler(Grakn.Session session, String executionName, List<String> queryStrings) {
         this.session = session;
 
         this.executionName = executionName;

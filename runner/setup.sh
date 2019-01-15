@@ -25,10 +25,10 @@ trap on_receiving_ctrl_c INT
 # Benchmark global variables
 JAVA_BIN=java
 [[ $(readlink $0) ]] && path=$(readlink $0) || path=$0
-BENCHMARK_HOME=$(cd "$(dirname "${path}")/.." && pwd -P)
+WORKING_DIR=$(cd "$(dirname "${path}")" && pwd -P)
 BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR=external-dependencies
-BENCHMARK_RUNNER_SERVICE_LIB_CP="runner/services/lib/*"
-BENCHMARK_LOGBACK="runner/services"
+BENCHMARK_RUNNER_SERVICE_LIB_CP="services/lib/*"
+BENCHMARK_LOGBACK="services"
 
 # ================================================
 # common helper functions
@@ -55,7 +55,7 @@ exit_if_java_not_found() {
 # =============================================
 exit_code=0
 
-pushd "$BENCHMARK_HOME" > /dev/null
+pushd "$WORKING_DIR" > /dev/null
 exit_if_java_not_found
 
 if [[ ! -d $BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR/elasticsearch-6.3.2 ]]; then
