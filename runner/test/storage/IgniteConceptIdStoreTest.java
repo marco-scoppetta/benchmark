@@ -18,15 +18,12 @@
 
 package grakn.benchmark.runner.storage;
 
-import grakn.core.concept.AttributeType;
-import grakn.core.concept.Concept;
-import grakn.core.concept.ConceptId;
-import grakn.core.concept.EntityType;
-import grakn.core.concept.Label;
-import grakn.core.concept.RelationshipType;
-import grakn.core.concept.Thing;
-import grakn.core.concept.Type;
+import grakn.core.concept.*;
+import org.apache.ignite.IgniteException;
+import org.apache.ignite.Ignition;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -52,17 +49,33 @@ public class IgniteConceptIdStoreTest {
     private ArrayList<String> typeLabels;
     private ArrayList<ConceptId> conceptIds;
     private ArrayList<Concept> conceptMocks;
-    private String typeLabel;
-
+    private String entityTypeLabel;
     HashSet<EntityType> entityTypes;
+
+    private String attrTypeLabel;
+    HashSet<AttributeType> attributeTypes;
+
+    private String relTypeLabel;
+    HashSet<RelationshipType> relationshipTypes;
+
+    @BeforeClass
+    public static void initIgniteServer() throws IgniteException {
+        Ignition.start();
+    }
+
+    @AfterClass
+    public static void stopIgniteServer() {
+        Ignition.stop(false);
+    }
 
     @Before
     public void setUp() {
 
-        typeLabel = "person";
-        typeLabelsSet = new HashSet<>();
-        typeLabelsSet.add(typeLabel);
+        //  --- Entities ---
 
+        entityTypeLabel = "person";
+        typeLabelsSet = new HashSet<>();
+        typeLabelsSet.add(entityTypeLabel);
         entityTypes = new HashSet<>();
 
         EntityType personEntityType = mock(EntityType.class);
@@ -102,25 +115,69 @@ public class IgniteConceptIdStoreTest {
             when(thingMock.type()).thenReturn(conceptTypeMock);
 
             // Concept Type label()
-            Label label = Label.of(typeLabel);
+            Label label = Label.of(entityTypeLabel);
             when(conceptTypeMock.label()).thenReturn(label);
         }
+
+        // --- attributes ---
+
+        attrTypeLabel = "age";
+        typeLabelsSet.add(attrTypeLabel);
+        attributeTypes = new HashSet<>();
+        AttributeType ageAttributeType = mock(AttributeType.class);
+        when(ageAttributeType.label()).thenReturn(Label.of(attrTypeLabel));
+        when(ageAttributeType.dataType()).thenReturn(AttributeType.DataType.LONG); // Data Type
+        attributeTypes.add(ageAttributeType);
+
+        Concept conceptMock = mock(Concept.class);
+        conceptMocks.add(conceptMock);
+        Thing thingMock = mock(Thing.class);
+        when(conceptMock.asThing()).thenReturn(thingMock); // Thing
+        when(thingMock.id()).thenReturn(ConceptId.of("V8")); // Concept Id
+        conceptIds.add(thingMock.id());
+        Type conceptTypeMock = mock(Type.class);
+        when(thingMock.type()).thenReturn(conceptTypeMock); // Concept Type
+        when(conceptTypeMock.label()).thenReturn(Label.of(attrTypeLabel)); // Type label
+        Attribute<Long> attributeMock = mock(Attribute.class);
+        when(conceptMock.<Long>asAttribute()).thenReturn(attributeMock); // Concept -> Attribute<Long>
+        when(attributeMock.value()).thenReturn(10l); // Attribute Value
+
+
+        // --- relationships ---
+        relTypeLabel = "friend";
+        typeLabelsSet.add(relTypeLabel);
+        relationshipTypes = new HashSet<>();
+        RelationshipType friendRelationshipType = mock(RelationshipType.class);
+        when(friendRelationshipType.label()).thenReturn(Label.of("friend"));
+        relationshipTypes.add(friendRelationshipType);
+
+        Concept relConceptMock = mock(Concept.class);
+        conceptMocks.add(relConceptMock);
+        Thing relThingMock = mock(Thing.class);
+        when(relConceptMock.asThing()).thenReturn(relThingMock); // Thing
+        when(relThingMock.id()).thenReturn(ConceptId.of("V9")); // Concept Id
+        conceptIds.add(relThingMock.id());
+        Type relConceptTypeMock = mock(Type.class);
+        when(relThingMock.type()).thenReturn(relConceptTypeMock); // Concept Type
+        when(relConceptTypeMock.label()).thenReturn(Label.of("friend")); // Type label
+
+
+        // create new ignite store
+        this.store = new IgniteConceptIdStore(entityTypes, relationshipTypes, attributeTypes);
     }
 
     @Test
     public void whenConceptIdsAreAdded_conceptIdsAreInTheDB() throws SQLException {
-        this.store = new IgniteConceptIdStore(entityTypes, new HashSet<RelationshipType>(), new HashSet<AttributeType>());
-
         // Add all of the elements
         for (Concept conceptMock : this.conceptMocks) {
-            this.store.add(conceptMock);
+            this.store.addConcept(conceptMock);
         }
 
         int counter = 0;
         // Check objects were added to the db
         Connection conn = DriverManager.getConnection("jdbc:ignite:thin://127.0.0.1/");
         try (Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + this.typeLabel)) {
+            try (ResultSet rs = stmt.executeQuery("SELECT * FROM " + this.entityTypeLabel)) {
                 while (rs.next()) {
                     counter++;
                 }
@@ -133,40 +190,112 @@ public class IgniteConceptIdStoreTest {
 
     @Test
     public void whenConceptIsAdded_conceptIdCanBeRetrieved() throws SQLException {
-        this.store = new IgniteConceptIdStore(entityTypes, new HashSet<RelationshipType>(), new HashSet<AttributeType>());
-
         int index = 0;
-        this.store.add(this.conceptMocks.get(index));
-        ConceptId personConceptId = this.store.getConceptId(this.typeLabel, index);
+        this.store.addConcept(this.conceptMocks.get(index));
+        ConceptId personConceptId = this.store.getConceptId(this.entityTypeLabel, index);
         System.out.println("Found id: " + personConceptId.toString());
         assertEquals(personConceptId, this.conceptIds.get(index));
     }
 
     @Test
     public void whenGettingIdWithOffset_correctIdIsReturned() throws SQLException {
-        this.store = new IgniteConceptIdStore(entityTypes, new HashSet<RelationshipType>(), new HashSet<AttributeType>());
-
         int index = 4;
         // Add all of the elements
 
         for (Concept conceptMock : this.conceptMocks) {
-            this.store.add(conceptMock);
+            this.store.addConcept(conceptMock);
         }
 
-        ConceptId personConceptId = this.store.getConceptId(this.typeLabel, index);
+        ConceptId personConceptId = this.store.getConceptId(this.entityTypeLabel, index);
         System.out.println("Found id: " + personConceptId.toString());
         assertEquals(this.conceptIds.get(index), personConceptId);
     }
 
     @Test
     public void whenCountingTypeInstances_resultIsCorrect() throws SQLException, ClassNotFoundException {
-        this.store = new IgniteConceptIdStore(entityTypes, new HashSet<RelationshipType>(), new HashSet<AttributeType>());
-
         for (Concept conceptMock : this.conceptMocks) {
-            this.store.add(conceptMock);
+            this.store.addConcept(conceptMock);
         }
 
-        int count = this.store.getConceptCount(this.typeLabel);
+        int count = this.store.getConceptCount(this.entityTypeLabel);
         assertEquals(7, count);
+    }
+
+    @Test
+    public void whenRolePlayerIsAdded_countIsCorrect() {
+        for (Concept conceptMock : this.conceptMocks) {
+            this.store.addRolePlayer(conceptMock.asThing().id().toString());
+        }
+
+        int roleplayerCount = this.store.totalRolePlayers();
+        assertEquals(9, roleplayerCount);
+    }
+
+    @Test
+    public void whenAllButOnePlayingRole_orphanEntitiesCorrect() {
+        // add all concepts to store
+        for (Concept conceptMock : this.conceptMocks) {
+            this.store.addConcept(conceptMock);
+        }
+
+        // add 6 of 7 entities as role players too
+        for (int i = 0 ; i < 6; i++) {
+            Concept conceptMock = this.conceptMocks.get(i);
+            this.store.addRolePlayer(conceptMock.asThing().id().toString());
+        }
+
+        int orphanEntities = this.store.totalOrphanEntities();
+        assertEquals(1, orphanEntities);
+    }
+
+    @Test
+    public void whenAllButOnePlayingRole_orphanAttributesCorrect() {
+        // add all concepts to store
+        for (Concept conceptMock : this.conceptMocks) {
+            this.store.addConcept(conceptMock);
+        }
+
+        // ad all but the attribute and relationship
+        for (int i = 0 ; i < conceptMocks.size()-2; i++) {
+            Concept conceptMock = this.conceptMocks.get(i);
+            this.store.addRolePlayer(conceptMock.asThing().id().toString());
+        }
+
+        int orphanAttributes = this.store.totalOrphanAttributes();
+        assertEquals(1, orphanAttributes);
+    }
+
+    @Test
+    public void whenRelationshipsDoNotOverlap_overlapEmpty() {
+        // add all concepts to store
+        for (Concept conceptMock : this.conceptMocks) {
+            this.store.addConcept(conceptMock);
+        }
+
+        // add all but the relationship (last element)
+        for (int i = 0 ; i < conceptMocks.size()-1; i++) {
+            Concept conceptMock = this.conceptMocks.get(i);
+            this.store.addRolePlayer(conceptMock.asThing().id().toString());
+        }
+
+        int relationshipDoubleCounts = this.store.totalRelationshipsRolePlayersOverlap();
+        assertEquals(0, relationshipDoubleCounts);
+    }
+
+    @Test
+    public void whenRelationshipPlaysRole_overlapOne() {
+        // add all concepts to store
+        for (Concept conceptMock : this.conceptMocks) {
+            this.store.addConcept(conceptMock);
+        }
+
+        // add all as role players
+        for (int i = 0 ; i < conceptMocks.size(); i++) {
+            Concept conceptMock = this.conceptMocks.get(i);
+            this.store.addRolePlayer(conceptMock.asThing().id().toString());
+        }
+
+        int relationshipDoubleCounts = this.store.totalRelationshipsRolePlayersOverlap();
+        assertEquals(1, relationshipDoubleCounts);
     }
 }

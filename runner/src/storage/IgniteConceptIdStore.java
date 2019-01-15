@@ -26,6 +26,8 @@ import grakn.core.concept.EntityType;
 import grakn.core.concept.Label;
 import grakn.core.concept.RelationshipType;
 import grakn.core.concept.SchemaConcept;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -51,6 +53,7 @@ import static grakn.core.concept.AttributeType.DataType.STRING;
  * Stores identifiers for all concepts in a Grakn
  */
 public class IgniteConceptIdStore implements IdStoreInterface {
+    private static final Logger LOG = LoggerFactory.getLogger(IgniteConceptIdStore.class);
 
     private final HashSet<String> entityTypeLabels;
     private final HashSet<String> relationshipTypeLabels;
@@ -61,6 +64,7 @@ public class IgniteConceptIdStore implements IdStoreInterface {
     private HashSet<String> allTypeLabels;
     private final String cachingMethod = "REPLICATED";
     private final int ID_INDEX = 1;
+    private final int VALUE_INDEX = 2;
 
     public static final Map<AttributeType.DataType<?>, String> DATATYPE_MAPPING;
     static {
@@ -86,41 +90,44 @@ public class IgniteConceptIdStore implements IdStoreInterface {
 
         try {
             clean(this.allTypeLabels);
+            dropTable("roleplayers"); // one special table for tracking role players
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.trace(e.getMessage(), e);
         }
 
         // Register JDBC driver.
         try {
             Class.forName("org.apache.ignite.IgniteJdbcThinDriver");
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            LOG.trace(e.getMessage(), e);
         }
 
         // Open JDBC connection.
         try {
             this.conn = DriverManager.getConnection("jdbc:ignite:thin://127.0.0.1/");
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.trace(e.getMessage(), e);
         }
 
         // Create database tables.
         for (String typeLabel : this.entityTypeLabels) {
-            this.createConceptIdTable(typeLabel);
+            this.createTypeIdsTable(typeLabel);
         }
 
         for (String typeLabel : this.relationshipTypeLabels) {
-            this.createConceptIdTable(typeLabel);
+            this.createTypeIdsTable(typeLabel);
         }
 
-//        for (String typeLabel : this.relationshipTypeLabels) {
         for (Map.Entry<String, AttributeType.DataType<?>> entry : this.attributeTypeLabels.entrySet()) {
             String typeLabel = entry.getKey();
             AttributeType.DataType<?> datatype = entry.getValue();
-
             String dbDatatype = DATATYPE_MAPPING.get(datatype);
-            this.createTable(typeLabel, dbDatatype);
+            this.createAttributeValueTable(typeLabel, dbDatatype);
         }
+
+        // re-create special table
+        // role players that have been assigned into a relationship at some point
+        createTable("roleplayers", "VARCHAR");
     }
 
     private <T extends SchemaConcept> HashSet<String> getTypeLabels(Set<T> conceptTypes) {
@@ -150,13 +157,41 @@ public class IgniteConceptIdStore implements IdStoreInterface {
         return allLabels;
     }
 
-    private void createConceptIdTable(String typeLabel) {
-        createTable(typeLabel, "VARCHAR");
+    /**
+     * Create a table for storing concept IDs of the given type
+     * @param typeLabel
+     */
+    private void createTypeIdsTable(String typeLabel) {
+        String tableName = this.putTableName(typeLabel);
+        createTable(tableName, "VARCHAR");
     }
 
-    private void createTable(String typeLabel, String sqlDatatypeName) {
+    /**
+     * Create a table for storing attributeValues for the given type
+     * this is a TWO column table of attribute ID and attribute value
+     * @param typeLabel
+     * @param sqlDatatypeName
+     */
+    private void createAttributeValueTable(String typeLabel, String sqlDatatypeName) {
 
         String tableName = this.putTableName(typeLabel);
+        try (Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("CREATE TABLE " + tableName + " (" +
+                    " id VARCHAR PRIMARY KEY, " +
+                    " value " + sqlDatatypeName + ", " +
+                    "nothing LONG) " +
+                    " WITH \"template=" + cachingMethod + "\"");
+        } catch (SQLException e) {
+            LOG.trace(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Create a single column table with the value stored being of the given sqlDatatype
+     * @param tableName
+     * @param sqlDatatypeName
+     */
+    private void createTable(String tableName, String sqlDatatypeName) {
 
         try (Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("CREATE TABLE " + tableName + " (" +
@@ -164,7 +199,7 @@ public class IgniteConceptIdStore implements IdStoreInterface {
                     "nothing LONG) " +
                     " WITH \"template=" + cachingMethod + "\"");
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.trace(e.getMessage(), e);
         }
     }
 
@@ -191,10 +226,11 @@ public class IgniteConceptIdStore implements IdStoreInterface {
     }
 
     @Override
-    public void add(Concept concept) {
+    public void addConcept(Concept concept) {
 
         Label conceptTypeLabel = concept.asThing().type().label();
         String tableName = this.getTableName(conceptTypeLabel.toString());
+        String conceptId = concept.asThing().id().toString(); // TODO use the value instead for attributes
 
         if (concept.isAttribute()) {
             Attribute<?> attribute = concept.asAttribute();
@@ -202,43 +238,25 @@ public class IgniteConceptIdStore implements IdStoreInterface {
 
             Object value = attribute.value();
             try (PreparedStatement stmt = this.conn.prepareStatement(
-                    "INSERT INTO " + tableName + " (id, ) VALUES (?, )")) {
+                    "INSERT INTO " + tableName + " (id, value, ) VALUES (?, ?, )")) {
 
                 if (value.getClass() == String.class) {
-                    stmt.setString(ID_INDEX, (String) value);
+                    stmt.setString(VALUE_INDEX, (String) value);
 
                 } else if (value.getClass() == Double.class) {
-                    stmt.setDouble(ID_INDEX, (Double) value);
+                    stmt.setDouble(VALUE_INDEX, (Double) value);
 
                 } else if (value.getClass() == Long.class || value.getClass() == Integer.class) {
-                    stmt.setLong(ID_INDEX, (Long) value);
+                    stmt.setLong(VALUE_INDEX, (Long) value);
 
                 } else if (value.getClass() == Boolean.class) {
-                    stmt.setBoolean(ID_INDEX, (Boolean) value);
+                    stmt.setBoolean(VALUE_INDEX, (Boolean) value);
 
                 } else if (value.getClass() == Date.class) {
-                    stmt.setDate(ID_INDEX, (Date) value);
+                    stmt.setDate(VALUE_INDEX, (Date) value);
                 } else {
                     throw new UnsupportedOperationException(String.format("Datatype %s isn't supported by Grakn", datatype));
                 }
-
-                stmt.executeUpdate();
-
-            } catch (SQLException e) {
-                if (!e.getSQLState().equals("23000")) {
-                    // TODO Doesn't seem like the right way to go
-                    // In the case of duplicate primary key, which we want to ignore since I want to keep a unique set of
-                    // attribute values in each table
-                    e.printStackTrace();
-                }
-            }
-
-        } else {
-
-            String conceptId = concept.asThing().id().toString(); // TODO use the value instead for attributes
-
-            try (PreparedStatement stmt = this.conn.prepareStatement(
-                    "INSERT INTO " + tableName + " (id, ) VALUES (?, )")) {
 
                 stmt.setString(ID_INDEX, conceptId);
                 stmt.executeUpdate();
@@ -248,9 +266,40 @@ public class IgniteConceptIdStore implements IdStoreInterface {
                     // TODO Doesn't seem like the right way to go
                     // In the case of duplicate primary key, which we want to ignore since I want to keep a unique set of
                     // attribute values in each table
-                    e.printStackTrace();
+                    LOG.trace(e.getMessage(), e);
                 }
             }
+
+        } else {
+
+
+            try (PreparedStatement stmt = this.conn.prepareStatement(
+                    "INSERT INTO " + tableName + " (id, ) VALUES (?, )")) {
+
+                stmt.setString(ID_INDEX, conceptId);
+                stmt.executeUpdate();
+
+            } catch (SQLException e) {
+                if (!e.getSQLState().equals("23000")) {
+                    LOG.trace(e.getMessage(), e);
+                }
+            }
+        }
+    }
+
+    public void addRolePlayer(String conceptId) {
+        try (PreparedStatement stmt = this.conn.prepareStatement(
+                "INSERT INTO roleplayers (id, ) VALUES (?, )")) {
+
+            stmt.setString(ID_INDEX, conceptId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            // TODO Doesn't seem like the right way to go
+            // In the case of duplicate primary key, which we want to ignore since I want to keep a unique set of
+            // attribute values in each table
+
+            // this was way too verbose
+            LOG.trace(e.getMessage(), e);
         }
     }
 
@@ -260,8 +309,15 @@ public class IgniteConceptIdStore implements IdStoreInterface {
     [{FETCH {FIRST | NEXT} expression {ROW | ROWS} ONLY}]}]
      */
 
-    private String sqlGet(String typeLabel, int offset) {
+    private String sqlGetId(String typeLabel, int offset) {
         String sql = "SELECT id FROM " + getTableName(typeLabel) +
+                " OFFSET " + offset +
+                " FETCH FIRST ROW ONLY";
+        return sql;
+    }
+
+    private String sqlGetAttrValue(String typeLabel, int offset) {
+        String sql = "SELECT value FROM " + getTableName(typeLabel) +
                 " OFFSET " + offset +
                 " FETCH FIRST ROW ONLY";
         return sql;
@@ -269,30 +325,30 @@ public class IgniteConceptIdStore implements IdStoreInterface {
 
     public ConceptId getConceptId(String typeLabel, int offset) {
         try (Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(sqlGet(typeLabel, offset))) {
+            try (ResultSet rs = stmt.executeQuery(sqlGetId(typeLabel, offset))) {
                 if (rs != null && rs.next()) { // Need to do this to increment one line in the ResultSet
                     return ConceptId.of(rs.getString(ID_INDEX));
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                LOG.trace(e.getMessage(), e);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.trace(e.getMessage(), e);
         }
         return null;
     }
 
     public String getString(String typeLabel, int offset) {
         try (Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(sqlGet(typeLabel, offset))) {
+            try (ResultSet rs = stmt.executeQuery(sqlGetAttrValue(typeLabel, offset))) {
                 if (rs != null && rs.next()) { // Need to do this to increment one line in the ResultSet
                     return rs.getString(ID_INDEX);
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                LOG.trace(e.getMessage(), e);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.trace(e.getMessage(), e);
         }
         return null;
 
@@ -300,68 +356,72 @@ public class IgniteConceptIdStore implements IdStoreInterface {
 
     public Double getDouble(String typeLabel, int offset) {
         try (Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(sqlGet(typeLabel, offset))) {
+            try (ResultSet rs = stmt.executeQuery(sqlGetAttrValue(typeLabel, offset))) {
                 if (rs != null && rs.next()) { // Need to do this to increment one line in the ResultSet
                     return rs.getDouble(ID_INDEX);
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                LOG.trace(e.getMessage(), e);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.trace(e.getMessage(), e);
         }
         return null;
     }
 
     public Long getLong(String typeLabel, int offset) {
         try (Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(sqlGet(typeLabel, offset))) {
+            try (ResultSet rs = stmt.executeQuery(sqlGetAttrValue(typeLabel, offset))) {
                 if (rs != null && rs.next()) { // Need to do this to increment one line in the ResultSet
                     return rs.getLong(ID_INDEX);
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                LOG.trace(e.getMessage(), e);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.trace(e.getMessage(), e);
         }
         return null;
     }
 
     public Boolean getBoolean(String typeLabel, int offset) {
         try (Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(sqlGet(typeLabel, offset))) {
+            try (ResultSet rs = stmt.executeQuery(sqlGetAttrValue(typeLabel, offset))) {
                 if (rs != null && rs.next()) { // Need to do this to increment one line in the ResultSet
                     return rs.getBoolean(ID_INDEX);
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                LOG.trace(e.getMessage(), e);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.trace(e.getMessage(), e);
         }
         return null;
     }
 
     public Date getDate(String typeLabel, int offset) {
         try (Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(sqlGet(typeLabel, offset))) {
+            try (ResultSet rs = stmt.executeQuery(sqlGetAttrValue(typeLabel, offset))) {
                 if (rs != null && rs.next()) { // Need to do this to increment one line in the ResultSet
                     return rs.getDate(ID_INDEX);
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                LOG.trace(e.getMessage(), e);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.trace(e.getMessage(), e);
         }
         return null;
     }
 
     public int getConceptCount(String typeLabel) {
+        String tableName = getTableName(typeLabel);
+        return getCountInTable(tableName);
+    }
 
-        String sql = "SELECT COUNT(1) FROM " + getTableName(typeLabel);
-//        ResultSet rs = this.runQuery(sql);
+
+    private int getCountInTable(String tableName) {
+        String sql = "SELECT COUNT(1) FROM " + tableName;
 
         try (Statement stmt = conn.createStatement()) {
             try (ResultSet rs = stmt.executeQuery(sql)) {
@@ -373,65 +433,110 @@ public class IgniteConceptIdStore implements IdStoreInterface {
                 }
 
             } catch (SQLException e) {
-                e.printStackTrace();
+                LOG.trace(e.getMessage(), e);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.trace(e.getMessage(), e);
         }
         return 0;
     }
 
     @Override
-    public int total() {
-        int total = 0;
-        for (String typeLabel : this.allTypeLabels) {
-            total += this.getConceptCount(typeLabel);
-        }
-        return total;
-    }
-
-    @Override
-    public int totalEntities() {
-        int total = 0;
-        for (String typeLabel : this.entityTypeLabels) {
-            total += this.getConceptCount(typeLabel);
-        }
-        return total;
-    }
-
-    @Override
     public int totalRelationships() {
         int total = 0;
-        for (String typeLabel : this.relationshipTypeLabels) {
-            total += this.getConceptCount(typeLabel);
+        for (String relationshipType : this.relationshipTypeLabels) {
+            total += getConceptCount(relationshipType);
         }
         return total;
     }
 
     @Override
-    public int totalAttributes() {
-        int total = 0;
-        for (String typeLabel : this.attributeTypeLabels.keySet()) {
-            total += this.getConceptCount(typeLabel);
-        }
-        return total;
+    public int totalRolePlayers() {
+        return getCountInTable("roleplayers");
     }
 
+    /**
+     * Orphan entities = Set(all entities) - Set(entities playing roles)
+     * @return
+     */
+    @Override
+    public int totalOrphanEntities() {
+        Set<String> rolePlayerIds = getIds("roleplayers");
+        Set<String> entityIds = new HashSet<>();
+        for (String typeLabel: this.entityTypeLabels) {
+            Set<String> ids = getIds(getTableName(typeLabel));
+            entityIds.addAll(ids);
+        }
+        entityIds.removeAll(rolePlayerIds);
+        return entityIds.size();
+    }
 
     /**
-     * Clean all elements in the storage
+     * Orphan attributes = Set(all attribute ids) - Set(attributes playing roles)
+     * @return
+     */
+    @Override
+    public int totalOrphanAttributes() {
+        Set<String> rolePlayerIds = getIds("roleplayers");
+        Set<String> attributeIds = new HashSet<>();
+        for (String typeLabel: this.attributeTypeLabels.keySet()) {
+            Set<String> ids = getIds(getTableName(typeLabel));
+            attributeIds.addAll(ids);
+        }
+        attributeIds.removeAll(rolePlayerIds);
+        return attributeIds.size();
+    }
+
+    /**
+     * Double counting between relationships and relationships also playing roles
+     * = Set(All relationship ids) intersect Set(role players)
+     * @return
+     */
+    @Override
+    public int totalRelationshipsRolePlayersOverlap() {
+        Set<String> rolePlayerIds = getIds("roleplayers");
+        Set<String> relationshipIds = new HashSet<>();
+        for (String typeLabel: this.relationshipTypeLabels) {
+            Set<String> ids = getIds(getTableName(typeLabel));
+            relationshipIds.addAll(ids);
+        }
+        relationshipIds.retainAll(rolePlayerIds);
+        return relationshipIds.size();
+    }
+
+    private Set<String> getIds(String tableName) {
+        String sql = "SELECT id FROM " + tableName;
+        Set<String> ids = new HashSet<>();
+        try (Statement stmt = conn.createStatement()) {
+            try (ResultSet resultSet = stmt.executeQuery(sql)) {
+                while (resultSet.next()) {
+                    ids.add(resultSet.getString(ID_INDEX));
+                }
+            } catch (SQLException e) {
+                LOG.trace(e.getMessage(), e);
+            }
+        } catch (SQLException e) {
+            LOG.trace(e.getMessage(), e);
+        }
+
+        return ids;
+    }
+
+    /**
+     * clean up a table for a specific type
      */
     public void clean(Set<String> typeLabels) throws SQLException {
-
-
-        // TODO figure out how to drop all tables
         for (String typeLabel : typeLabels) {
-            Connection conn = DriverManager.getConnection("jdbc:ignite:thin://127.0.0.1/");
-            try (PreparedStatement stmt = conn.prepareStatement("DROP TABLE IF EXISTS " + this.getTableName(typeLabel))) {
-                stmt.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            dropTable(getTableName(typeLabel));
+        }
+    }
+
+    private void dropTable(String tableName) throws SQLException {
+        Connection conn = DriverManager.getConnection("jdbc:ignite:thin://127.0.0.1/");
+        try (PreparedStatement stmt = conn.prepareStatement("DROP TABLE IF EXISTS " + this.getTableName(tableName))) {
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            LOG.trace(e.getMessage(), e);
         }
     }
 }

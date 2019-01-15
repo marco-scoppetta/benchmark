@@ -106,7 +106,7 @@ public class GraknBenchmark {
             DataGenerator dataGenerator = new DataGenerator(session, config, randomSeed);
             dataGenerator.loadSchema();
 
-            List<Integer> numConceptsInRun = config.getConceptsToBenchmark();
+            List<Integer> numConceptsInRun = config.scalesToProfile();
             for (int numConcepts : numConceptsInRun) {
                 LOG.info("Running queries with " + numConcepts + " concepts");
                 dataGenerator.generate(numConcepts);

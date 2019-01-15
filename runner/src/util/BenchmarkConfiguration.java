@@ -95,8 +95,8 @@ public class BenchmarkConfiguration {
         return this.queries;
     }
 
-    public List<Integer> getConceptsToBenchmark() {
-        return this.benchmarkConfigFile.getConceptsToBenchmark();
+    public List<Integer> scalesToProfile() {
+        return this.benchmarkConfigFile.scalesToProfile();
     }
 
     public boolean generateData() {
@@ -139,7 +139,7 @@ public class BenchmarkConfiguration {
         try {
             return benchmarkConfigMapper.readValue(configFilePath.toFile(), BenchmarkConfigurationFile.class);
         } catch (IOException e) {
-            throw new RuntimeException("Exception parsing Benchmark configuration file", e);
+            throw new BootupException("Exception parsing Benchmark configuration file", e);
         }
     }
 

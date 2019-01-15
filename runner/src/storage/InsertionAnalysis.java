@@ -19,17 +19,17 @@
 package grakn.benchmark.runner.storage;
 
 import grakn.core.concept.Concept;
+import grakn.core.concept.ConceptId;
 import grakn.core.graql.InsertQuery;
 import grakn.core.graql.Match;
 import grakn.core.graql.Var;
 import grakn.core.graql.admin.VarPatternAdmin;
 import grakn.core.graql.answer.ConceptMap;
 import grakn.core.graql.internal.pattern.property.IdProperty;
+import grakn.core.graql.internal.pattern.property.RelationshipProperty;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -78,6 +78,38 @@ public class InsertionAnalysis {
         return resultConcepts;
     }
 
+    /**
+     * Given the query, return the IDs of the concepts that filled ROLES in any relationships
+     * that were added in the given insert query. Returns empty set if none/no relationships added
+     * @return
+     */
+    public static Set<ConceptId> getRolePlayers(InsertQuery query) {
+
+        // find variables and their associated IDs
+        HashMap<Var, ConceptId> varIds = new HashMap<>();
+        Set<Var> rolePlayerVars = new HashSet<>();
+        if (query.admin().match() != null) {
+            for (VarPatternAdmin patternAdmin : query.admin().match().admin().getPattern().varPatterns()) {
+                Var var = patternAdmin.var();
+                Optional<IdProperty> idProperty = patternAdmin.getProperty(IdProperty.class);
+                if (idProperty.isPresent()) {
+                    varIds.put(var, idProperty.get().id());
+                }
+            }
+        }
+        for (VarPatternAdmin patternAdmin : query.admin().varPatterns()) {
+            Optional<RelationshipProperty> relationshipProperty = patternAdmin.getProperty(RelationshipProperty.class);
+            if (relationshipProperty.isPresent()) {
+                rolePlayerVars.addAll(relationshipProperty.get().innerVarPatterns().map(vpa -> vpa.var()).collect(Collectors.toSet()));
+            }
+        }
+
+        return varIds.entrySet().stream()
+                .filter(varStringEntry -> rolePlayerVars.contains(varStringEntry.getKey()))
+                .map(varStringEntry -> varStringEntry.getValue())
+                .collect(Collectors.toSet());
+    }
+
     private static HashSet<Var> getVars(Iterator<VarPatternAdmin> varPatternAdminIterator) {
         HashSet<Var> vars = new HashSet<>();
         while (varPatternAdminIterator.hasNext()) {
@@ -107,4 +139,5 @@ public class InsertionAnalysis {
         varsWithoutIds.removeAll(varsWithIds);
         return varsWithoutIds;
     }
+
 }

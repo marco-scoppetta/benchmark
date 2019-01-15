@@ -1,5 +1,5 @@
 java_test(
-    name = "grakn-benchmark",
+    name = "benchmark-test",
     test_class = "grakn.benchmark.runner.GraknBenchmarkTest",
     srcs = ["GraknBenchmarkTest.java"],
     deps = ["//runner:benchmark-runner"],

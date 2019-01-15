@@ -468,19 +468,19 @@ public class WebContentGenerator implements SchemaSpecificDataGenerator {
     }
 
     private ScalingUniform scalingUniform(double lowerBoundFraction, double upperBoundFraction) {
-        return new ScalingUniform(random, () -> storage.totalEntities(), lowerBoundFraction, upperBoundFraction);
+        return new ScalingUniform(random, () -> getGraphScale(), lowerBoundFraction, upperBoundFraction);
     }
 
     private ScalingDiscreteGaussian scalingGaussian(double meanScaleFraction, double stddevScaleFraction) {
-        return new ScalingDiscreteGaussian(random, () -> storage.totalEntities(), meanScaleFraction, stddevScaleFraction);
+        return new ScalingDiscreteGaussian(random, () -> getGraphScale(), meanScaleFraction, stddevScaleFraction);
     }
 
     private ScalingBoundedZipf scalingZipf(double rangeLimitFraction, double initialExponentForScale40) {
-        return new ScalingBoundedZipf(random, () -> storage.totalEntities(), rangeLimitFraction, initialExponentForScale40);
+        return new ScalingBoundedZipf(random, () -> getGraphScale(), rangeLimitFraction, initialExponentForScale40);
     }
 
     private ScalingConstant scalingConstant(double constantFraction) {
-        return new ScalingConstant(() -> storage.totalEntities(), constantFraction);
+        return new ScalingConstant(() -> getGraphScale(), constantFraction);
     }
 
     private FromIdStoragePicker<ConceptId> fromIdStorageConceptIdPicker(String typeLabel) {
@@ -619,6 +619,11 @@ public class WebContentGenerator implements SchemaSpecificDataGenerator {
         ));
 
 
+    }
+
+
+    public ConceptStore getConceptStore() {
+        return this.storage;
     }
 
 }

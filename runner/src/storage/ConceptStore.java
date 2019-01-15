@@ -19,17 +19,19 @@
 package grakn.benchmark.runner.storage;
 
 import grakn.core.concept.Concept;
+import grakn.core.concept.ConceptId;
 
 /**
  *
  */
 public interface ConceptStore {
 
-    void add(Concept concept);
+    void addConcept(Concept concept);
+    void addRolePlayer(String conceptId);
 
-    int total();
-
-    int totalEntities();
     int totalRelationships();
-    int totalAttributes();
+    int totalRolePlayers();
+    int totalOrphanEntities();
+    int totalOrphanAttributes();
+    int totalRelationshipsRolePlayersOverlap();
 }

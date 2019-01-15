@@ -24,15 +24,15 @@ import grakn.core.concept.Thing;
 import grakn.core.graql.Graql;
 import grakn.core.graql.InsertQuery;
 import grakn.core.graql.Var;
+import grakn.core.graql.VarPattern;
 import grakn.core.graql.answer.ConceptMap;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
+import static grakn.core.graql.Graql.var;
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -63,7 +63,7 @@ public class InsertionAnalysisTest {
     @Test
     public void whenEntityInserted_IdentifyEntityWasInserted() {
 
-        Var x = Graql.var("x");
+        Var x = var("x");
         InsertQuery query = Graql.insert(x.isa("company"));
 
         HashMap<Var, String> vars = new HashMap<>();
@@ -84,10 +84,10 @@ public class InsertionAnalysisTest {
         String yId = "Vy";
         String zId = "Vz";
 
-        Var r = Graql.var("r");
-        Var x = Graql.var("x").asUserDefined();
-        Var y = Graql.var("y").asUserDefined();
-        Var z = Graql.var("z").asUserDefined();
+        Var r = var("r");
+        Var x = var("x").asUserDefined();
+        Var y = var("y").asUserDefined();
+        Var z = var("z").asUserDefined();
 
         HashMap<Var, String> vars = new HashMap<>();
         vars.put(r, rId);
@@ -121,10 +121,10 @@ public class InsertionAnalysisTest {
         String yId = "Vy";
         String zId = "Vz";
 
-        Var r = Graql.var("r");
-        Var x = Graql.var("x").asUserDefined();
-        Var y = Graql.var("y").asUserDefined();
-        Var z = Graql.var("z").asUserDefined();
+        Var r = var("r");
+        Var x = var("x").asUserDefined();
+        Var y = var("y").asUserDefined();
+        Var z = var("z").asUserDefined();
 
         HashMap<Var, String> vars = new HashMap<>();
         vars.put(r, rId);
@@ -158,8 +158,8 @@ public class InsertionAnalysisTest {
 
         String cAttr = "c-name";
 
-        Var x = Graql.var("x").asUserDefined();
-        Var y = Graql.var("y").asUserDefined();
+        Var x = var("x").asUserDefined();
+        Var y = var("y").asUserDefined();
 
         HashMap<Var, String> vars = new HashMap<>();
         vars.put(x, xId);
@@ -185,8 +185,8 @@ public class InsertionAnalysisTest {
 
         String cAttr = "c-name";
 
-        Var x = Graql.var("x").asUserDefined();
-        Var y = Graql.var("y").asUserDefined();
+        Var x = var("x").asUserDefined();
+        Var y = var("y").asUserDefined();
 
         HashMap<Var, String> vars = new HashMap<>();
         vars.put(x, xId);
@@ -201,5 +201,25 @@ public class InsertionAnalysisTest {
 
         assertEquals(1, insertedConcepts.size());
         assertEquals(yId, insertedConcepts.iterator().next().asThing().id().toString());
+    }
+
+    @Test
+    public void whenInsertRelationship_IdentifyRolePlayers() {
+        VarPattern x = var("x").asUserDefined().id(ConceptId.of("V123"));
+        VarPattern y = var("y").asUserDefined().id(ConceptId.of("V234"));
+        InsertQuery insertQuery = Graql.match(x, y).insert(var("r").rel(x).rel(y).isa("friendship"));
+
+        Set<ConceptId> rolePlayerIds = InsertionAnalysis.getRolePlayers(insertQuery);
+        assertTrue(rolePlayerIds.contains(ConceptId.of("V123")));
+        assertTrue(rolePlayerIds.contains(ConceptId.of("V234")));
+    }
+
+    @Test
+    public void whenInsertNonRelationship_ReturnEmptySet() {
+        VarPattern x = var("x").asUserDefined();
+        VarPattern y = var("y").asUserDefined();
+        InsertQuery insert = Graql.insert(x.isa("company").has("name", y).id(ConceptId.of("V123")), y.val("john"));
+        Set<ConceptId> rolePlayerIds = InsertionAnalysis.getRolePlayers(insert);
+        assertEquals(0, rolePlayerIds.size());
     }
 }

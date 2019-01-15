@@ -23,10 +23,7 @@ import grakn.benchmark.runner.schemaspecific.SchemaSpecificDataGeneratorFactory;
 import grakn.benchmark.runner.util.BenchmarkConfiguration;
 import grakn.core.GraknTxType;
 import grakn.core.client.Grakn;
-import grakn.core.concept.AttributeType;
-import grakn.core.concept.Concept;
-import grakn.core.concept.EntityType;
-import grakn.core.concept.RelationshipType;
+import grakn.core.concept.*;
 import grakn.core.graql.InsertQuery;
 import grakn.core.graql.Query;
 import grakn.core.graql.answer.ConceptMap;
@@ -40,6 +37,7 @@ import grakn.benchmark.runner.strategy.TypeStrategyInterface;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -83,7 +81,7 @@ public class DataGenerator {
         this.dataStrategies = SchemaSpecificDataGeneratorFactory.getSpecificStrategy(this.executionName, this.rand, this.storage);
     }
 
-    public void generate(int numConceptsLimit) {
+    public void generate(int graphScaleLimit) {
 
         RouletteWheel<RouletteWheel<TypeStrategyInterface>> operationStrategies = this.dataStrategies.getStrategy();
         /*
@@ -92,9 +90,9 @@ public class DataGenerator {
         */
 
         GeneratorFactory gf = new GeneratorFactory();
-        int conceptTotal = this.storage.total();
+        int graphScale= dataStrategies.getGraphScale();
 
-        while (conceptTotal < numConceptsLimit) {
+        while (graphScale < graphScaleLimit) {
             System.out.printf("\n---- Iteration %d ----\n", this.iteration);
             try (Grakn.Transaction tx = session.transaction(GraknTxType.WRITE)) {
 
@@ -105,16 +103,20 @@ public class DataGenerator {
                 GeneratorInterface generator = gf.create(typeStrategy, tx); // TODO Can we do without creating a new generator each iteration
 
                 System.out.println("Using generator " + generator.getClass().toString());
+                // create the stream of insert/match-insert queries
                 Stream<Query> queryStream = generator.generate();
-                
+
+                // execute & parse the results
                 this.processQueryStream(queryStream);
 
                 iteration++;
-                conceptTotal = this.storage.total();
-                System.out.printf(String.format("---- %d concepts (based on ignite data):----\n", conceptTotal), this.iteration);
-                System.out.println(String.format("   %d entities", this.storage.totalEntities()));
-                System.out.println(String.format("   %d relationships", this.storage.totalRelationships()));
-                System.out.println(String.format("   %d attributes", this.storage.totalAttributes()));
+                graphScale = dataStrategies.getGraphScale();
+                System.out.printf(String.format("Size: %d (based on ignite data)\n", graphScale));
+                System.out.println(String.format("   %d role players", this.storage.totalRolePlayers()));
+                System.out.println(String.format("   %d entity orphans", this.storage.totalOrphanEntities()));
+                System.out.println(String.format("   %d attribute orphans", this.storage.totalOrphanAttributes()));
+                System.out.println(String.format("   %d Rel double counts", this.storage.totalRelationshipsRolePlayersOverlap()));
+                System.out.println(String.format("   %d Relationships", this.storage.totalRelationships()));
 
                 tx.commit();
             }
@@ -133,8 +135,12 @@ public class DataGenerator {
                         if (insertedConcepts.isEmpty()) {
                             throw new RuntimeException("No concepts were inserted");
                         }
-                        insertedConcepts.forEach(concept -> this.storage.add(concept));
+                        insertedConcepts.forEach(concept -> this.storage.addConcept(concept));
+
+                        Set<ConceptId> rolePlayers = InsertionAnalysis.getRolePlayers(q);
+                        rolePlayers.forEach(conceptId -> this.storage.addRolePlayer(conceptId.toString()));
                     });
                 });
     }
+
 }
