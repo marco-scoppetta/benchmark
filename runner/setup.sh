@@ -30,6 +30,16 @@ BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR=external-dependencies
 BENCHMARK_RUNNER_SERVICE_LIB_CP="runner/services/lib/*"
 BENCHMARK_LOGBACK="runner/services"
 
+# ================================================
+# common helper functions
+# ================================================
+on_receiving_ctrl_c() {
+  echo "Benchmark Runner Finshised. Stopping Elasticsearch..."
+  kill $elasticsearch_pid
+  echo "Stopping Zipkin..."
+  kill $zipkin_pid
+}
+
 exit_if_java_not_found() {
   which "${JAVA_BIN}" > /dev/null
   exit_code=$?
@@ -48,10 +58,27 @@ exit_code=0
 pushd "$BENCHMARK_HOME" > /dev/null
 exit_if_java_not_found
 
+if [[ ! -d $BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR/elasticsearch-6.3.2 ]]; then
+  echo "Unzipping Elasticsearch..."
+  unzip -q $BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR/elasticsearch.zip -d $BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR
+fi
+echo -n "Starting Elasticsearch"
+$BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR/elasticsearch-6.3.2/bin/elasticsearch -E path.logs=data/logs/elasticsearch/ -E path.data=data/data/elasticsearch/ &
+elasticsearch_pid=$!
+until $(curl --output /dev/null --silent --head --fail localhost:9200); do
+  echo -n "."
+  sleep 1
+done
+echo
 
-echo "Starting Benchmark Runner"
-CLASSPATH="${BENCHMARK_HOME}/${BENCHMARK_RUNNER_SERVICE_LIB_CP}:${BENCHMARK_HOME}/${BENCHMARK_LOGBACK}"
-java -cp "${CLASSPATH}" -Dworking.dir="${BENCHMARK_HOME}" -Xms512m -Xmx512m grakn.benchmark.runner.GraknBenchmark $@
+echo -n "Starting Zipkin"
+ES_HOSTS=http://localhost:9200 env ES_INDEX="benchmarking" java -jar $BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR/zipkin.jar &
+zipkin_pid=$!
+until $(curl --output /dev/null --silent --head --fail localhost:9411); do
+  echo -n "."
+  sleep 1
+done
+echo
 
 exit_code=$?
 

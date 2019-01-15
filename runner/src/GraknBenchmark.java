@@ -60,11 +60,12 @@ public class GraknBenchmark {
         try {
             ElasticSearchManager.init();
 
+            printAscii();
             GraknBenchmark benchmark = new GraknBenchmark(args);
             benchmark.start();
 
         } catch (Exception e) {
-            LOG.error("Unable to start Grakn Benchmark", e);
+            LOG.error("Unable to start Grakn Benchmark:", e);
         } finally {
             ignite.close();
         }
@@ -120,9 +121,26 @@ public class GraknBenchmark {
     }
 
     private static Ignite initIgnite(){
+        System.setProperty("IGNITE_NO_ASCII", "true"); // Disable Ignite ASCII logo
+        System.setProperty("IGNITE_PERFORMANCE_SUGGESTIONS_DISABLED", "true"); // Enable suggestions when need performance improvements
+        System.setProperty("java.net.preferIPv4Stack","true"); // As suggested by Ignite we set preference on IPv4
         IgniteConfiguration igniteConfig = new IgniteConfiguration();
         IgniteLogger logger = new Slf4jLogger();
         igniteConfig.setGridLogger(logger);
         return Ignition.start(igniteConfig);
+    }
+
+    private static void printAscii(){
+        System.out.println();
+        System.out.println();
+        System.out.println("========================================================================================================");
+        System.out.println("   ______ ____   ___     __ __  _   __   ____   ______ _   __ ______ __  __ __  ___ ___     ____   __ __\n" +
+                "  / ____// __ \\ /   |   / //_/ / | / /  / __ ) / ____// | / // ____// / / //  |/  //   |   / __ \\ / //_/\n" +
+                " / / __ / /_/ // /| |  / ,<   /  |/ /  / __  |/ __/  /  |/ // /    / /_/ // /|_/ // /| |  / /_/ // ,<   \n" +
+                "/ /_/ // _, _// ___ | / /| | / /|  /  / /_/ // /___ / /|  // /___ / __  // /  / // ___ | / _, _// /| |  \n" +
+                "\\____//_/ |_|/_/  |_|/_/ |_|/_/ |_/  /_____//_____//_/ |_/ \\____//_/ /_//_/  /_//_/  |_|/_/ |_|/_/ |_|  \n" +
+                "                                                                                                        ");
+        System.out.println("========================================================================================================");
+        System.out.println();
     }
 }

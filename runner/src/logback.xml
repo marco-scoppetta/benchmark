@@ -24,12 +24,30 @@
         </encoder>
     </appender>
 
+    <!--Configure the "main" appender used for Grakn. Logs are kept for
+        60 days and each file is capped at 50MB, but at most 1GB -->
+    <appender name="MAIN" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/benchmark.log</file>
+        <encoder>
+            <pattern>%date{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>grakn-benchmark-%d{yyyy-MM}.%i.log.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
     <root level="INFO"/>
-    <logger name="grakn.benchmark" level="INFO">
+    <logger name="grakn.benchmark.runner.GraknBenchmark" level="INFO">
         <appender-ref ref="STDOUT"/>
     </logger>
+    <logger name="grakn.benchmark" level="INFO">
+        <appender-ref ref="MAIN"/>
+    </logger>
     <logger name="org.apache.ignite" level="ERROR">
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="MAIN"/>
     </logger>
 
 </configuration>

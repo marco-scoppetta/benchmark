@@ -27,6 +27,7 @@ distribution(
     },
     additional_files = {
         "//runner:runner.sh": "runner/runner.sh",
+        "//runner:setup.sh": "runner/setup.sh",
         "//runner:conf/societal_model/queries.yml": "runner/conf/societal_model/queries.yml",
         "//runner:conf/societal_model/societal_config_1.yml": "runner/conf/societal_model/societal_config_1.yml",
         "//runner:conf/societal_model/societal_model.gql": "runner/conf/societal_model/societal_model.gql",

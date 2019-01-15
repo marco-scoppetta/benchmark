@@ -16,7 +16,7 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-exports_files(glob(["conf/**/*"]) + ["runner.sh"], visibility = ["//visibility:public"])
+exports_files(glob(["conf/**/*"]) + ["runner.sh"] + ["setup.sh"], visibility = ["//visibility:public"])
 
 java_binary(
     name = "benchmark-runner-binary",

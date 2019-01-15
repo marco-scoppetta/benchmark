@@ -75,18 +75,18 @@ public class ElasticSearchManager {
         HttpEntity entity = new StringEntity(indexTemplate, ContentType.APPLICATION_JSON);
         putTemplateRequest.setEntity(entity);
         esClient.performRequest(putTemplateRequest);
-        LOG.info("Created index template `" + indexTemplateName + "`");
+        LOG.debug("Created index template `" + indexTemplateName + "`");
     }
 
     private static boolean indexTemplateExists(RestClient esClient, String indexTemplateName) throws IOException {
         try {
             Request templateExistsRequest = new Request("GET", "/_template/" + indexTemplateName);
             esClient.performRequest(templateExistsRequest);
-            LOG.info("Index template `" + indexTemplateName + "` already exists");
+            LOG.debug("Index template `" + indexTemplateName + "` already exists");
             return true;
         } catch (ResponseException err) {
             // 404 => template does not exist yet
-            LOG.error("Index template `" + indexTemplateName + "` does not exist", err);
+            LOG.debug("Index template `" + indexTemplateName + "` does not exist.");
             return false;
         }
     }
