@@ -1,9 +1,13 @@
 # Benchmark
 
-Benchmark is a piece of software used for measuring the performance of Grakn. It supports two main use cases:
+Benchmark is a piece of software used for generating data and measuring the performance of Grakn. It is composed of two main components:
 
-1. Benchmarking (done using the `runner` package)
-2. Visualising the benchmark result (done using the `dashboard` package)
+1. *GraknBenchmark*, used to run one of the two use cases (done using the `runner` package):
+
+       1. Generate data to different scales and profile performances with different sizes of graph
+
+       2. Profile an existing graph
+2. *Web Dashboard*, used for visualising the benchmark results (done using the `dashboard` package)
 
 ## Requirements
 
@@ -11,7 +15,7 @@ Benchmark is a piece of software used for measuring the performance of Grakn. It
 
 2. [Download Zipkin](https://github.com/openzipkin/zipkin/blob/master/zipkin-server/README.md)
 
-3. Install `pipenv`
+3. Install `pipenv` (for dashboard)
 
 4. Install the requirements of `benchmark-dashboard`: 
 
@@ -19,6 +23,16 @@ Benchmark is a piece of software used for measuring the performance of Grakn. It
    $ cd $BENCHMARK/dashboard
    $ pipenv install
    ```
+
+## Quickstart
+
+We use temporary helper scripts to start Benchmark from scratch on a local machine:
+
+ 1. `runner/setup.sh` will download and start Elasticsearch and Zipkin
+ 2. `runner/runner.sh --config=path-to-config` will start generating data and profiling graph at different scales
+ 3. `runner/runner.sh --no-data-generation -k an-existing-keyspace-name` will profile an existing keyspace, skipping the data generation
+
+NOTE: for the time being you will need to manually kill Elasticsearch and Zipkin once you're done with benchmakring. (`jps` followed by `kill ...` should do)
 
 ## Using Benchmark
 
@@ -46,14 +60,15 @@ $ java -jar zipkin.jar
 
 
 
-### 2. Benchmark Grakn With Benchmark-Runner
+### 2. Benchmark With GraknBenchmark
 
 We define YAML config files to execute under `benchmark/runner/conf/somedir`
 
 The entry point to rebuild, generate, and name executions of config files is `run.py`
 
 Basic usage:
-`run.py --config grakn-benchmark/src/main/resources/societal_config_1.yml --execution-name query-plan-mod-1 --keyspace benchmark --ignite-dir /Users/user/Documents/benchmarking-reqs/apache-ignite-fabric-2.6.0-bin/`
+
+`runner/runner.sh --config grakn-benchmark/src/main/resources/societal_config_1.yml --execution-name query-plan-mod-1 --keyspace benchmark --ignite-dir /Users/user/Documents/benchmarking-reqs/apache-ignite-fabric-2.6.0-bin/`
 
 Notes:
 
@@ -61,17 +76,6 @@ Notes:
 - Keyspace is not required, defaults to `name` in the YAML file
 
 Further examples:
-
-** TODO revisit run.py to see if it is needed all, was primarily intended to collect classpath, Bazel now does already **
-
-Stop and re-unpack Grakn server, then run
-`run.py --unpack-tar --config grakn-benchmark/src/main/resources/societal_config_1.yml`
-
-Rebuild Grakn server, stop and remove the old one, untar, then run
-`run.py --build-grakn --config grakn-benchmark/src/main/resources/societal_config_1.yml`
-
-Rebuild Benchmarking and its dependencies and execute
-`run.py --build-benchmark--alldeps --config grakn-benchmark/src/main/resources/societal_config_1.yml`
 
 #### Adding new spans to measure code segments
 
