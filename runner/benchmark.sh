@@ -24,9 +24,8 @@ set -e
 JAVA_BIN=java
 [[ $(readlink $0) ]] && path=$(readlink $0) || path=$0
 WORKING_DIR=$(cd "$(dirname "${path}")" && pwd -P)
-BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR=external-dependencies
-BENCHMARK_RUNNER_SERVICE_LIB_CP="services/lib/*"
-BENCHMARK_LOGBACK="services"
+BENCHMARK_RUNNER_SERVICE_LIB_CP="lib/*"
+BENCHMARK_LOGBACK="conf"
 
 exit_if_java_not_found(                                     ) {
   which "${JAVA_BIN}" > /dev/null
@@ -46,8 +45,6 @@ exit_code=0
 pushd "$WORKING_DIR" > /dev/null
 exit_if_java_not_found
 
-
-echo "Starting Benchmark Runner"
 CLASSPATH="${WORKING_DIR}/${BENCHMARK_RUNNER_SERVICE_LIB_CP}:${WORKING_DIR}/${BENCHMARK_LOGBACK}"
 java -cp "${CLASSPATH}" -Dworking.dir="${WORKING_DIR}" -Xms512m -Xmx512m grakn.benchmark.runner.GraknBenchmark $@
 

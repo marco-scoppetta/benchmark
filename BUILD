@@ -23,20 +23,20 @@ load("@graknlabs_rules_deployment//distribution:rules.bzl", distribution = "dist
 distribution(
     name = "distribution",
     targets = {
-        "//runner:benchmark-runner": "runner/services/lib/",
+        "//runner:benchmark-runner": "lib/",
     },
     additional_files = {
-        "//runner:runner.sh": "runner/runner.sh",
-        "//runner:setup.sh": "runner/setup.sh",
-        "//runner:conf/societal_model/queries.yml": "runner/conf/societal_model/queries.yml",
-        "//runner:conf/societal_model/societal_config_1.yml": "runner/conf/societal_model/societal_config_1.yml",
-        "//runner:conf/societal_model/societal_model.gql": "runner/conf/societal_model/societal_model.gql",
-        "//runner:conf/web_content/queries.yml": "runner/conf/web_content/queries.yml",
-        "//runner:conf/web_content/web_content_config.yml": "runner/conf/web_content/web_content_config.yml",
-        "//runner:conf/web_content/web_content_schema.gql": "runner/conf/web_content/web_content_schema.gql",
-        "//runner:logback": "runner/services/logback.xml",
+        "//runner:benchmark.sh": "benchmark.sh",
+        "//runner:conf/societal_model/queries.yml": "conf/societal_model/queries.yml",
+        "//runner:conf/societal_model/societal_config_1.yml": "conf/societal_model/societal_config_1.yml",
+        "//runner:conf/societal_model/societal_model.gql": "conf/societal_model/societal_model.gql",
+        "//runner:conf/web_content/queries.yml": "conf/web_content/queries.yml",
+        "//runner:conf/web_content/web_content_config.yml": "conf/web_content/web_content_config.yml",
+        "//runner:conf/web_content/web_content_schema.gql": "conf/web_content/web_content_schema.gql",
+        "//runner:logback": "conf/logback.xml",
         
         # External dependencies: Elasticsearch and Zipkin
+        "//runner:setup.sh": "external-dependencies/setup.sh",
         "@external-dependencies-zipkin//file": "external-dependencies/zipkin.jar",
         "@external-dependencies-elasticsearch//file": "external-dependencies/elasticsearch.zip"
     },
@@ -44,8 +44,5 @@ distribution(
         "data/logs",
         "data/data"
     ],
-    permissions = {
-        "runner/runner.sh": "0755"
-    },
     output_filename = "benchmark",
 )

@@ -28,9 +28,9 @@ Benchmark is a piece of software used for generating data and measuring the perf
 
 We use temporary helper scripts to start Benchmark from scratch on a local machine:
 
- 1. `runner/setup.sh` will download and start Elasticsearch and Zipkin
- 2. `runner/runner.sh --config=path-to-config` will start generating data and profiling graph at different scales
- 3. `runner/runner.sh --no-data-generation -k an-existing-keyspace-name` will profile an existing keyspace, skipping the data generation
+ 1. `external-dependencies/setup.sh` will download and start Elasticsearch and Zipkin
+ 2. `benchmark.sh --config=path-to-config` will start generating data and profiling graph at different scales
+ 3. `benchmark.sh --no-data-generation -k an-existing-keyspace-name` will profile an existing keyspace, skipping the data generation
 
 NOTE: for the time being you will need to manually kill Elasticsearch and Zipkin once you're done with benchmakring. (`jps` followed by `kill ...` should do)
 
@@ -62,13 +62,13 @@ $ java -jar zipkin.jar
 
 ### 2. Benchmark With GraknBenchmark
 
-We define YAML config files to execute under `benchmark/runner/conf/somedir`
+We define YAML config files to execute under `benchmark/conf/somedir`
 
 The entry point to rebuild, generate, and name executions of config files is `run.py`
 
 Basic usage:
 
-`runner/runner.sh --config grakn-benchmark/src/main/resources/societal_config_1.yml --execution-name query-plan-mod-1 --keyspace benchmark --ignite-dir /Users/user/Documents/benchmarking-reqs/apache-ignite-fabric-2.6.0-bin/`
+`benchmark.sh --config grakn-benchmark/src/main/resources/societal_config_1.yml --execution-name query-plan-mod-1 --keyspace benchmark --ignite-dir /Users/user/Documents/benchmarking-reqs/apache-ignite-fabric-2.6.0-bin/`
 
 Notes:
 

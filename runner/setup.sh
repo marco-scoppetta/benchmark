@@ -26,9 +26,7 @@ trap on_receiving_ctrl_c INT
 JAVA_BIN=java
 [[ $(readlink $0) ]] && path=$(readlink $0) || path=$0
 WORKING_DIR=$(cd "$(dirname "${path}")" && pwd -P)
-BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR=external-dependencies
-BENCHMARK_RUNNER_SERVICE_LIB_CP="services/lib/*"
-BENCHMARK_LOGBACK="services"
+BENCHMARK_RUNNER_EXTERNAL_DEPS_DIR=.
 
 # ================================================
 # common helper functions
