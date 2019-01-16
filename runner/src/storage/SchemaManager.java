@@ -47,7 +47,7 @@ public class SchemaManager {
     public static void verifyEmptyKeyspace(Grakn.Session session) {
         try (Grakn.Transaction tx = session.transaction(GraknTxType.READ)) {
             // check for concept instances
-            List<ConceptMap> existingConcepts = tx.graql().match(var("x").isa("thing")).get().execute();
+            List<ConceptMap> existingConcepts = tx.graql().match(var("x").isa("thing")).limit(1).get().execute();
             if (existingConcepts.size() != 0) {
                 throw new BootupException("Keyspace [" + session.keyspace() + "] not empty, contains concept instances");
             }
