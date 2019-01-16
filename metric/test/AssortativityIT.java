@@ -44,6 +44,7 @@ public class AssortativityIT {
 
         // define basic schema
         String keyspaceName = "assortativity_it";
+        client.keyspaces().delete(Keyspace.of(keyspaceName));
         Grakn.Session session = client.session(Keyspace.of(keyspaceName));
         Grakn.Transaction tx = session.transaction(GraknTxType.WRITE);
         List<?> answer = tx.graql().parse("define vertex sub entity, plays endpt; edge sub relationship, relates endpt;").execute();
@@ -72,6 +73,7 @@ public class AssortativityIT {
         double correctAssortativity = -0.38888888888888995;
         double allowedDeviation = 0.000001;
         client.keyspaces().delete(Keyspace.of(keyspaceName));
+        session.close();
         assertEquals(correctAssortativity, computedAssortativity, allowedDeviation);
     }
 
@@ -82,6 +84,7 @@ public class AssortativityIT {
 
         // define basic schema
         String keyspaceName = "assortativity_it";
+        client.keyspaces().delete(Keyspace.of(keyspaceName));
         Grakn.Session session = client.session(Keyspace.of(keyspaceName));
         Grakn.Transaction tx = session.transaction(GraknTxType.WRITE);
         List<?> answer = tx.graql().parse("define vertex sub entity, plays endpt; edge sub relationship, relates endpt;").execute();
@@ -112,6 +115,7 @@ public class AssortativityIT {
         double correctAssortativity = -0.2767857142857146;
         double allowedDeviation = 0.000001;
         client.keyspaces().delete(Keyspace.of(keyspaceName));
+        session.close();
         assertEquals(correctAssortativity, computedAssortativity, allowedDeviation);
     }
 }
