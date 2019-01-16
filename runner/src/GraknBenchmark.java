@@ -53,7 +53,7 @@ public class GraknBenchmark {
     private final String executionName;
 
     /**
-     * Entry point invoked by benchmark.sh script
+     * Entry point invoked by benchmark script
      */
     public static void main(String[] args) {
         printAscii();

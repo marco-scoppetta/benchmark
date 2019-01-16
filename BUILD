@@ -26,7 +26,7 @@ distribution(
         "//runner:benchmark-runner": "lib/",
     },
     additional_files = {
-        "//runner:benchmark.sh": "benchmark.sh",
+        "//runner:benchmark": "benchmark",
         "//runner:conf/societal_model/queries.yml": "conf/societal_model/queries.yml",
         "//runner:conf/societal_model/societal_config_1.yml": "conf/societal_model/societal_config_1.yml",
         "//runner:conf/societal_model/societal_model.gql": "conf/societal_model/societal_model.gql",
