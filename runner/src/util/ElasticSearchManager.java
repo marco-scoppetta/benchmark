@@ -26,6 +26,7 @@ public class ElasticSearchManager {
                     "  \"index_patterns\": [\"benchmark:span-*\"],\n" +
                     "  \"mappings\": {\n" +
                     "    \"span\": { \n" +
+                    "      \"_source\": {\"excludes\": [\"_q\"] },\n"+
                     "      \"properties\": {\n" +
                     "        \"tags\": { \"enabled\": true }\n" +
                     "}}}}";
