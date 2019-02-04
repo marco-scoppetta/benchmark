@@ -1,19 +1,22 @@
 const { spawn } = require('child_process');
 
 function displayStream(stream){
-    stream.stdout.on('data', (data) => {
-        console.log(`${data}`);
-    });
-      
-    stream.stderr.on('data', (data) => {
-        process.stdout.write(`${data}`);
-    });
-      
-    stream.on('close', (code) => {
-        if(code !== 0){
-            console.log(`Script terminated with code ${code}`);
-        }
-    });
+    return new Promise((resolve, reject) => {
+        stream.stdout.on('data', (data) => {
+            console.log(`${data}`);
+        });
+          
+        stream.stderr.on('data', (data) => {
+            process.stdout.write(`${data}`);
+        });
+          
+        stream.on('close', (code) => {
+            if(code !== 0){
+                console.err(`Script terminated with code ${code}`);
+            }
+        });
+    })
+   
 }
     
 module.exports = {
