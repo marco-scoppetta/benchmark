@@ -18,15 +18,14 @@
 
 package grakn.benchmark.profiler.generator.strategy;
 
-import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction;
-import grakn.core.concept.AttributeType;
 import grakn.benchmark.profiler.generator.pick.StreamProviderInterface;
+import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction;
 
 
 /**
  * @param <ValueDatatype>
  */
-public class AttributeStrategy<ValueDatatype> extends TypeStrategy<AttributeType> implements HasPicker{
+public class AttributeStrategy<ValueDatatype> extends TypeStrategy implements HasPicker{
 
     private final StreamProviderInterface<ValueDatatype> valuePicker;
 

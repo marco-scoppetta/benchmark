@@ -19,12 +19,10 @@
 package grakn.benchmark.profiler.generator.strategy;
 
 import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction;
-import grakn.core.concept.Type;
 
 /**
- * @param <T>
  */
-public class TypeStrategy<T extends Type> implements TypeStrategyInterface {
+public class TypeStrategy {
     private final String typeLabel;
     private final ProbabilityDensityFunction numInstancesPDF;
 

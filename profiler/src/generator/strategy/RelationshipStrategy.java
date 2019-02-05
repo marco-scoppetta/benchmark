@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  *
  */
-public class RelationshipStrategy extends TypeStrategy<RelationshipType> {
+public class RelationshipStrategy extends TypeStrategy {
 
     private Set<RolePlayerTypeStrategy> rolePlayerTypeStrategies;
 

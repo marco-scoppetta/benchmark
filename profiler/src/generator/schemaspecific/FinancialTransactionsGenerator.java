@@ -19,10 +19,10 @@ public class FinancialTransactionsGenerator implements SchemaSpecificDefinition 
     private Random random;
     private ConceptStore storage;
 
-    private RouletteWheel<TypeStrategyInterface> entityStrategies;
-    private RouletteWheel<TypeStrategyInterface> relationshipStrategies;
-    private RouletteWheel<TypeStrategyInterface> attributeStrategies;
-    private RouletteWheel<RouletteWheel<TypeStrategyInterface>> operationStrategies;
+    private RouletteWheel<TypeStrategy> entityStrategies;
+    private RouletteWheel<TypeStrategy> relationshipStrategies;
+    private RouletteWheel<TypeStrategy> attributeStrategies;
+    private RouletteWheel<RouletteWheel<TypeStrategy>> operationStrategies;
 
     public FinancialTransactionsGenerator(Random random, ConceptStore storage) {
         this.random = random;
@@ -139,7 +139,7 @@ public class FinancialTransactionsGenerator implements SchemaSpecificDefinition 
     }
 
     @Override
-    public RouletteWheel<RouletteWheel<TypeStrategyInterface>> getDefinition() {
+    public RouletteWheel<RouletteWheel<TypeStrategy>> getDefinition() {
         return this.operationStrategies;
     }
 

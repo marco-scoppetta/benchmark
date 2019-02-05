@@ -18,13 +18,12 @@
 
 package grakn.benchmark.profiler.generator.strategy;
 
-import grakn.core.concept.EntityType;
 import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction;
 
 /**
  *
  */
-public class EntityStrategy extends TypeStrategy<EntityType> {
+public class EntityStrategy extends TypeStrategy {
     public EntityStrategy(String typeLabel, ProbabilityDensityFunction numInstancesPDF) {
         super(typeLabel, numInstancesPDF);
     }
