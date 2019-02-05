@@ -32,7 +32,7 @@ function buildQueriesMap(queries) {
  *                              ...
  *                           ]
  */
-function buildQueriesTimes(queries, spans, executions) {
+function buildQueriesTimes(queries, spans, executions, currentScale) {
   return queries.map(query => {
     // Find all the spans related to the current query
     const querySpans = spans.filter(span => span.tags.query === query);
@@ -40,7 +40,8 @@ function buildQueriesTimes(queries, spans, executions) {
     const times = executions.map(exec => {
       // Collect all the spans relative to this current commit and query
       const executionQuerySpans = querySpans.filter(
-        span => span.tags.executionName === exec.id
+        span =>
+          span.tags.executionName === exec.id && span.tags.scale == currentScale
       );
       // Compute average time combining all the repetitions
       const avgTimeMicro =
@@ -50,13 +51,7 @@ function buildQueriesTimes(queries, spans, executions) {
         executionQuerySpans.map(x => x.duration),
         avgTimeMicro
       );
-      if (stdDeviation > 60000) {
-        console.log(
-          "Numbers: " + executionQuerySpans.map(x => x.duration / 1000)
-        );
-        console.log("AvgTime: " + avgTimeMicro / 1000);
-        console.log("stdDeviation: " + Number(stdDeviation / 1000).toFixed(3));
-      }
+
       return {
         commit: exec.commit,
         avgTime: avgTimeMicro / 1000,

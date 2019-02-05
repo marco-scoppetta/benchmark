@@ -28,7 +28,7 @@ export default {
         getSpans(
           `{ querySpans( limit: 300, executionName: "${
             exec.id
-          }"){ name duration tags { graphName executionName query }} }`
+          }"){ name duration tags { graphName executionName query scale }} }`
         ).then(res => res.data.querySpans)
       )
     ).then(nestedSpans => nestedSpans.flatMap(x => x)),
