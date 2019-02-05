@@ -39,9 +39,9 @@ distribution(
         "//profiler:conf/financial_transactions/financial_config.yml": "conf/financial_transactions/financial_config.yml",
         "//profiler:conf/financial_transactions/financial.gql": "conf/financial_transactions/financial.gql",
 
-        "//profiler:conf/biochem_network/queries.yml": "conf/biochem_network/queries.yml",
-        "//profiler:conf/biochem_network/biochem_config.yml": "conf/biochem_network/biochem_config.yml",
-        "//profiler:conf/biochem_network/biochem_network.gql": "conf/biochem_network/biochem_network.gql",
+        "//profiler:conf/biochemical_network/queries.yml": "conf/biochemical_network/queries.yml",
+        "//profiler:conf/biochemical_network/biochemical_config.yml": "conf/biochemical_network/biochemical_config.yml",
+        "//profiler:conf/biochemical_network/biochemical_network.gql": "conf/biochemical_network/biochemical_network.gql",
 
         "//profiler:logback": "conf/logback.xml",
 

@@ -17,22 +17,19 @@ function mapToSerie(x, queriesMap) {
     showAllSymbol: true,
     tooltip: {
       formatter: args => {
-        return `avgTime: ${Number(args.data.value).toFixed(
-          3
-        )} ms <br> stdDeviation: ${Number(args.data.stdDeviation).toFixed(3)}`;
+        return `
+        query: ${args.seriesName}
+        <br> avgTime: ${Number(args.data.value).toFixed(3)} ms 
+        <br> stdDeviation: ${Number(args.data.stdDeviation).toFixed(3)}`;
       }
     }
   };
 }
 
-function createChart(htmlComponent, title, queriesTimes, queriesMap) {
+function createChart(htmlComponent, queriesTimes, queriesMap) {
   const myChart = echarts.init(htmlComponent);
   // specify chart configuration item and data
   const option = {
-    title: {
-      text: title,
-      subtext: "Grakn graph"
-    },
     tooltip: {
       show: true,
       trigger: "item"
@@ -76,6 +73,7 @@ function createChart(htmlComponent, title, queriesTimes, queriesMap) {
     dataZoom: [
       {
         type: "inside",
+        zoomOnMouseWheel: 'ctrl',
         filterMode: "none",
         orient: "vertical"
       }
