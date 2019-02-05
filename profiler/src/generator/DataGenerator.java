@@ -90,26 +90,23 @@ public class DataGenerator {
          */
         queryStream.forEach(q -> {
 
-                    List<ConceptMap> insertions = q.withTx(tx).execute();
-                    HashSet<Concept> insertedConcepts = InsertionAnalysis.getInsertedConcepts(q, insertions);
-                    if (insertedConcepts.isEmpty()) {
-                        throw new RuntimeException("No concepts were inserted");
-                    }
+            List<ConceptMap> insertions = q.withTx(tx).execute();
+            HashSet<Concept> insertedConcepts = InsertionAnalysis.getInsertedConcepts(q, insertions);
 
-                    insertedConcepts.forEach(storage::addConcept);
+            insertedConcepts.forEach(storage::addConcept);
 
-                    // check if we have to update any roles by first checking if any relationships added
-                    String relationshipAdded = InsertionAnalysis.getRelationshipTypeLabel(q);
-                    if (relationshipAdded != null) {
-                        Map<Concept, String> rolePlayersAdded = InsertionAnalysis.getRolePlayersAndRoles(q, insertions);
+            // check if we have to update any roles by first checking if any relationships added
+            String relationshipAdded = InsertionAnalysis.getRelationshipTypeLabel(q);
+            if (relationshipAdded != null) {
+                Map<Concept, String> rolePlayersAdded = InsertionAnalysis.getRolePlayersAndRoles(q, insertions);
 
-                        rolePlayersAdded.forEach((concept, roleName) -> {
-                            String rolePlayerId = concept.id().toString();
-                            String rolePlayerTypeLabel = concept.asThing().type().label().toString();
-                            storage.addRolePlayer(rolePlayerId, rolePlayerTypeLabel, relationshipAdded, roleName);
-                        });
-                    }
+                rolePlayersAdded.forEach((concept, roleName) -> {
+                    String rolePlayerId = concept.id().toString();
+                    String rolePlayerTypeLabel = concept.asThing().type().label().toString();
+                    storage.addRolePlayer(rolePlayerId, rolePlayerTypeLabel, relationshipAdded, roleName);
                 });
+            }
+        });
     }
 
 
