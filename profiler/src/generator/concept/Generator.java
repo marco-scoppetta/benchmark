@@ -18,9 +18,8 @@
 
 package grakn.benchmark.profiler.generator.concept;
 
-import grakn.core.client.Grakn;
-import grakn.core.graql.InsertQuery;
 import grakn.benchmark.profiler.generator.strategy.TypeStrategy;
+import grakn.core.graql.InsertQuery;
 
 import java.util.stream.Stream;
 
@@ -28,18 +27,15 @@ import java.util.stream.Stream;
  * @param <T>
  */
 // TODO Should generator have an interface to make it easy to pass generators of different types. This means passing a TypeStrategy as a parameter
-public abstract class Generator<T extends TypeStrategy> implements GeneratorInterface {
+public abstract class Generator<T extends TypeStrategy> {
 
     protected final T strategy;
-    protected final Grakn.Transaction tx;
 
     /**
      * @param strategy
-     * @param tx
      */
-    public Generator(T strategy, Grakn.Transaction tx) {
+    public Generator(T strategy) {
         this.strategy = strategy;
-        this.tx = tx;
     }
 
     /**

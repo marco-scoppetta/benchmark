@@ -18,7 +18,6 @@
 
 package grakn.benchmark.profiler.generator.pick;
 
-import grakn.core.client.Grakn;
 import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction;
 
 import java.util.stream.Stream;
@@ -38,14 +37,14 @@ public class StreamProvider<T> implements StreamProviderInterface<T> {
     }
 
     @Override
-    public Stream<T> getStream(ProbabilityDensityFunction pdf, Grakn.Transaction tx) {
+    public Stream<T> getStream(ProbabilityDensityFunction pdf) {
         // Simply limit the stream of ConceptIds to the number given by the probdensity
         int streamLength = pdf.sample();
 
-        if (this.streamer.checkAvailable(streamLength, tx)) {
+        if (this.streamer.checkAvailable(streamLength)) {
 
             // limit check for availability of # required
-            Stream<T> stream = this.streamer.getStream(tx);
+            Stream<T> stream = this.streamer.getStream();
 
             //TODO also check the stream in case it curtails with nulls?
 

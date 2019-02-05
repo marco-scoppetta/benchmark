@@ -3,18 +3,23 @@ package grakn.benchmark.profiler.generator.schemaspecific;
 import grakn.benchmark.profiler.generator.pick.CentralStreamProvider;
 import grakn.benchmark.profiler.generator.pick.StreamProvider;
 import grakn.benchmark.profiler.generator.pick.StringStreamGenerator;
-import grakn.benchmark.profiler.generator.probdensity.*;
+import grakn.benchmark.profiler.generator.probdensity.FixedConstant;
+import grakn.benchmark.profiler.generator.probdensity.FixedUniform;
 import grakn.benchmark.profiler.generator.storage.ConceptStore;
 import grakn.benchmark.profiler.generator.storage.FromIdStorageConceptIdPicker;
-import grakn.benchmark.profiler.generator.storage.IdStore;
 import grakn.benchmark.profiler.generator.storage.NotInRelationshipConceptIdPicker;
-import grakn.benchmark.profiler.generator.strategy.*;
+import grakn.benchmark.profiler.generator.strategy.AttributeStrategy;
+import grakn.benchmark.profiler.generator.strategy.EntityStrategy;
+import grakn.benchmark.profiler.generator.strategy.RelationshipStrategy;
+import grakn.benchmark.profiler.generator.strategy.RolePlayerTypeStrategy;
+import grakn.benchmark.profiler.generator.strategy.RouletteWheel;
+import grakn.benchmark.profiler.generator.strategy.TypeStrategyInterface;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
-public class RoadNetworkGenerator implements SchemaSpecificDataGenerator {
+public class RoadNetworkGenerator implements SchemaSpecificDefinition {
 
     private Random random;
     private ConceptStore storage;
@@ -67,7 +72,7 @@ public class RoadNetworkGenerator implements SchemaSpecificDataGenerator {
                 1.0,
                 new AttributeStrategy<>(
                         "name",
-                        new FixedUniform(this.random,10, 30),
+                        new FixedUniform(this.random, 10, 30),
                         new StreamProvider<>(nameStream)
                 )
         );
@@ -82,14 +87,14 @@ public class RoadNetworkGenerator implements SchemaSpecificDataGenerator {
                 "intersection",
                 new FixedConstant(1),
                 new CentralStreamProvider<>(
-                    new FixedUniform(random, 10, 40), // choose 10-40 roads not in relationships
-                    new NotInRelationshipConceptIdPicker(
-                            random,
-                            (IdStore) storage,
-                           "road",
-                           "intersection",
-                           "endpoint"
-                    )
+                        new FixedUniform(random, 10, 40), // choose 10-40 roads not in relationships
+                        new NotInRelationshipConceptIdPicker(
+                                random,
+                                storage,
+                                "road",
+                                "intersection",
+                                "endpoint"
+                        )
                 )
         );
         RolePlayerTypeStrategy anyEndpointRoads = new RolePlayerTypeStrategy(
@@ -97,7 +102,7 @@ public class RoadNetworkGenerator implements SchemaSpecificDataGenerator {
                 "intersection",
                 new FixedUniform(random, 1, 5), // choose 1-5 other role players for an intersection
                 new StreamProvider<>(
-                        new FromIdStorageConceptIdPicker(random, (IdStore) storage, "road")
+                        new FromIdStorageConceptIdPicker(random, storage, "road")
                 )
         );
 
@@ -116,14 +121,14 @@ public class RoadNetworkGenerator implements SchemaSpecificDataGenerator {
                 "@has-name-owner",
                 "@has-name",
                 new FixedConstant(1),
-                new StreamProvider<> (
+                new StreamProvider<>(
                         new NotInRelationshipConceptIdPicker(
-                            random,
-                            (IdStore) storage,
-                            "road",
-                            "@has-name",
-                            "@has-name-owner"
-                    )
+                                random,
+                                storage,
+                                "road",
+                                "@has-name",
+                                "@has-name-owner"
+                        )
                 )
         );
         // find some names not used and repeatedly connect a small set/one of them to the roads without names
@@ -134,10 +139,10 @@ public class RoadNetworkGenerator implements SchemaSpecificDataGenerator {
                 new CentralStreamProvider<>(
                         new FixedConstant(60), // take unused names
                         new NotInRelationshipConceptIdPicker(
-                               random,
-                               (IdStore) storage,
-                               "name",
-                               "@has-name",
+                                random,
+                                storage,
+                                "name",
+                                "@has-name",
                                 "@has-name-value"
                         )
                 )
@@ -153,12 +158,8 @@ public class RoadNetworkGenerator implements SchemaSpecificDataGenerator {
     }
 
     @Override
-    public RouletteWheel<RouletteWheel<TypeStrategyInterface>> getStrategy() {
+    public RouletteWheel<RouletteWheel<TypeStrategyInterface>> getDefinition() {
         return this.operationStrategies;
     }
 
-    @Override
-    public ConceptStore getConceptStore() {
-        return this.storage;
-    }
 }

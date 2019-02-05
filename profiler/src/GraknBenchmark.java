@@ -20,9 +20,10 @@ package grakn.benchmark.profiler;
 
 import grakn.benchmark.profiler.generator.DataGeneratorException;
 import grakn.benchmark.profiler.generator.DataGenerator;
-import grakn.benchmark.profiler.generator.schemaspecific.SchemaSpecificDataGenerator;
-import grakn.benchmark.profiler.generator.schemaspecific.SchemaSpecificDataGeneratorFactory;
-import grakn.benchmark.profiler.generator.storage.IdStore;
+import grakn.benchmark.profiler.generator.QueryGenerator;
+import grakn.benchmark.profiler.generator.schemaspecific.SchemaSpecificDefinition;
+import grakn.benchmark.profiler.generator.schemaspecific.SchemaSpecificDefinitionFactory;
+import grakn.benchmark.profiler.generator.storage.ConceptStore;
 import grakn.benchmark.profiler.generator.storage.IgniteConceptIdStore;
 import grakn.benchmark.profiler.generator.storage.IgniteManager;
 import grakn.benchmark.profiler.util.SchemaManager;
@@ -121,10 +122,13 @@ public class GraknBenchmark {
         HashSet<RelationshipType> relationshipTypes = schemaManager.getRelationshipTypes();
         HashSet<AttributeType> attributeTypes = schemaManager.getAttributeTypes();
 
-        IdStore storage = new IgniteConceptIdStore(entityTypes, relationshipTypes, attributeTypes);
-        SchemaSpecificDataGenerator schemaSpecificDataGenerator = SchemaSpecificDataGeneratorFactory.getSpecificStrategy(graphName, new Random(randomSeed), storage);
+        ConceptStore storage = new IgniteConceptIdStore(entityTypes, relationshipTypes, attributeTypes);
 
-        return new DataGenerator(session, storage, graphName, schemaSpecificDataGenerator);
+        SchemaSpecificDefinition schemaSpecificDefinition = SchemaSpecificDefinitionFactory.getDefinition(graphName, new Random(randomSeed), storage);
+        QueryGenerator queryGenerator = new QueryGenerator(schemaSpecificDefinition);
+
+
+        return new DataGenerator(session, storage, graphName, queryGenerator);
     }
 
     private static void printAscii() {

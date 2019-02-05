@@ -56,7 +56,7 @@ import static grakn.core.concept.AttributeType.DataType.STRING;
 /**
  * Stores identifiers for all concepts in a Grakn
  */
-public class IgniteConceptIdStore implements IdStore {
+public class IgniteConceptIdStore implements ConceptStore {
     private static final Logger LOG = LoggerFactory.getLogger(IgniteConceptIdStore.class);
 
     private HashSet<String> entityTypeLabels;
@@ -77,6 +77,7 @@ public class IgniteConceptIdStore implements IdStore {
     private int totalExplicitRolePlayers = 0;
 
     public static final Map<AttributeType.DataType<?>, String> DATATYPE_MAPPING;
+
     static {
         Map<AttributeType.DataType<?>, String> mapBuilder = new HashMap<>();
         mapBuilder.put(STRING, "VARCHAR");
@@ -209,6 +210,7 @@ public class IgniteConceptIdStore implements IdStore {
 
     /**
      * Create a table for storing concept IDs of the given type
+     *
      * @param typeLabel
      */
     private void createTypeIdsTable(String typeLabel, Set<String> relationshipLabels) {
@@ -222,6 +224,7 @@ public class IgniteConceptIdStore implements IdStore {
     /**
      * Create a table for storing attributeValues for the given type
      * this is a TWO column table of attribute ID and attribute value
+     *
      * @param typeLabel
      * @param sqlDatatypeName
      */
@@ -229,7 +232,7 @@ public class IgniteConceptIdStore implements IdStore {
                                            String sqlDatatypeName,
                                            Set<String> relationshipLabels) {
 
-        List<String> relationshipColumnNames= relationshipLabels.stream()
+        List<String> relationshipColumnNames = relationshipLabels.stream()
                 .map(label -> this.labelToSqlName.get(label))
                 .collect(Collectors.toList());
 
@@ -248,6 +251,7 @@ public class IgniteConceptIdStore implements IdStore {
 
     /**
      * Create a single column table with the value stored being of the given sqlDatatype
+     *
      * @param tableName
      * @param sqlDatatypeName
      */
@@ -354,6 +358,7 @@ public class IgniteConceptIdStore implements IdStore {
     /**
      * Add a role player, and specify its type, the relationship, and role it fills
      * This will track
+     *
      * @param conceptId
      * @param conceptType
      * @param relationshipType
@@ -406,7 +411,7 @@ public class IgniteConceptIdStore implements IdStore {
             String checkExists = "SELECT id FROM roleplayers WHERE id = '" + conceptId + "'";
             try (ResultSet rs = stmt.executeQuery(checkExists)) {
                 if (!rs.next()) {
-                    String addRolePlayer = "INSERT INTO roleplayers (id, ) VALUES ('"+conceptId+"')";
+                    String addRolePlayer = "INSERT INTO roleplayers (id, ) VALUES ('" + conceptId + "')";
                     stmt.executeUpdate(addRolePlayer);
                 }
             } catch (SQLException e) {
@@ -634,6 +639,7 @@ public class IgniteConceptIdStore implements IdStore {
     /**
      * Return total count of number of role players (repeat counts of the same concept playing multiples roles is
      * counted repeatedly, not once)
+     *
      * @return
      */
     @Override
@@ -644,6 +650,7 @@ public class IgniteConceptIdStore implements IdStore {
     /**
      * Return total count of number of role players (repeat counts of the same concept playing multiples roles is
      * counted repeatedly, not once)
+     *
      * @return
      */
     @Override
@@ -653,13 +660,14 @@ public class IgniteConceptIdStore implements IdStore {
 
     /**
      * Orphan entities = Set(all entities) - Set(entities playing roles)
+     *
      * @return
      */
     @Override
     public int totalOrphanEntities() {
         Set<String> rolePlayerIds = getIds("roleplayers");
         Set<String> entityIds = new HashSet<>();
-        for (String typeLabel: this.entityTypeLabels) {
+        for (String typeLabel : this.entityTypeLabels) {
             Set<String> ids = getIds(this.labelToSqlName.get(typeLabel));
             entityIds.addAll(ids);
         }
@@ -669,13 +677,14 @@ public class IgniteConceptIdStore implements IdStore {
 
     /**
      * Orphan attributes = Set(all attribute ids) - Set(attributes playing roles)
+     *
      * @return
      */
     @Override
     public int totalOrphanAttributes() {
         Set<String> rolePlayerIds = getIds("roleplayers");
         Set<String> attributeIds = new HashSet<>();
-        for (String typeLabel: this.attributeTypeLabels.keySet()) {
+        for (String typeLabel : this.attributeTypeLabels.keySet()) {
             Set<String> ids = getIds(this.labelToSqlName.get(typeLabel));
             attributeIds.addAll(ids);
         }
@@ -686,18 +695,27 @@ public class IgniteConceptIdStore implements IdStore {
     /**
      * Double counting between relationships and relationships also playing roles (including implicit and explicit rels)
      * = Set(All relationship ids) intersect Set(role players)
+     *
      * @return
      */
     @Override
     public int totalRelationshipsRolePlayersOverlap() {
         Set<String> rolePlayerIds = getIds("roleplayers");
         Set<String> relationshipIds = new HashSet<>();
-        for (String typeLabel: this.relationshipTypeLabels) {
+        for (String typeLabel : this.relationshipTypeLabels) {
             Set<String> ids = getIds(this.labelToSqlName.get(typeLabel));
             relationshipIds.addAll(ids);
         }
         relationshipIds.retainAll(rolePlayerIds);
         return relationshipIds.size();
+    }
+
+    @Override
+    public int getGraphScale() {
+        int entities = totalEntities();
+        int attributes = totalAttributes();
+        int relationships = totalExplicitRelationships();
+        return entities + attributes + relationships;
     }
 
     private Set<String> getIds(String tableName) {

@@ -18,11 +18,8 @@
 
 package grakn.benchmark.profiler.generator.concept;
 
-import grakn.core.client.Grakn;
 import grakn.core.graql.Graql;
 import grakn.core.graql.InsertQuery;
-import grakn.core.graql.Query;
-import grakn.core.graql.QueryBuilder;
 import grakn.core.graql.Var;
 import grakn.benchmark.profiler.generator.probdensity.FixedConstant;
 import grakn.benchmark.profiler.generator.pick.StreamProviderInterface;
@@ -38,10 +35,9 @@ import java.util.stream.Stream;
 public class AttributeGenerator< ValueDatatype> extends Generator<AttributeStrategy<ValueDatatype>> {
     /**
      * @param strategy
-     * @param tx
      */
-    public AttributeGenerator(AttributeStrategy<ValueDatatype> strategy, Grakn.Transaction tx) {
-        super(strategy, tx);
+    public AttributeGenerator(AttributeStrategy<ValueDatatype> strategy) {
+        super(strategy);
     }
 
     /**
@@ -49,7 +45,6 @@ public class AttributeGenerator< ValueDatatype> extends Generator<AttributeStrat
      */
     @Override
     public Stream<InsertQuery> generate() {
-        QueryBuilder qb = this.tx.graql();
         int numInstances = this.strategy.getNumInstancesPDF().sample();
 
         StreamProviderInterface<ValueDatatype> valuePicker = this.strategy.getPicker();
@@ -60,9 +55,9 @@ public class AttributeGenerator< ValueDatatype> extends Generator<AttributeStrat
 
         return Stream.generate(() -> {
             Var attr = Graql.var().asUserDefined();
-            Stream<ValueDatatype> valueStream = valuePicker.getStream(unityPDF, tx);
+            Stream<ValueDatatype> valueStream = valuePicker.getStream(unityPDF);
             ValueDatatype value = valueStream.findFirst().get();
-            return qb.insert(attr.isa(attributeTypeLabel), attr.val(value));
+            return Graql.insert(attr.isa(attributeTypeLabel), attr.val(value));
         }).limit(numInstances).filter(Objects::nonNull);
     }
 }

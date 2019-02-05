@@ -18,8 +18,6 @@
 
 package grakn.benchmark.profiler.generator.pick;
 
-import grakn.core.client.Grakn;
-
 import java.util.stream.Stream;
 
 /**
@@ -27,5 +25,5 @@ import java.util.stream.Stream;
  */
 public interface PickerInterface<T> extends StreamInterface<T> {
 
-    Stream<Integer> getStreamOfRandomOffsets(Grakn.Transaction tx);
+    Stream<Integer> getStreamOfRandomOffsets();
 }

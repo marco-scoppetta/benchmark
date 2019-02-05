@@ -18,7 +18,6 @@
 
 package grakn.benchmark.profiler.generator.pick;
 
-import grakn.core.client.Grakn;
 import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction;
 
 import java.util.ArrayList;
@@ -61,7 +60,7 @@ public class CentralStreamProvider<T> implements StreamProviderInterface<T> {
     }
 
     @Override
-    public Stream<T> getStream(ProbabilityDensityFunction pdf, Grakn.Transaction tx) {
+    public Stream<T> getStream(ProbabilityDensityFunction pdf) {
         // Get the same list as used previously, or generate one if not seen before
         // Only create a new stream if reset() has been called prior
 
@@ -70,7 +69,7 @@ public class CentralStreamProvider<T> implements StreamProviderInterface<T> {
             int quantity = this.centralConceptsPdf.sample();
 
             this.conceptIdList.clear();
-            this.streamer.getStream(tx).limit(quantity).forEach(conceptId -> conceptIdList.add(conceptId));
+            this.streamer.getStream().limit(quantity).forEach(conceptId -> conceptIdList.add(conceptId));
 
             this.consumeFrom = 0;
             this.isReset = false;

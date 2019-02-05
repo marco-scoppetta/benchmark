@@ -18,14 +18,8 @@
 
 package grakn.benchmark.profiler.generator;
 
-import grakn.benchmark.profiler.generator.concept.GeneratorFactory;
-import grakn.benchmark.profiler.generator.concept.GeneratorInterface;
-import grakn.benchmark.profiler.generator.schemaspecific.SchemaSpecificDataGenerator;
 import grakn.benchmark.profiler.generator.storage.ConceptStore;
-import grakn.benchmark.profiler.generator.storage.IdStore;
 import grakn.benchmark.profiler.generator.storage.InsertionAnalysis;
-import grakn.benchmark.profiler.generator.strategy.RouletteWheel;
-import grakn.benchmark.profiler.generator.strategy.TypeStrategyInterface;
 import grakn.core.GraknTxType;
 import grakn.core.client.Grakn;
 import grakn.core.concept.Concept;
@@ -51,18 +45,18 @@ public class DataGenerator {
 
     private final Grakn.Session session;
     private final String graphName;
+    private final QueryGenerator queryGenerator;
     private final ConceptStore storage;
-    private final SchemaSpecificDataGenerator dataStrategies;
 
     private int iteration;
 
 
-    public DataGenerator(Grakn.Session session, IdStore storage, String graphName, SchemaSpecificDataGenerator schemaSpecificDataGenerator) {
+    public DataGenerator(Grakn.Session session, ConceptStore storage, String graphName, QueryGenerator queryGenerator) {
         this.session = session;
         this.graphName = graphName;
+        this.queryGenerator = queryGenerator;
         this.iteration = 0;
         this.storage = storage;
-        this.dataStrategies = schemaSpecificDataGenerator;
     }
 
     /**
@@ -73,61 +67,54 @@ public class DataGenerator {
      */
     public void generate(int graphScaleLimit) {
 
-        RouletteWheel<RouletteWheel<TypeStrategyInterface>> operationStrategies = dataStrategies.getStrategy();
-
-        GeneratorFactory gf = new GeneratorFactory();
-        int graphScale = dataStrategies.getGraphScale();
-
-        while (graphScale < graphScaleLimit) {
+        while (storage.getGraphScale() < graphScaleLimit) {
             try (Grakn.Transaction tx = session.transaction(GraknTxType.WRITE)) {
-                TypeStrategyInterface typeStrategy = operationStrategies.next().next();
-                GeneratorInterface generator = gf.create(typeStrategy, tx); // TODO Can we do without creating a new generator each iteration
 
                 // create the stream of insert/match-insert queries
-                Stream<InsertQuery> queryStream = generator.generate();
+                Stream<InsertQuery> queryStream = queryGenerator.nextQueryBatch();
 
                 // execute & parse the results
-                processQueryStream(queryStream);
-                iteration++;
+                processQueryStream(queryStream, tx);
 
-                graphScale = dataStrategies.getGraphScale();
-                printProgress(graphScale, typeStrategy.getTypeLabel());
+                printProgress();
                 tx.commit();
             }
+            iteration++;
         }
         System.out.print("\n");
     }
 
-    private void processQueryStream(Stream<InsertQuery> queryStream) {
+    private void processQueryStream(Stream<InsertQuery> queryStream, Grakn.Transaction tx) {
         /*
         Make the data insertions from the stream of queries generated
          */
         queryStream.forEach(q -> {
 
-            List<ConceptMap> insertions = q.execute();
-            HashSet<Concept> insertedConcepts = InsertionAnalysis.getInsertedConcepts(q, insertions);
-            if (insertedConcepts.isEmpty()) {
-                throw new RuntimeException("No concepts were inserted");
-            }
+                    List<ConceptMap> insertions = q.withTx(tx).execute();
+                    HashSet<Concept> insertedConcepts = InsertionAnalysis.getInsertedConcepts(q, insertions);
+                    if (insertedConcepts.isEmpty()) {
+                        throw new RuntimeException("No concepts were inserted");
+                    }
 
-            insertedConcepts.forEach(storage::addConcept);
+                    insertedConcepts.forEach(storage::addConcept);
 
-            // check if we have to update any roles by first checking if any relationships added
-            String relationshipAdded = InsertionAnalysis.getRelationshipTypeLabel(q);
-            if (relationshipAdded != null) {
-                Map<Concept, String> rolePlayersAdded = InsertionAnalysis.getRolePlayersAndRoles(q, insertions);
+                    // check if we have to update any roles by first checking if any relationships added
+                    String relationshipAdded = InsertionAnalysis.getRelationshipTypeLabel(q);
+                    if (relationshipAdded != null) {
+                        Map<Concept, String> rolePlayersAdded = InsertionAnalysis.getRolePlayersAndRoles(q, insertions);
 
-                rolePlayersAdded.forEach((concept, roleName) -> {
-                    String rolePlayerId = concept.id().toString();
-                    String rolePlayerTypeLabel = concept.asThing().type().label().toString();
-                    storage.addRolePlayer(rolePlayerId, rolePlayerTypeLabel, relationshipAdded, roleName);
+                        rolePlayersAdded.forEach((concept, roleName) -> {
+                            String rolePlayerId = concept.id().toString();
+                            String rolePlayerTypeLabel = concept.asThing().type().label().toString();
+                            storage.addRolePlayer(rolePlayerId, rolePlayerTypeLabel, relationshipAdded, roleName);
+                        });
+                    }
                 });
-            }
-        });
     }
 
 
-    private void printProgress(int graphScale, String generatedTypeLabel) {
+    private void printProgress() {
+        int graphScale = storage.getGraphScale();
         int totalRolePlayers = this.storage.totalRolePlayers();
         int explicitRolePlayers = this.storage.totalExplicitRolePlayers();
         // this should actually == number of implicit relationships!
@@ -166,7 +153,7 @@ public class DataGenerator {
 
         // write to log verbosely in DEBUG that it doesn't overwrite
         LOG.debug(String.format("----- Iteration %d [%s] ----- ", this.iteration, this.graphName));
-        LOG.debug(String.format(">> Generating instances of concept type \"%s\"", generatedTypeLabel));
+//        LOG.debug(String.format(">> Generating instances of concept type \"%s\"", generatedTypeLabel));
         LOG.debug(String.format(">> %d - Scale", graphScale));
         LOG.debug(String.format(">> %d, %d, %d - entity, explicit relationships, attributes", entities, explicitRelationships, attributes));
         LOG.debug(String.format(">> %d, %d - entity orphans, attribute orphans ", orphanEntities, orphanAttrs));

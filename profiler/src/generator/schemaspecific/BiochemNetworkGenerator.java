@@ -7,15 +7,19 @@ import grakn.benchmark.profiler.generator.probdensity.FixedDiscreteGaussian;
 import grakn.benchmark.profiler.generator.probdensity.ScalingDiscreteGaussian;
 import grakn.benchmark.profiler.generator.storage.ConceptStore;
 import grakn.benchmark.profiler.generator.storage.FromIdStorageConceptIdPicker;
-import grakn.benchmark.profiler.generator.storage.IdStore;
 import grakn.benchmark.profiler.generator.storage.NotInRelationshipConceptIdPicker;
-import grakn.benchmark.profiler.generator.strategy.*;
+import grakn.benchmark.profiler.generator.strategy.AttributeStrategy;
+import grakn.benchmark.profiler.generator.strategy.EntityStrategy;
+import grakn.benchmark.profiler.generator.strategy.RelationshipStrategy;
+import grakn.benchmark.profiler.generator.strategy.RolePlayerTypeStrategy;
+import grakn.benchmark.profiler.generator.strategy.RouletteWheel;
+import grakn.benchmark.profiler.generator.strategy.TypeStrategyInterface;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
-public class BiochemNetworkGenerator implements SchemaSpecificDataGenerator {
+public class BiochemNetworkGenerator implements SchemaSpecificDefinition {
 
     private Random random;
     private ConceptStore storage;
@@ -75,7 +79,7 @@ public class BiochemNetworkGenerator implements SchemaSpecificDataGenerator {
                 1.0,
                 new AttributeStrategy<>(
                         "biochem-id",
-                        new FixedDiscreteGaussian(this.random,5,3),
+                        new FixedDiscreteGaussian(this.random, 5, 3),
                         new StreamProvider<>(idGenerator)
                 )
         );
@@ -91,11 +95,11 @@ public class BiochemNetworkGenerator implements SchemaSpecificDataGenerator {
                 "agent",
                 "interaction",
                 // high variance in the number of role players
-                new ScalingDiscreteGaussian(random, () -> this.getGraphScale(), 0.01, 0.005),
+                new ScalingDiscreteGaussian(random, () -> storage.getGraphScale(), 0.01, 0.005),
                 new StreamProvider<>(
                         new FromIdStorageConceptIdPicker(
                                 random,
-                                (IdStore) this.storage,
+                                this.storage,
                                 "chemical")
                 )
         );
@@ -103,11 +107,11 @@ public class BiochemNetworkGenerator implements SchemaSpecificDataGenerator {
                 "catalyst",
                 "interaction",
                 // high variance in the number of role players
-                new ScalingDiscreteGaussian(random, () -> this.getGraphScale(), 0.001, 0.001),
+                new ScalingDiscreteGaussian(random, () -> storage.getGraphScale(), 0.001, 0.001),
                 new StreamProvider<>(
                         new FromIdStorageConceptIdPicker(
                                 random,
-                                (IdStore) this.storage,
+                                this.storage,
                                 "enzyme")
                 )
         );
@@ -129,7 +133,7 @@ public class BiochemNetworkGenerator implements SchemaSpecificDataGenerator {
                 new StreamProvider<>(
                         new NotInRelationshipConceptIdPicker(
                                 random,
-                                (IdStore) storage,
+                                storage,
                                 "chemical", "@has-biochem-id", "@has-biochem-id-owner"
                         )
                 )
@@ -141,7 +145,7 @@ public class BiochemNetworkGenerator implements SchemaSpecificDataGenerator {
                 new StreamProvider<>(
                         new NotInRelationshipConceptIdPicker(
                                 random,
-                                (IdStore) storage,
+                                storage,
                                 "biochem-id", "@has-biochem-id", "@has-biochem-id-value"
                         )
                 )
@@ -164,7 +168,7 @@ public class BiochemNetworkGenerator implements SchemaSpecificDataGenerator {
                 new StreamProvider<>(
                         new NotInRelationshipConceptIdPicker(
                                 random,
-                                (IdStore) storage,
+                                storage,
                                 "enzyme", "@has-biochem-id", "@has-biochem-id-owner"
                         )
                 )
@@ -176,7 +180,7 @@ public class BiochemNetworkGenerator implements SchemaSpecificDataGenerator {
                 new StreamProvider<>(
                         new NotInRelationshipConceptIdPicker(
                                 random,
-                                (IdStore) storage,
+                                storage,
                                 "biochem-id", "@has-biochem-id", "@has-biochem-id-value"
                         )
                 )
@@ -192,12 +196,8 @@ public class BiochemNetworkGenerator implements SchemaSpecificDataGenerator {
     }
 
     @Override
-    public RouletteWheel<RouletteWheel<TypeStrategyInterface>> getStrategy() {
+    public RouletteWheel<RouletteWheel<TypeStrategyInterface>> getDefinition() {
         return this.operationStrategies;
     }
 
-    @Override
-    public ConceptStore getConceptStore() {
-        return this.storage;
-    }
 }

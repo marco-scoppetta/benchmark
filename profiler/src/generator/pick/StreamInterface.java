@@ -18,15 +18,13 @@
 
 package grakn.benchmark.profiler.generator.pick;
 
-import grakn.core.client.Grakn;
-
 import java.util.stream.Stream;
 
 /**
  * @param <T>
  */
 public interface StreamInterface<T> {
-    Stream<T> getStream(Grakn.Transaction tx);
-    boolean checkAvailable(int requiredLength, Grakn.Transaction tx);
+    Stream<T> getStream();
+    boolean checkAvailable(int requiredLength);
 }
 

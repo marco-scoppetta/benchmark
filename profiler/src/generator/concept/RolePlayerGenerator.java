@@ -31,10 +31,9 @@ public class RolePlayerGenerator extends Generator<RolePlayerTypeStrategy> {
 
     /**
      * @param strategy
-     * @param tx
      */
-    public RolePlayerGenerator(RolePlayerTypeStrategy strategy, Grakn.Transaction tx) {
-        super(strategy, tx);
+    public RolePlayerGenerator(RolePlayerTypeStrategy strategy) {
+        super(strategy);
     }
 
     /**

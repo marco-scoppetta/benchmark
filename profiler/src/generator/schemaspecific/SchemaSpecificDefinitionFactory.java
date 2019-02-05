@@ -4,9 +4,9 @@ import grakn.benchmark.profiler.generator.storage.ConceptStore;
 
 import java.util.Random;
 
-public class SchemaSpecificDataGeneratorFactory {
+public class SchemaSpecificDefinitionFactory {
 
-    public static SchemaSpecificDataGenerator getSpecificStrategy(String name, Random random, ConceptStore storage) {
+    public static SchemaSpecificDefinition getDefinition(String name, Random random, ConceptStore storage) {
         switch (name) {
             case "social_network":
                 return new SocialNetworkGenerator(random, storage);

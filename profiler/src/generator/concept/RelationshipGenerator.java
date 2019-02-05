@@ -47,10 +47,9 @@ public class RelationshipGenerator extends Generator<RelationshipStrategy> {
 
     /**
      * @param strategy
-     * @param tx
      */
-    public RelationshipGenerator(RelationshipStrategy strategy, Grakn.Transaction tx) {
-        super(strategy, tx);
+    public RelationshipGenerator(RelationshipStrategy strategy) {
+        super(strategy);
     }
 
     /**
@@ -58,7 +57,6 @@ public class RelationshipGenerator extends Generator<RelationshipStrategy> {
      */
     @Override
     public Stream<InsertQuery> generate() {
-        QueryBuilder qb = this.tx.graql();
 
         int numInstances = this.strategy.getNumInstancesPDF().sample();
 
@@ -89,7 +87,7 @@ public class RelationshipGenerator extends Generator<RelationshipStrategy> {
 
                 // Find random role-players matching this type
                 // Pick ids from the list of concept ids
-                Stream<ConceptId> conceptIdStream = rolePlayerTypeStrategy.getPicker().getStream(rolePlayerTypeStrategy.getNumInstancesPDF(), tx);
+                Stream<ConceptId> conceptIdStream = rolePlayerTypeStrategy.getPicker().getStream(rolePlayerTypeStrategy.getNumInstancesPDF());
 
                 Iterator<ConceptId> iter = conceptIdStream.iterator();
 
@@ -112,7 +110,7 @@ public class RelationshipGenerator extends Generator<RelationshipStrategy> {
                     insertVarPattern = insertVarPattern.rel(roleLabel, v);
                 }
             }
-            return qb.match(matchVarPattern).insert(insertVarPattern);
+            return Graql.match(matchVarPattern).insert(insertVarPattern);
 
         }).limit(numInstances).filter(Objects::nonNull);
     }

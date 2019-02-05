@@ -8,14 +8,18 @@ import grakn.benchmark.profiler.generator.probdensity.ScalingBoundedZipf;
 import grakn.benchmark.profiler.generator.probdensity.ScalingDiscreteGaussian;
 import grakn.benchmark.profiler.generator.storage.ConceptStore;
 import grakn.benchmark.profiler.generator.storage.FromIdStorageConceptIdPicker;
-import grakn.benchmark.profiler.generator.storage.IdStore;
-import grakn.benchmark.profiler.generator.strategy.*;
+import grakn.benchmark.profiler.generator.strategy.AttributeStrategy;
+import grakn.benchmark.profiler.generator.strategy.EntityStrategy;
+import grakn.benchmark.profiler.generator.strategy.RelationshipStrategy;
+import grakn.benchmark.profiler.generator.strategy.RolePlayerTypeStrategy;
+import grakn.benchmark.profiler.generator.strategy.RouletteWheel;
+import grakn.benchmark.profiler.generator.strategy.TypeStrategyInterface;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
-public class SocialNetworkGenerator implements SchemaSpecificDataGenerator {
+public class SocialNetworkGenerator implements SchemaSpecificDefinition {
 
     private Random random;
     private ConceptStore storage;
@@ -23,7 +27,7 @@ public class SocialNetworkGenerator implements SchemaSpecificDataGenerator {
     private RouletteWheel<TypeStrategyInterface> entityStrategies;
     private RouletteWheel<TypeStrategyInterface> relationshipStrategies;
     private RouletteWheel<TypeStrategyInterface> attributeStrategies;
-    private RouletteWheel<RouletteWheel<TypeStrategyInterface>> operationStrategies;
+    private RouletteWheel<RouletteWheel<TypeStrategyInterface>> metaTypeStrategies;
 
     public SocialNetworkGenerator(Random random, ConceptStore storage) {
         this.random = random;
@@ -32,16 +36,16 @@ public class SocialNetworkGenerator implements SchemaSpecificDataGenerator {
         this.entityStrategies = new RouletteWheel<>(random);
         this.relationshipStrategies = new RouletteWheel<>(random);
         this.attributeStrategies = new RouletteWheel<>(random);
-        this.operationStrategies = new RouletteWheel<>(random);
+        this.metaTypeStrategies = new RouletteWheel<>(random);
 
         buildGenerator();
     }
 
     private void buildGenerator() {
         buildStrategies();
-        this.operationStrategies.add(1.0, entityStrategies);
-        this.operationStrategies.add(1.2, relationshipStrategies);
-        this.operationStrategies.add(1.0, attributeStrategies);
+        this.metaTypeStrategies.add(1.0, entityStrategies);
+        this.metaTypeStrategies.add(1.2, relationshipStrategies);
+        this.metaTypeStrategies.add(1.0, attributeStrategies);
     }
 
     private void buildStrategies() {
@@ -94,7 +98,7 @@ public class SocialNetworkGenerator implements SchemaSpecificDataGenerator {
                 new StreamProvider<>(
                     new FromIdStorageConceptIdPicker(
                         random,
-                        (IdStore) this.storage,
+                        this.storage,
                         "person")
                 )
         );
@@ -102,7 +106,7 @@ public class SocialNetworkGenerator implements SchemaSpecificDataGenerator {
                 1.0,
                 new RelationshipStrategy(
                         "friendship",
-                        new ScalingBoundedZipf(this.random, ()->this.getGraphScale(), 0.5, 2.3),
+                        new ScalingBoundedZipf(this.random, ()-> storage.getGraphScale(), 0.5, 2.3),
                         new HashSet<>(Arrays.asList(friendRoleFiller))
                 )
         );
@@ -113,19 +117,19 @@ public class SocialNetworkGenerator implements SchemaSpecificDataGenerator {
                 "liked",
                 "like",
                 new FixedConstant(1),
-                new StreamProvider<>(new FromIdStorageConceptIdPicker(random, (IdStore) storage, "page"))
+                new StreamProvider<>(new FromIdStorageConceptIdPicker(random, storage, "page"))
         );
         RolePlayerTypeStrategy likerPersonRole = new RolePlayerTypeStrategy(
                 "liker",
                 "like",
                 new FixedConstant(1),
-                new StreamProvider<>(new FromIdStorageConceptIdPicker(random, (IdStore) storage, "person"))
+                new StreamProvider<>(new FromIdStorageConceptIdPicker(random, storage, "person"))
         );
         this.relationshipStrategies.add(
                 1.0,
                 new RelationshipStrategy(
                         "like",
-                        new ScalingDiscreteGaussian(random, () -> this.getGraphScale(), 0.05, 0.001),
+                        new ScalingDiscreteGaussian(random, () -> storage.getGraphScale(), 0.05, 0.001),
                         new HashSet<>(Arrays.asList(likedPageRole, likerPersonRole))
                 )
         );
@@ -136,31 +140,27 @@ public class SocialNetworkGenerator implements SchemaSpecificDataGenerator {
                 "@has-name-owner",
                 "@has-name",
                 new FixedConstant(1),
-                new StreamProvider<>(new FromIdStorageConceptIdPicker(random, (IdStore) storage, "person"))
+                new StreamProvider<>(new FromIdStorageConceptIdPicker(random, storage, "person"))
         );
         RolePlayerTypeStrategy nameValue = new RolePlayerTypeStrategy(
                 "@has-name-value",
                 "@has-name",
                 new FixedConstant(1),
-                new StreamProvider<>(new FromIdStorageConceptIdPicker(random, (IdStore) storage, "name"))
+                new StreamProvider<>(new FromIdStorageConceptIdPicker(random, storage, "name"))
         );
         this.relationshipStrategies.add(
                 1.0,
                 new RelationshipStrategy(
                         "@has-name",
-                        new ScalingDiscreteGaussian(random, () -> this.getGraphScale(), 0.1, 0.03),
+                        new ScalingDiscreteGaussian(random, () -> storage.getGraphScale(), 0.1, 0.03),
                         new HashSet<>(Arrays.asList(nameOwner, nameValue))
                 )
         );
     }
 
     @Override
-    public RouletteWheel<RouletteWheel<TypeStrategyInterface>> getStrategy() {
-        return this.operationStrategies;
+    public RouletteWheel<RouletteWheel<TypeStrategyInterface>> getDefinition() {
+        return this.metaTypeStrategies;
     }
 
-    @Override
-    public ConceptStore getConceptStore() {
-        return this.storage;
-    }
 }

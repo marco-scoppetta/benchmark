@@ -18,11 +18,9 @@
 
 package grakn.benchmark.profiler.generator.concept;
 
-import grakn.core.client.Grakn;
-import grakn.core.graql.InsertQuery;
-import grakn.core.graql.Query;
-import grakn.core.graql.QueryBuilder;
 import grakn.benchmark.profiler.generator.strategy.EntityStrategy;
+import grakn.core.graql.Graql;
+import grakn.core.graql.InsertQuery;
 
 import java.util.stream.Stream;
 
@@ -32,8 +30,8 @@ import static grakn.core.graql.internal.pattern.Patterns.var;
  *
  */
 public class EntityGenerator extends Generator<EntityStrategy> {
-    public EntityGenerator(EntityStrategy strategy, Grakn.Transaction tx) {
-        super(strategy, tx);
+    public EntityGenerator(EntityStrategy strategy) {
+        super(strategy);
     }
 
     /**
@@ -41,7 +39,6 @@ public class EntityGenerator extends Generator<EntityStrategy> {
      */
     @Override
     public Stream<InsertQuery> generate() {
-        QueryBuilder qb = this.tx.graql();
 
         // TODO Can using toString be avoided? Waiting for TP task #20179
 //        String entityTypeName = this.strategy.getType().label().getValue();
@@ -50,7 +47,7 @@ public class EntityGenerator extends Generator<EntityStrategy> {
 
         int numInstances = this.strategy.getNumInstancesPDF().sample();
 
-        return Stream.generate(() -> qb.insert(var("x").isa(typeLabel)))
+        return Stream.generate(() -> Graql.insert(var("x").isa(typeLabel)))
                 .limit(numInstances);
     }
 }

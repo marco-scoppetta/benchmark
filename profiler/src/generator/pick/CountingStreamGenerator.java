@@ -18,8 +18,6 @@
 
 package grakn.benchmark.profiler.generator.pick;
 
-import grakn.core.client.Grakn;
-
 import java.util.stream.Stream;
 
 /**
@@ -38,12 +36,12 @@ public class CountingStreamGenerator implements StreamInterface<Integer>{
     }
 
     @Override
-    public Stream<Integer> getStream(Grakn.Transaction tx) {
+    public Stream<Integer> getStream() {
         return Stream.generate( () -> next());
     }
 
     @Override
-    public boolean checkAvailable(int requiredLength, Grakn.Transaction tx) {
+    public boolean checkAvailable(int requiredLength) {
         return true;
     }
 }

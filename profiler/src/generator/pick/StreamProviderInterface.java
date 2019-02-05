@@ -18,7 +18,6 @@
 
 package grakn.benchmark.profiler.generator.pick;
 
-import grakn.core.client.Grakn;
 import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction;
 
 import java.util.stream.Stream;
@@ -28,7 +27,7 @@ import java.util.stream.Stream;
  */
 // TODO rename to PDFLimitedStreamProviderInterface
 public interface StreamProviderInterface<T> {
-        Stream<T> getStream(ProbabilityDensityFunction pdf, Grakn.Transaction tx);  // TODO Change from probdensity to streamLength for the benefit of AttributeGenerator
+        Stream<T> getStream(ProbabilityDensityFunction pdf);  // TODO Change from probdensity to streamLength for the benefit of AttributeGenerator
 
         void reset();
 }

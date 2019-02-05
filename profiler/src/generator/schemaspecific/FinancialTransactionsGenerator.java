@@ -7,7 +7,6 @@ import grakn.benchmark.profiler.generator.probdensity.FixedDiscreteGaussian;
 import grakn.benchmark.profiler.generator.probdensity.ScalingDiscreteGaussian;
 import grakn.benchmark.profiler.generator.storage.ConceptStore;
 import grakn.benchmark.profiler.generator.storage.FromIdStorageConceptIdPicker;
-import grakn.benchmark.profiler.generator.storage.IdStore;
 import grakn.benchmark.profiler.generator.storage.NotInRelationshipConceptIdPicker;
 import grakn.benchmark.profiler.generator.strategy.*;
 
@@ -15,7 +14,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
-public class FinancialTransactionsGenerator implements SchemaSpecificDataGenerator{
+public class FinancialTransactionsGenerator implements SchemaSpecificDefinition {
 
     private Random random;
     private ConceptStore storage;
@@ -56,7 +55,7 @@ public class FinancialTransactionsGenerator implements SchemaSpecificDataGenerat
                 1.0,
                 new EntityStrategy(
                         "trader",
-                        new ScalingDiscreteGaussian(this.random, () -> this.getGraphScale(), 0.02, 0.01))
+                        new ScalingDiscreteGaussian(this.random, () -> storage.getGraphScale(), 0.02, 0.01))
         );
 
 
@@ -85,11 +84,11 @@ public class FinancialTransactionsGenerator implements SchemaSpecificDataGenerat
                 "transactor",
                 "transaction",
                 // high variance in the number of role players
-                new ScalingDiscreteGaussian(random, () -> this.getGraphScale(), 0.01, 0.01),
+                new ScalingDiscreteGaussian(random, () -> storage.getGraphScale(), 0.01, 0.01),
                 new StreamProvider<>(
                         new FromIdStorageConceptIdPicker(
                                 random,
-                                (IdStore) this.storage,
+                                 this.storage,
                                 "trader")
                 )
         );
@@ -111,7 +110,7 @@ public class FinancialTransactionsGenerator implements SchemaSpecificDataGenerat
                 new StreamProvider<>(
                         new NotInRelationshipConceptIdPicker(
                                 random,
-                                (IdStore) storage,
+                                storage,
                                 "transaction", "@has-quantity", "@has-quantity-owner"
                         )
                 )
@@ -123,7 +122,7 @@ public class FinancialTransactionsGenerator implements SchemaSpecificDataGenerat
                 new StreamProvider<>(
                         new FromIdStorageConceptIdPicker(
                                 random,
-                                (IdStore) this.storage,
+                                this.storage,
                                 "quantity"
                         )
                 )
@@ -132,7 +131,7 @@ public class FinancialTransactionsGenerator implements SchemaSpecificDataGenerat
                 1.0,
                 new RelationshipStrategy(
                         "@has-quantity",
-                        new ScalingDiscreteGaussian(random, () -> getGraphScale(), 0.01, 0.005), // more than number of entities being created to compensate for being picked less
+                        new ScalingDiscreteGaussian(random, () -> storage.getGraphScale(), 0.01, 0.005), // more than number of entities being created to compensate for being picked less
                         new HashSet<>(Arrays.asList(quantityOwner, quantityValue))
                 )
         );
@@ -140,12 +139,8 @@ public class FinancialTransactionsGenerator implements SchemaSpecificDataGenerat
     }
 
     @Override
-    public RouletteWheel<RouletteWheel<TypeStrategyInterface>> getStrategy() {
+    public RouletteWheel<RouletteWheel<TypeStrategyInterface>> getDefinition() {
         return this.operationStrategies;
     }
 
-    @Override
-    public ConceptStore getConceptStore() {
-        return this.storage;
-    }
 }

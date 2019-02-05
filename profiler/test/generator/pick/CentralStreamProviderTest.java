@@ -24,12 +24,12 @@ public class CentralStreamProviderTest {
 
         StreamInterface<Integer> streamer = mock(StreamInterface.class);
         List<Integer> ints = IntStream.range(0, 10).boxed().collect(Collectors.toList());
-        when(streamer.getStream(any())).thenReturn(ints.stream());
+        when(streamer.getStream()).thenReturn(ints.stream());
 
         FixedConstant five = new FixedConstant(5);
 
         CentralStreamProvider<Integer> centralStreamProvider = new CentralStreamProvider<>(one, streamer);
-        Stream<Integer> centralStream = centralStreamProvider.getStream(five, null);
+        Stream<Integer> centralStream = centralStreamProvider.getStream(five);
 
         List<Integer> centralIntegers = centralStream.collect(Collectors.toList());
 
@@ -45,12 +45,12 @@ public class CentralStreamProviderTest {
 
         StreamInterface<Integer> streamer = mock(StreamInterface.class);
         List<Integer> ints = IntStream.range(0, 10).boxed().collect(Collectors.toList());
-        when(streamer.getStream(any())).thenReturn(ints.stream());
+        when(streamer.getStream()).thenReturn(ints.stream());
 
         FixedConstant five = new FixedConstant(5);
 
         CentralStreamProvider<Integer> centralStreamProvider = new CentralStreamProvider<>(three, streamer);
-        Stream<Integer> centralStream = centralStreamProvider.getStream(five, null);
+        Stream<Integer> centralStream = centralStreamProvider.getStream(five);
 
         List<Integer> centralIntegers = centralStream.collect(Collectors.toList());
 
@@ -66,18 +66,18 @@ public class CentralStreamProviderTest {
 
         StreamInterface<Integer> streamer = mock(StreamInterface.class);
         List<Integer> ints = IntStream.range(0, 10).boxed().collect(Collectors.toList());
-        when(streamer.getStream(any())).thenReturn(ints.stream());
+        when(streamer.getStream()).thenReturn(ints.stream());
 
         FixedConstant five = new FixedConstant(5);
 
         CentralStreamProvider<Integer> centralStreamProvider = new CentralStreamProvider<>(three, streamer);
-        Stream<Integer> centralStream = centralStreamProvider.getStream(five, null);
+        Stream<Integer> centralStream = centralStreamProvider.getStream(five);
 
         List<Integer> centralIntegers = centralStream.collect(Collectors.toList());
         List<Integer> expectedIntegers = Arrays.asList(0, 1, 2, 0, 1);
         Assert.assertThat(centralIntegers, is(expectedIntegers));
 
-        Stream<Integer> centralStreamTwo = centralStreamProvider.getStream(five, null);
+        Stream<Integer> centralStreamTwo = centralStreamProvider.getStream(five);
         List<Integer> centralIntegersTwo = centralStreamTwo.collect(Collectors.toList());
         List<Integer> expectedIntegersTwo = Arrays.asList(2, 0, 1, 2, 0);
         Assert.assertThat(centralIntegersTwo, is(expectedIntegersTwo));
@@ -91,12 +91,12 @@ public class CentralStreamProviderTest {
 
         StreamInterface<Integer> streamer = mock(StreamInterface.class);
         List<Integer> ints = IntStream.range(0, 10).boxed().collect(Collectors.toList());
-        when(streamer.getStream(any())).thenReturn(ints.stream()).thenReturn(ints.stream());
+        when(streamer.getStream()).thenReturn(ints.stream()).thenReturn(ints.stream());
 
         FixedConstant five = new FixedConstant(5);
 
         CentralStreamProvider<Integer> centralStreamProvider = new CentralStreamProvider<>(three, streamer);
-        Stream<Integer> centralStream = centralStreamProvider.getStream(five, null);
+        Stream<Integer> centralStream = centralStreamProvider.getStream(five);
 
         List<Integer> centralIntegers = centralStream.collect(Collectors.toList());
         List<Integer> expectedIntegers = Arrays.asList(0, 1, 2, 0, 1);
@@ -104,7 +104,7 @@ public class CentralStreamProviderTest {
 
         centralStreamProvider.reset();
 
-        Stream<Integer> centralStreamTwo = centralStreamProvider.getStream(five, null);
+        Stream<Integer> centralStreamTwo = centralStreamProvider.getStream(five);
         List<Integer> centralIntegersTwo = centralStreamTwo.collect(Collectors.toList());
         List<Integer> expectedIntegersTwo = Arrays.asList(0, 1, 2, 0, 1);
         Assert.assertThat(centralIntegersTwo, is(expectedIntegersTwo));

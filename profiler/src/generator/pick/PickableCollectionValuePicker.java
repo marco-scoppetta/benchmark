@@ -18,7 +18,6 @@
 
 package grakn.benchmark.profiler.generator.pick;
 
-import grakn.core.client.Grakn;
 import grakn.benchmark.profiler.generator.strategy.PickableCollection;
 
 import java.util.stream.Stream;
@@ -35,13 +34,13 @@ public class PickableCollectionValuePicker<T> implements StreamInterface<T> {
     }
 
     @Override
-    public Stream<T> getStream(Grakn.Transaction tx) {
+    public Stream<T> getStream() {
         return Stream.generate(() -> valueOptions.next());
     }
 
     // TODO could implement replacement/no replacement in PickableCollections if we want
     @Override
-    public boolean checkAvailable(int requiredLength, Grakn.Transaction tx) {
+    public boolean checkAvailable(int requiredLength) {
         return true;
     }
 

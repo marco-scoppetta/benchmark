@@ -1,8 +1,6 @@
 package grakn.benchmark.profiler.generator.pick;
 
 
-import grakn.core.client.Grakn;
-
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
@@ -25,12 +23,12 @@ public class StringStreamGenerator implements StreamInterface<String> {
     }
 
     @Override
-    public Stream<String> getStream(Grakn.Transaction tx) {
+    public Stream<String> getStream() {
         return Stream.generate(() -> this.next());
     }
 
     @Override
-    public boolean checkAvailable(int rqeuiredLength, Grakn.Transaction tx) {
+    public boolean checkAvailable(int rqeuiredLength) {
         return true;
     }
 

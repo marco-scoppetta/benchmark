@@ -19,7 +19,6 @@
 package grakn.benchmark.profiler.generator.storage;
 
 
-import grakn.core.client.Grakn;
 import grakn.benchmark.profiler.generator.pick.Picker;
 import java.util.Random;
 
@@ -30,17 +29,17 @@ import java.util.Random;
  */
 public abstract class FromIdStoragePicker<T> extends Picker<T> {
 
-    protected IdStore conceptStore;
+    protected ConceptStore conceptStore;
     protected String typeLabel;
 
-    public FromIdStoragePicker(Random rand, IdStore conceptStore, String typeLabel) {
+    public FromIdStoragePicker(Random rand, ConceptStore conceptStore, String typeLabel) {
         super(rand);
         this.conceptStore = conceptStore;
         this.typeLabel = typeLabel;
     }
 
 
-    protected Integer getConceptCount(Grakn.Transaction tx) {
+    protected Integer getConceptCount() {
         return this.conceptStore.getConceptCount(this.typeLabel);
     }
 }
