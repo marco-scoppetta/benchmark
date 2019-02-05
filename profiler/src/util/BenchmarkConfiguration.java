@@ -32,7 +32,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static grakn.benchmark.profiler.util.BenchmarkArguments.*;
+import static grakn.benchmark.profiler.util.BenchmarkArguments.CONFIG_ARGUMENT;
+import static grakn.benchmark.profiler.util.BenchmarkArguments.EXECUTION_NAME_ARGUMENT;
+import static grakn.benchmark.profiler.util.BenchmarkArguments.GRAKN_URI;
+import static grakn.benchmark.profiler.util.BenchmarkArguments.KEYSPACE_ARGUMENT;
+import static grakn.benchmark.profiler.util.BenchmarkArguments.NO_DATA_GENERATION_ARGUMENT;
 
 /**
  * This class parses multiple yaml files into object and wraps them
@@ -51,7 +55,6 @@ public class BenchmarkConfiguration {
     private String keyspace;
     private String graknUri;
     private String executionName;
-    private String graphName;
 
     public BenchmarkConfiguration(CommandLine arguments) {
         Path configFilePath = getConfigFilePath(arguments);
@@ -76,10 +79,6 @@ public class BenchmarkConfiguration {
         this.generateData = !(arguments.hasOption(NO_DATA_GENERATION_ARGUMENT));
     }
 
-    public String getConfigName() {
-        return this.benchmarkConfigFile.getGraphName();
-    }
-
     public String graknUri() {
         return graknUri;
     }
@@ -88,7 +87,9 @@ public class BenchmarkConfiguration {
         return executionName;
     }
 
-    public String graphName() { return this.benchmarkConfigFile.getGraphName(); }
+    public String graphName() {
+        return this.benchmarkConfigFile.getGraphName();
+    }
 
     public Keyspace getKeyspace() {
         return Keyspace.of(this.keyspace);
