@@ -20,6 +20,7 @@ package grakn.benchmark.profiler.generator.concept;
 
 import grakn.core.client.Grakn;
 import grakn.core.graql.Graql;
+import grakn.core.graql.InsertQuery;
 import grakn.core.graql.Query;
 import grakn.core.graql.QueryBuilder;
 import grakn.core.graql.Var;
@@ -47,7 +48,7 @@ public class AttributeGenerator< ValueDatatype> extends Generator<AttributeStrat
      * @return
      */
     @Override
-    public Stream<Query> generate() {
+    public Stream<InsertQuery> generate() {
         QueryBuilder qb = this.tx.graql();
         int numInstances = this.strategy.getNumInstancesPDF().sample();
 
@@ -61,7 +62,7 @@ public class AttributeGenerator< ValueDatatype> extends Generator<AttributeStrat
             Var attr = Graql.var().asUserDefined();
             Stream<ValueDatatype> valueStream = valuePicker.getStream(unityPDF, tx);
             ValueDatatype value = valueStream.findFirst().get();
-            return (Query) qb.insert(attr.isa(attributeTypeLabel), attr.val(value));
+            return qb.insert(attr.isa(attributeTypeLabel), attr.val(value));
         }).limit(numInstances).filter(Objects::nonNull);
     }
 }

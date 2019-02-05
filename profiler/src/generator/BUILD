@@ -11,9 +11,7 @@ java_library(
         "//dependencies/maven/artifacts/org/apache/commons:commons-math3",
         "//dependencies/maven/artifacts/org/apache/ignite:ignite-core",
         "//dependencies/maven/artifacts/org/apache/ignite:ignite-indexing",
-        "//dependencies/maven/artifacts/org/apache/ignite:ignite-slf4j",
-        "//profiler:bootup-exception"
-
+        "//dependencies/maven/artifacts/org/apache/ignite:ignite-slf4j"
     ],
     runtime_deps = [
         "//dependencies/maven/artifacts/io/grpc:grpc-netty-shaded"

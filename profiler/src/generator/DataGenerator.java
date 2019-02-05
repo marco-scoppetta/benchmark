@@ -21,7 +21,6 @@ package grakn.benchmark.profiler.generator;
 import grakn.benchmark.profiler.generator.concept.GeneratorFactory;
 import grakn.benchmark.profiler.generator.concept.GeneratorInterface;
 import grakn.benchmark.profiler.generator.schemaspecific.SchemaSpecificDataGenerator;
-import grakn.benchmark.profiler.generator.schemaspecific.SchemaSpecificDataGeneratorFactory;
 import grakn.benchmark.profiler.generator.storage.ConceptStore;
 import grakn.benchmark.profiler.generator.storage.IdStore;
 import grakn.benchmark.profiler.generator.storage.InsertionAnalysis;
@@ -31,7 +30,6 @@ import grakn.core.GraknTxType;
 import grakn.core.client.Grakn;
 import grakn.core.concept.Concept;
 import grakn.core.graql.InsertQuery;
-import grakn.core.graql.Query;
 import grakn.core.graql.answer.ConceptMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,40 +37,43 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.stream.Stream;
 
 /**
- *
+ * Entry point for Generator.
+ * This class is in charge of populating a keyspace executing insert queries provided by schema
+ * specific data generators.
+ * While populating a keyspace it also updates local storage to keep track of what's already
+ * in the current graph.
  */
 public class DataGenerator {
     private static final Logger LOG = LoggerFactory.getLogger(DataGenerator.class);
 
     private final Grakn.Session session;
     private final String graphName;
+    private final ConceptStore storage;
+    private final SchemaSpecificDataGenerator dataStrategies;
+
     private int iteration;
-    private Random rand;
 
-    private ConceptStore storage;
 
-    private SchemaSpecificDataGenerator dataStrategies;
-
-    public DataGenerator(Grakn.Session session, IdStore storage, String graphName, int randomSeed) {
+    public DataGenerator(Grakn.Session session, IdStore storage, String graphName, SchemaSpecificDataGenerator schemaSpecificDataGenerator) {
         this.session = session;
         this.graphName = graphName;
-        this.rand = new Random(randomSeed);
         this.iteration = 0;
         this.storage = storage;
-        this.dataStrategies = SchemaSpecificDataGeneratorFactory.getSpecificStrategy(this.graphName, this.rand, this.storage);
+        this.dataStrategies = schemaSpecificDataGenerator;
     }
 
+    /**
+     * This method can be called multiple times, with a higher numConceptsLimit each time, so that the generation can be
+     * effectively paused while benchmarking takes place
+     *
+     * @param graphScaleLimit
+     */
     public void generate(int graphScaleLimit) {
 
-        RouletteWheel<RouletteWheel<TypeStrategyInterface>> operationStrategies = this.dataStrategies.getStrategy();
-        /*
-        This method can be called multiple times, with a higher numConceptsLimit each time, so that the generation can be
-        effectively paused while benchmarking takes place
-        */
+        RouletteWheel<RouletteWheel<TypeStrategyInterface>> operationStrategies = dataStrategies.getStrategy();
 
         GeneratorFactory gf = new GeneratorFactory();
         int graphScale = dataStrategies.getGraphScale();
@@ -83,10 +84,10 @@ public class DataGenerator {
                 GeneratorInterface generator = gf.create(typeStrategy, tx); // TODO Can we do without creating a new generator each iteration
 
                 // create the stream of insert/match-insert queries
-                Stream<Query> queryStream = generator.generate();
+                Stream<InsertQuery> queryStream = generator.generate();
 
                 // execute & parse the results
-                this.processQueryStream(queryStream);
+                processQueryStream(queryStream);
                 iteration++;
 
                 graphScale = dataStrategies.getGraphScale();
@@ -97,34 +98,32 @@ public class DataGenerator {
         System.out.print("\n");
     }
 
-    private void processQueryStream(Stream<Query> queryStream) {
+    private void processQueryStream(Stream<InsertQuery> queryStream) {
         /*
         Make the data insertions from the stream of queries generated
          */
-        queryStream.map(q -> (InsertQuery) q)
-                .forEach(q -> {
-                    List<ConceptMap> insertions = q.execute();
-                    HashSet<Concept> insertedConcepts = InsertionAnalysis.getInsertedConcepts(q, insertions);
-                    if (insertedConcepts.isEmpty()) {
-                        throw new RuntimeException("No concepts were inserted");
-                    }
-                    insertedConcepts.forEach(concept -> this.storage.addConcept(concept));
+        queryStream.forEach(q -> {
 
-                    // check if we have to update any roles by first checking if any relationships added
-                    String relationshipAdded = InsertionAnalysis.getRelationshipTypeLabel(q);
-                    if (relationshipAdded != null) {
-                        Map<Concept, String> rolePlayersAdded = InsertionAnalysis.getRolePlayersAndRoles(q, insertions);
+            List<ConceptMap> insertions = q.execute();
+            HashSet<Concept> insertedConcepts = InsertionAnalysis.getInsertedConcepts(q, insertions);
+            if (insertedConcepts.isEmpty()) {
+                throw new RuntimeException("No concepts were inserted");
+            }
 
-                        rolePlayersAdded.entrySet().stream()
-                                .forEach(entry ->
-                                        this.storage.addRolePlayer(
-                                                entry.getKey().id().toString(),
-                                                entry.getKey().asThing().type().label().toString(),
-                                                relationshipAdded,
-                                                entry.getValue()
-                                        ));
-                    }
+            insertedConcepts.forEach(storage::addConcept);
+
+            // check if we have to update any roles by first checking if any relationships added
+            String relationshipAdded = InsertionAnalysis.getRelationshipTypeLabel(q);
+            if (relationshipAdded != null) {
+                Map<Concept, String> rolePlayersAdded = InsertionAnalysis.getRolePlayersAndRoles(q, insertions);
+
+                rolePlayersAdded.forEach((concept, roleName) -> {
+                    String rolePlayerId = concept.id().toString();
+                    String rolePlayerTypeLabel = concept.asThing().type().label().toString();
+                    storage.addRolePlayer(rolePlayerId, rolePlayerTypeLabel, relationshipAdded, roleName);
                 });
+            }
+        });
     }
 
 

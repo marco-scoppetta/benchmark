@@ -19,7 +19,7 @@
 package grakn.benchmark.profiler.generator.concept;
 
 import grakn.core.client.Grakn;
-import grakn.core.graql.Query;
+import grakn.core.graql.InsertQuery;
 import grakn.benchmark.profiler.generator.strategy.RolePlayerTypeStrategy;
 
 import java.util.stream.Stream;
@@ -41,7 +41,7 @@ public class RolePlayerGenerator extends Generator<RolePlayerTypeStrategy> {
      * @return
      */
     @Override
-    public Stream<Query> generate() {
+    public Stream<InsertQuery> generate() {
         return null;
     }
 }

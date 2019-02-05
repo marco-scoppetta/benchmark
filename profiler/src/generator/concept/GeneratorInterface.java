@@ -18,7 +18,7 @@
 
 package grakn.benchmark.profiler.generator.concept;
 
-import grakn.core.graql.Query;
+import grakn.core.graql.InsertQuery;
 
 import java.util.stream.Stream;
 
@@ -30,5 +30,5 @@ public interface GeneratorInterface {
     /**
      * @return
      */
-    Stream<Query> generate();
+    Stream<InsertQuery> generate();
 }

@@ -19,8 +19,14 @@
 package grakn.benchmark.profiler.generator.storage;
 
 import grakn.benchmark.profiler.generator.DataGeneratorException;
-import grakn.benchmark.profiler.generator.SchemaManager;
-import grakn.core.concept.*;
+import grakn.core.concept.Attribute;
+import grakn.core.concept.AttributeType;
+import grakn.core.concept.Concept;
+import grakn.core.concept.ConceptId;
+import grakn.core.concept.EntityType;
+import grakn.core.concept.Label;
+import grakn.core.concept.RelationshipType;
+import grakn.core.concept.SchemaConcept;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +37,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static grakn.core.concept.AttributeType.DataType.BOOLEAN;
@@ -76,17 +88,14 @@ public class IgniteConceptIdStore implements IdStore {
         DATATYPE_MAPPING = Collections.unmodifiableMap(mapBuilder);
     }
 
-    public IgniteConceptIdStore(SchemaManager schemaManager) {
+    public IgniteConceptIdStore(HashSet<EntityType> entityTypes, HashSet<RelationshipType> relationshipTypes, HashSet<AttributeType> attributeTypes) {
         LOG.info("Initialising ignite...");
         // Read schema concepts and create ignite tables
-        HashSet<EntityType> entityTypes = schemaManager.getTypesOfMetaType("entity");
-        HashSet<RelationshipType> relationshipTypes = schemaManager.getTypesOfMetaType("relationship");
-        HashSet<AttributeType> attributeTypes = schemaManager.getTypesOfMetaType("attribute");
-        this.collectTypeLabels(entityTypes, relationshipTypes, attributeTypes);
-        labelToSqlName = this.mapLabelToSqlName(entityTypeLabels, relationshipTypeLabels, attributeTypeLabels.keySet());
-        this.cleanTables();
-        this.initializeSqlDriver();
-        this.createTables();
+        collectTypeLabels(entityTypes, relationshipTypes, attributeTypes);
+        labelToSqlName = mapLabelToSqlName(entityTypeLabels, relationshipTypeLabels, attributeTypeLabels.keySet());
+        cleanTables();
+        initializeSqlDriver();
+        createTables();
     }
 
     private void collectTypeLabels(Set<EntityType> entityTypes,

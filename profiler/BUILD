@@ -51,12 +51,6 @@ java_library(
     visibility = ["//visibility:public"]
 )
 
-java_library(
-    name = "bootup-exception",
-    srcs = ["src/BootupException.java"],
-    visibility = ["//visibility:public"]
-)
-
 filegroup(
     name = "logback",
     srcs = ["src/logback.xml"],

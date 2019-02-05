@@ -20,21 +20,28 @@ package grakn.benchmark.profiler;
 
 import grakn.benchmark.profiler.generator.DataGeneratorException;
 import grakn.benchmark.profiler.generator.DataGenerator;
+import grakn.benchmark.profiler.generator.schemaspecific.SchemaSpecificDataGenerator;
+import grakn.benchmark.profiler.generator.schemaspecific.SchemaSpecificDataGeneratorFactory;
 import grakn.benchmark.profiler.generator.storage.IdStore;
 import grakn.benchmark.profiler.generator.storage.IgniteConceptIdStore;
 import grakn.benchmark.profiler.generator.storage.IgniteManager;
-import grakn.benchmark.profiler.generator.SchemaManager;
+import grakn.benchmark.profiler.util.SchemaManager;
 import grakn.benchmark.profiler.util.BenchmarkArguments;
 import grakn.benchmark.profiler.util.BenchmarkConfiguration;
 import grakn.benchmark.profiler.util.ElasticSearchManager;
 import grakn.core.client.Grakn;
+import grakn.core.concept.AttributeType;
+import grakn.core.concept.EntityType;
+import grakn.core.concept.RelationshipType;
 import grakn.core.util.SimpleURI;
 import org.apache.commons.cli.CommandLine;
 import org.apache.ignite.Ignite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Class in charge of
@@ -73,8 +80,7 @@ public class GraknBenchmark {
     }
 
     public GraknBenchmark(CommandLine arguments) {
-        BenchmarkConfiguration benchmarkConfig = new BenchmarkConfiguration(arguments);
-        this.config = benchmarkConfig;
+        this.config = new BenchmarkConfiguration(arguments);
     }
 
 
@@ -90,12 +96,7 @@ public class GraknBenchmark {
         int repetitionsPerQuery = config.numQueryRepetitions();
 
         if (config.generateData()) {
-            int randomSeed = 0;
-            ignite = IgniteManager.initIgnite();
-            SchemaManager schemaManager = new SchemaManager(session, config.getGraqlSchema());
-            IdStore storage = new IgniteConceptIdStore(schemaManager);
-            DataGenerator dataGenerator = new DataGenerator(session, storage, config.graphName(), randomSeed);
-
+            DataGenerator dataGenerator = initDataGenerator(session);
             List<Integer> numConceptsInRun = config.scalesToProfile();
             for (int numConcepts : numConceptsInRun) {
                 LOG.info("Generating graph to scale... " + numConcepts);
@@ -108,6 +109,22 @@ public class GraknBenchmark {
         }
 
         session.close();
+    }
+
+    private DataGenerator initDataGenerator(Grakn.Session session){
+        int randomSeed = 0;
+        String graphName = config.graphName();
+        ignite = IgniteManager.initIgnite();
+
+        SchemaManager schemaManager = new SchemaManager(session, config.getGraqlSchema());
+        HashSet<EntityType> entityTypes = schemaManager.getEntityTypes();
+        HashSet<RelationshipType> relationshipTypes = schemaManager.getRelationshipTypes();
+        HashSet<AttributeType> attributeTypes = schemaManager.getAttributeTypes();
+
+        IdStore storage = new IgniteConceptIdStore(entityTypes, relationshipTypes, attributeTypes);
+        SchemaSpecificDataGenerator schemaSpecificDataGenerator = SchemaSpecificDataGeneratorFactory.getSpecificStrategy(graphName, new Random(randomSeed), storage);
+
+        return new DataGenerator(session, storage, graphName, schemaSpecificDataGenerator);
     }
 
     private static void printAscii() {

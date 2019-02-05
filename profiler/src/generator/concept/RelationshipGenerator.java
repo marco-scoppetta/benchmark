@@ -20,6 +20,7 @@ package grakn.benchmark.profiler.generator.concept;
 
 import grakn.core.client.Grakn;
 import grakn.core.concept.ConceptId;
+import grakn.core.graql.InsertQuery;
 import grakn.core.graql.Pattern;
 import grakn.core.graql.Query;
 import grakn.core.graql.QueryBuilder;
@@ -56,7 +57,7 @@ public class RelationshipGenerator extends Generator<RelationshipStrategy> {
      * @return
      */
     @Override
-    public Stream<Query> generate() {
+    public Stream<InsertQuery> generate() {
         QueryBuilder qb = this.tx.graql();
 
         int numInstances = this.strategy.getNumInstancesPDF().sample();
@@ -111,7 +112,7 @@ public class RelationshipGenerator extends Generator<RelationshipStrategy> {
                     insertVarPattern = insertVarPattern.rel(roleLabel, v);
                 }
             }
-            return (Query) qb.match(matchVarPattern).insert(insertVarPattern);
+            return qb.match(matchVarPattern).insert(insertVarPattern);
 
         }).limit(numInstances).filter(Objects::nonNull);
     }

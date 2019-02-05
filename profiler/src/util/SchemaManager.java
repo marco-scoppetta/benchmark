@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.profiler.generator;
+package grakn.benchmark.profiler.util;
 
 import grakn.benchmark.profiler.BootupException;
 import grakn.core.GraknTxType;
@@ -78,7 +78,7 @@ public class SchemaManager {
         }
     }
 
-    public <T extends Type> HashSet<T> getTypesOfMetaType(String metaTypeName) {
+    private <T extends Type> HashSet<T> getTypesOfMetaType(String metaTypeName) {
         QueryBuilder qb = session.transaction(GraknTxType.READ).graql();
         Match match = qb.match(var("x").sub(metaTypeName));
         List<ConceptMap> result = match.get().execute();
@@ -88,5 +88,15 @@ public class SchemaManager {
                 .filter(type -> !type.isImplicit())
                 .filter(type -> !Schema.MetaSchema.isMetaLabel(type.label()))
                 .collect(Collectors.toCollection(HashSet::new));
+    }
+
+    public HashSet<AttributeType> getAttributeTypes(){
+        return getTypesOfMetaType("attribute");
+    }
+    public HashSet<RelationshipType> getRelationshipTypes(){
+        return getTypesOfMetaType("relationship");
+    }
+    public HashSet<EntityType> getEntityTypes(){
+        return getTypesOfMetaType("entity");
     }
 }

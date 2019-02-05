@@ -19,6 +19,7 @@
 package grakn.benchmark.profiler.generator.concept;
 
 import grakn.core.client.Grakn;
+import grakn.core.graql.InsertQuery;
 import grakn.core.graql.Query;
 import grakn.core.graql.QueryBuilder;
 import grakn.benchmark.profiler.generator.strategy.EntityStrategy;
@@ -39,20 +40,17 @@ public class EntityGenerator extends Generator<EntityStrategy> {
      * @return
      */
     @Override
-    public Stream<Query> generate() {
+    public Stream<InsertQuery> generate() {
         QueryBuilder qb = this.tx.graql();
 
         // TODO Can using toString be avoided? Waiting for TP task #20179
 //        String entityTypeName = this.strategy.getType().label().getValue();
 
         String typeLabel = this.strategy.getTypeLabel();
-        Query query = qb.insert(var("x").isa(typeLabel));
 
         int numInstances = this.strategy.getNumInstancesPDF().sample();
 
-        Stream<Query> stream = Stream.generate(() -> query)
-//                .map(q -> (Query) q)
+        return Stream.generate(() -> qb.insert(var("x").isa(typeLabel)))
                 .limit(numInstances);
-        return stream;
     }
 }

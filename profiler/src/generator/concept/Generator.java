@@ -19,7 +19,7 @@
 package grakn.benchmark.profiler.generator.concept;
 
 import grakn.core.client.Grakn;
-import grakn.core.graql.Query;
+import grakn.core.graql.InsertQuery;
 import grakn.benchmark.profiler.generator.strategy.TypeStrategy;
 
 import java.util.stream.Stream;
@@ -45,6 +45,6 @@ public abstract class Generator<T extends TypeStrategy> implements GeneratorInte
     /**
      * @return
      */
-    public abstract Stream<Query> generate();
+    public abstract Stream<InsertQuery> generate();
 
 }
