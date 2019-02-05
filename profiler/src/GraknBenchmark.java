@@ -54,7 +54,7 @@ public class GraknBenchmark {
     private static final Logger LOG = LoggerFactory.getLogger(GraknBenchmark.class);
 
     private final BenchmarkConfiguration config;
-    private static Ignite ignite;
+
     /**
      * Entry point invoked by benchmark script
      */
@@ -75,7 +75,6 @@ public class GraknBenchmark {
             exitCode = 1;
             LOG.error("Unable to start Grakn Benchmark:", e);
         } finally {
-            if(ignite !=null) ignite.close();
             System.exit(exitCode);
         }
     }
@@ -97,13 +96,22 @@ public class GraknBenchmark {
         int repetitionsPerQuery = config.numQueryRepetitions();
 
         if (config.generateData()) {
-            DataGenerator dataGenerator = initDataGenerator(session);
-            List<Integer> numConceptsInRun = config.scalesToProfile();
-            for (int numConcepts : numConceptsInRun) {
-                LOG.info("Generating graph to scale... " + numConcepts);
-                dataGenerator.generate(numConcepts);
-                queryProfiler.processStaticQueries(repetitionsPerQuery, numConcepts);
+
+            Ignite ignite = IgniteManager.initIgnite();
+            try {
+                DataGenerator dataGenerator = initDataGenerator(session);
+                List<Integer> numConceptsInRun = config.scalesToProfile();
+                for (int numConcepts : numConceptsInRun) {
+                    LOG.info("Generating graph to scale... " + numConcepts);
+                    dataGenerator.generate(numConcepts);
+                    queryProfiler.processStaticQueries(repetitionsPerQuery, numConcepts);
+                }
+            } catch (Exception e) {
+                throw e;
+            } finally {
+                ignite.close();
             }
+
         } else {
             int numConcepts = queryProfiler.aggregateCount();
             queryProfiler.processStaticQueries(repetitionsPerQuery, numConcepts);
@@ -112,10 +120,9 @@ public class GraknBenchmark {
         session.close();
     }
 
-    private DataGenerator initDataGenerator(Grakn.Session session){
+    private DataGenerator initDataGenerator(Grakn.Session session) {
         int randomSeed = 0;
         String graphName = config.graphName();
-        ignite = IgniteManager.initIgnite();
 
         SchemaManager schemaManager = new SchemaManager(session, config.getGraqlSchema());
         HashSet<EntityType> entityTypes = schemaManager.getEntityTypes();
