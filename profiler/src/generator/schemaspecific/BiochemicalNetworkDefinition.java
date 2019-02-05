@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
-public class BiochemNetworkGenerator implements SchemaSpecificDefinition {
+public class BiochemicalNetworkDefinition implements SchemaSpecificDefinition {
 
     private Random random;
     private ConceptStore storage;
@@ -29,7 +29,7 @@ public class BiochemNetworkGenerator implements SchemaSpecificDefinition {
     private RouletteWheel<TypeStrategy> attributeStrategies;
     private RouletteWheel<RouletteWheel<TypeStrategy>> operationStrategies;
 
-    public BiochemNetworkGenerator(Random random, ConceptStore storage) {
+    public BiochemicalNetworkDefinition(Random random, ConceptStore storage) {
         this.random = random;
         this.storage = storage;
 

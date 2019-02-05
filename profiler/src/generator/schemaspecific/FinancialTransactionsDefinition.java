@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
-public class FinancialTransactionsGenerator implements SchemaSpecificDefinition {
+public class FinancialTransactionsDefinition implements SchemaSpecificDefinition {
 
     private Random random;
     private ConceptStore storage;
@@ -24,7 +24,7 @@ public class FinancialTransactionsGenerator implements SchemaSpecificDefinition 
     private RouletteWheel<TypeStrategy> attributeStrategies;
     private RouletteWheel<RouletteWheel<TypeStrategy>> operationStrategies;
 
-    public FinancialTransactionsGenerator(Random random, ConceptStore storage) {
+    public FinancialTransactionsDefinition(Random random, ConceptStore storage) {
         this.random = random;
         this.storage = storage;
 

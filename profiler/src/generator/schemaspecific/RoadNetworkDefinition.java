@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
-public class RoadNetworkGenerator implements SchemaSpecificDefinition {
+public class RoadNetworkDefinition implements SchemaSpecificDefinition {
 
     private Random random;
     private ConceptStore storage;
@@ -29,7 +29,7 @@ public class RoadNetworkGenerator implements SchemaSpecificDefinition {
     private RouletteWheel<TypeStrategy> attributeStrategies;
     private RouletteWheel<RouletteWheel<TypeStrategy>> operationStrategies;
 
-    public RoadNetworkGenerator(Random random, ConceptStore storage) {
+    public RoadNetworkDefinition(Random random, ConceptStore storage) {
         this.random = random;
         this.storage = storage;
 

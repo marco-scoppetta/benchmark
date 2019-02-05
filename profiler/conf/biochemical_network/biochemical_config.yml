@@ -1,5 +1,5 @@
-graphName: "biochem_network"
-schema: "biochem_network.gql"
+graphName: "biochemical_network"
+schema: "biochemical_network.gql"
 queries: "queries.yml"
 scales:
   - 500
