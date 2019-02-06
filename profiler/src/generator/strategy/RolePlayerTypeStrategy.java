@@ -25,7 +25,7 @@ import grakn.benchmark.profiler.generator.pick.StreamProviderInterface;
 /**
  *
  */
-public class RolePlayerTypeStrategy extends TypeStrategy implements HasPicker {
+public class RolePlayerTypeStrategy extends TypeStrategy {
 
     private final String roleLabel;
     private StreamProviderInterface<ConceptId> conceptPicker;

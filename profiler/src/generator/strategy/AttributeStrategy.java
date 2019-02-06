@@ -25,7 +25,7 @@ import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction
 /**
  * @param <ValueDatatype>
  */
-public class AttributeStrategy<ValueDatatype> extends TypeStrategy implements HasPicker{
+public class AttributeStrategy<ValueDatatype> extends TypeStrategy {
 
     private final StreamProviderInterface<ValueDatatype> valuePicker;
 
@@ -36,7 +36,6 @@ public class AttributeStrategy<ValueDatatype> extends TypeStrategy implements Ha
         this.valuePicker = valuePicker;
     }
 
-    @Override
     public StreamProviderInterface<ValueDatatype> getPicker() {
         return this.valuePicker;
     }

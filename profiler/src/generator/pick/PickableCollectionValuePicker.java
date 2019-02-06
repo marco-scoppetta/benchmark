@@ -18,8 +18,6 @@
 
 package grakn.benchmark.profiler.generator.pick;
 
-import grakn.benchmark.profiler.generator.strategy.PickableCollection;
-
 import java.util.stream.Stream;
 
 /**

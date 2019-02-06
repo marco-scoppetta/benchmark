@@ -1,4 +1,4 @@
-package grakn.benchmark.profiler.generator.schemaspecific;
+package grakn.benchmark.profiler.generator.definition;
 
 import grakn.benchmark.profiler.generator.storage.ConceptStore;
 

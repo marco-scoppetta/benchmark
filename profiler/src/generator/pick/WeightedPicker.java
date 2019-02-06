@@ -16,11 +16,33 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.profiler.generator.strategy;
+package grakn.benchmark.profiler.generator.pick;
+
+import java.util.NavigableMap;
+import java.util.Random;
+import java.util.TreeMap;
 
 /**
  * @param <T>
  */
-public interface PickableCollection<T> {
-    T next();
+public class WeightedPicker<T> {
+    private final NavigableMap<Double, T> map = new TreeMap<>();
+    private final Random random;
+    private double total = 0;
+
+    public WeightedPicker(Random random) {
+        this.random = random;
+    }
+
+    public WeightedPicker<T> add(double weight, T result) {
+        if (weight <= 0) return this;
+        total += weight;
+        map.put(total, result);
+        return this;
+    }
+
+    public T sample() {
+        double value = random.nextDouble() * total;
+        return map.higherEntry(value).getValue();
+    }
 }

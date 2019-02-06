@@ -1,7 +1,8 @@
-package grakn.benchmark.profiler.generator.schemaspecific;
+package grakn.benchmark.profiler.generator.definition;
 
 import grakn.benchmark.profiler.generator.pick.CountingStreamGenerator;
 import grakn.benchmark.profiler.generator.pick.StreamProvider;
+import grakn.benchmark.profiler.generator.pick.WeightedPicker;
 import grakn.benchmark.profiler.generator.probdensity.FixedConstant;
 import grakn.benchmark.profiler.generator.probdensity.FixedDiscreteGaussian;
 import grakn.benchmark.profiler.generator.probdensity.ScalingDiscreteGaussian;
@@ -19,20 +20,20 @@ public class FinancialTransactionsDefinition extends DataGeneratorDefinition {
     private Random random;
     private ConceptStore storage;
 
-    private RouletteWheel<TypeStrategy> entityStrategies;
-    private RouletteWheel<TypeStrategy> relationshipStrategies;
-    private RouletteWheel<TypeStrategy> attributeStrategies;
-    private RouletteWheel<RouletteWheel<TypeStrategy>> metaTypeStrategies;
+    private WeightedPicker<TypeStrategy> entityStrategies;
+    private WeightedPicker<TypeStrategy> relationshipStrategies;
+    private WeightedPicker<TypeStrategy> attributeStrategies;
+    private WeightedPicker<WeightedPicker<TypeStrategy>> metaTypeStrategies;
 
     public FinancialTransactionsDefinition(Random random, ConceptStore storage) {
         this.random = random;
         this.storage = storage;
 
 
-        this.entityStrategies = new RouletteWheel<>(random);
-        this.relationshipStrategies = new RouletteWheel<>(random);
-        this.attributeStrategies = new RouletteWheel<>(random);
-        this.metaTypeStrategies = new RouletteWheel<>(random);
+        this.entityStrategies = new WeightedPicker<>(random);
+        this.relationshipStrategies = new WeightedPicker<>(random);
+        this.attributeStrategies = new WeightedPicker<>(random);
+        this.metaTypeStrategies = new WeightedPicker<>(random);
 
         buildGenerator();
     }
@@ -139,7 +140,7 @@ public class FinancialTransactionsDefinition extends DataGeneratorDefinition {
     }
 
     @Override
-    protected RouletteWheel<RouletteWheel<TypeStrategy>> getDefinition() {
+    protected WeightedPicker<WeightedPicker<TypeStrategy>> getDefinition() {
         return this.metaTypeStrategies;
     }
 

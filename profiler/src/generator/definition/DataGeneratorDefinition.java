@@ -1,7 +1,7 @@
-package grakn.benchmark.profiler.generator.schemaspecific;
+package grakn.benchmark.profiler.generator.definition;
 
 
-import grakn.benchmark.profiler.generator.strategy.RouletteWheel;
+import grakn.benchmark.profiler.generator.pick.WeightedPicker;
 import grakn.benchmark.profiler.generator.strategy.TypeStrategy;
 
 
@@ -11,10 +11,10 @@ import grakn.benchmark.profiler.generator.strategy.TypeStrategy;
 
 public abstract class DataGeneratorDefinition {
 
-    protected abstract RouletteWheel<RouletteWheel<TypeStrategy>> getDefinition();
+    protected abstract WeightedPicker<WeightedPicker<TypeStrategy>> getDefinition();
 
     public TypeStrategy sampleNextStrategy(){
-        return getDefinition().next().next();
+        return getDefinition().sample().sample();
     }
 
 }

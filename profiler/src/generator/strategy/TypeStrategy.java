@@ -28,7 +28,7 @@ import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction
  *
  *  and it is consumed by a generator.
  */
-public class TypeStrategy {
+public abstract class TypeStrategy {
     private final String typeLabel;
     private final ProbabilityDensityFunction numInstancesPDF;
 
