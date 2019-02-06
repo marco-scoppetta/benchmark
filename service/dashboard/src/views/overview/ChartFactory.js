@@ -9,7 +9,8 @@ function mapToSerie(x, queriesMap) {
         value: Number(x.avgTime).toFixed(3),
         symbolSize: Math.min(x.stdDeviation / 10, 45) + 5,
         symbol: "circle",
-        stdDeviation: x.stdDeviation
+        stdDeviation: x.stdDeviation,
+        repetitions: x.repetitions
       };
     }),
     smooth: true,
@@ -20,7 +21,8 @@ function mapToSerie(x, queriesMap) {
         return `
         query: ${args.seriesName}
         <br> avgTime: ${Number(args.data.value).toFixed(3)} ms 
-        <br> stdDeviation: ${Number(args.data.stdDeviation).toFixed(3)}`;
+        <br> stdDeviation: ${Number(args.data.stdDeviation).toFixed(3)}
+        <br> repetitions: ${args.data.repetitions}`;
       }
     }
   };
@@ -73,7 +75,7 @@ function createChart(htmlComponent, queriesTimes, queriesMap) {
     dataZoom: [
       {
         type: "inside",
-        zoomOnMouseWheel: 'ctrl',
+        zoomOnMouseWheel: "ctrl",
         filterMode: "none",
         orient: "vertical"
       }
