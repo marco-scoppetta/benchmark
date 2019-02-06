@@ -20,7 +20,7 @@ package grakn.benchmark.profiler;
 
 import grakn.benchmark.profiler.generator.DataGeneratorException;
 import grakn.benchmark.profiler.generator.DataGenerator;
-import grakn.benchmark.profiler.generator.QueryGenerator;
+import grakn.benchmark.profiler.generator.QueryProvider;
 import grakn.benchmark.profiler.generator.definition.DataGeneratorDefinition;
 import grakn.benchmark.profiler.generator.definition.DefinitionFactory;
 import grakn.benchmark.profiler.generator.storage.ConceptStore;
@@ -133,10 +133,10 @@ public class GraknBenchmark {
 
         DataGeneratorDefinition dataGeneratorDefinition = DefinitionFactory.getDefinition(graphName, new Random(randomSeed), storage);
 
-        QueryGenerator queryGenerator = new QueryGenerator(dataGeneratorDefinition);
+        QueryProvider queryProvider = new QueryProvider(dataGeneratorDefinition);
 
 
-        return new DataGenerator(session, storage, graphName, queryGenerator);
+        return new DataGenerator(session, storage, graphName, queryProvider);
     }
 
     private static void printAscii() {

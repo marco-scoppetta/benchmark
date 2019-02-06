@@ -23,7 +23,9 @@ import java.util.Random;
 import java.util.TreeMap;
 
 /**
- * @param <T>
+ * Provides functionality to randomly choose from a weighted set of elements.
+ *
+ * @param <T> Type of elements in collection
  */
 public class WeightedPicker<T> {
     private final NavigableMap<Double, T> map = new TreeMap<>();
@@ -34,10 +36,10 @@ public class WeightedPicker<T> {
         this.random = random;
     }
 
-    public WeightedPicker<T> add(double weight, T result) {
-        if (weight <= 0) return this;
+    public WeightedPicker<T> add(double weight, T element) {
+        if (weight <= 0) throw new IllegalArgumentException("Weight must be greater than zero.");
         total += weight;
-        map.put(total, result);
+        map.put(total, element);
         return this;
     }
 

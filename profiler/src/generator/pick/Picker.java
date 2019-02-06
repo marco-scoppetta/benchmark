@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 /**
  * @param <T>
  */
-public abstract class Picker<T> implements PickerInterface<T> {
+public abstract class Picker<T> implements StreamInterface<T> {
     protected Random rand;
 
     public Picker(Random rand) {

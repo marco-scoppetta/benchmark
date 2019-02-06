@@ -33,8 +33,7 @@ public class StreamProvider<T> implements StreamProviderInterface<T> {
     }
 
     @Override
-    public void reset() {
-    }
+    public void reset() { }
 
     @Override
     public Stream<T> getStream(ProbabilityDensityFunction pdf) {

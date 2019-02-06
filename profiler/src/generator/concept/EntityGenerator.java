@@ -29,9 +29,11 @@ import static grakn.core.graql.internal.pattern.Patterns.var;
 /**
  *
  */
-public class EntityGenerator extends Generator<EntityStrategy> {
+public class EntityGenerator implements QueryGenerator {
+    private final EntityStrategy strategy;
+
     public EntityGenerator(EntityStrategy strategy) {
-        super(strategy);
+        this.strategy = strategy;
     }
 
     /**

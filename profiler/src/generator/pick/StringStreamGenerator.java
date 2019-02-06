@@ -13,6 +13,15 @@ import java.util.stream.Stream;
  */
 public class StringStreamGenerator implements StreamInterface<String> {
 
+    public static final String UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    public static final String LOWER = UPPER.toLowerCase(Locale.ROOT);
+    public static final String DIGITS = "0123456789";
+    public static final String ALPHANUM = UPPER + LOWER + DIGITS;
+
+    private final Random random;
+    private final char[] symbols;
+    private final char[] buf;
+
     /**
      * Generate a random string.
      */
@@ -28,24 +37,10 @@ public class StringStreamGenerator implements StreamInterface<String> {
     }
 
     @Override
-    public boolean checkAvailable(int rqeuiredLength) {
+    public boolean checkAvailable(int requiredLength) {
         return true;
     }
 
-
-    public static final String upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    public static final String lower = upper.toLowerCase(Locale.ROOT);
-
-    public static final String digits = "0123456789";
-
-    public static final String alphanum = upper + lower + digits;
-
-    private final Random random;
-
-    private final char[] symbols;
-
-    private final char[] buf;
 
     public StringStreamGenerator(Random random, int stringLength, String symbols) {
         if (stringLength < 1) throw new IllegalArgumentException();
@@ -59,7 +54,7 @@ public class StringStreamGenerator implements StreamInterface<String> {
      * Create an alphanumeric string generator.
      */
     public StringStreamGenerator(Random random, int stringLength) {
-        this(random, stringLength, alphanum);
+        this(random, stringLength, ALPHANUM);
     }
 
 }

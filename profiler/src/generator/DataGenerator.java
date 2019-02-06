@@ -45,16 +45,16 @@ public class DataGenerator {
 
     private final Grakn.Session session;
     private final String graphName;
-    private final QueryGenerator queryGenerator;
+    private final QueryProvider queryProvider;
     private final ConceptStore storage;
 
     private int iteration;
 
 
-    public DataGenerator(Grakn.Session session, ConceptStore storage, String graphName, QueryGenerator queryGenerator) {
+    public DataGenerator(Grakn.Session session, ConceptStore storage, String graphName, QueryProvider queryProvider) {
         this.session = session;
         this.graphName = graphName;
-        this.queryGenerator = queryGenerator;
+        this.queryProvider = queryProvider;
         this.iteration = 0;
         this.storage = storage;
     }
@@ -71,7 +71,7 @@ public class DataGenerator {
             try (Grakn.Transaction tx = session.transaction(GraknTxType.WRITE)) {
 
                 // create the stream of insert/match-insert queries
-                Stream<InsertQuery> queryStream = queryGenerator.nextQueryBatch();
+                Stream<InsertQuery> queryStream = queryProvider.nextQueryBatch();
 
                 // execute & parse the results
                 processQueryStream(queryStream, tx);
