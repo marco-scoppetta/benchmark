@@ -3,6 +3,7 @@ import Router from "vue-router";
 import Home from "./views/Home.vue";
 import Overview from "./views/overview/Overview.vue";
 import Executions from "./views/executions/Executions.vue";
+import Inspect from "./views/inspect/Inspect.vue";
 
 Vue.use(Router);
 
@@ -21,6 +22,10 @@ export default new Router({
         {
           path: "executions",
           component: Executions
+        },
+        {
+          path: "inspect/:executionId",
+          component: Inspect
         }
       ]
     },

@@ -51,7 +51,8 @@ function buildQueriesTimes(queries, spans, executions, currentScale) {
         commit: exec.commit,
         avgTime: avgTime / 1000,
         stdDeviation: stdDeviation / 1000,
-        repetitions: executionQuerySpans.length
+        repetitions: executionQuerySpans.length,
+        executionId: exec.id
       };
     });
     return { query, times };

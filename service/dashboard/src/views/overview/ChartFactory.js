@@ -10,7 +10,8 @@ function mapToSerie(x, queriesMap) {
         symbolSize: Math.min(x.stdDeviation / 10, 45) + 5,
         symbol: "circle",
         stdDeviation: x.stdDeviation,
-        repetitions: x.repetitions
+        repetitions: x.repetitions,
+        executionId: x.executionId
       };
     }),
     smooth: true,
@@ -21,7 +22,7 @@ function mapToSerie(x, queriesMap) {
         return `
         query: ${args.seriesName}
         <br> avgTime: ${Number(args.data.value).toFixed(3)} ms 
-        <br> stdDeviation: ${Number(args.data.stdDeviation).toFixed(3)}
+        <br> stdDeviation: ${Number(args.data.stdDeviation).toFixed(3)} ms
         <br> repetitions: ${args.data.repetitions}`;
       }
     }
@@ -29,7 +30,7 @@ function mapToSerie(x, queriesMap) {
 }
 
 function createChart(htmlComponent, queriesTimes, queriesMap) {
-  const myChart = echarts.init(htmlComponent);
+  const overviewChart = echarts.init(htmlComponent);
   // specify chart configuration item and data
   const option = {
     tooltip: {
@@ -59,7 +60,10 @@ function createChart(htmlComponent, queriesTimes, queriesMap) {
       {
         type: "category",
         boundaryGap: false,
-        data: queriesTimes[0].times.map(x => x.commit.substring(0, 15)),
+        data: queriesTimes[0].times.map(x => ({
+          value: x.commit.substring(0, 15),
+          commit: x.commit
+        })),
         triggerEvent: true
       }
     ],
@@ -81,8 +85,8 @@ function createChart(htmlComponent, queriesTimes, queriesMap) {
       }
     ]
   };
-  myChart.setOption(option);
-  return myChart;
+  overviewChart.setOption(option);
+  return overviewChart;
 }
 
 export default { createChart };

@@ -17,6 +17,7 @@ const typeDefs = `
   }
 
   type Span {
+    id: String!
     duration: Int!
     name: String!
     tags: Tag
