@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 /**
  * @param <ValueDatatype>
  */
-public class AttributeGenerator< ValueDatatype> extends Generator<AttributeStrategy<ValueDatatype>> {
+public class AttributeGenerator<ValueDatatype> extends Generator<AttributeStrategy<ValueDatatype>> {
     /**
      * @param strategy
      */

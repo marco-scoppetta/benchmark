@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
-public class SocialNetworkDefinition implements SchemaSpecificDefinition {
+public class SocialNetworkDefinition extends DataGeneratorDefinition {
 
     private Random random;
     private ConceptStore storage;
@@ -159,8 +159,7 @@ public class SocialNetworkDefinition implements SchemaSpecificDefinition {
     }
 
     @Override
-    public RouletteWheel<RouletteWheel<TypeStrategy>> getDefinition() {
+    protected RouletteWheel<RouletteWheel<TypeStrategy>> getDefinition() {
         return this.metaTypeStrategies;
     }
-
 }

@@ -56,8 +56,8 @@ import static grakn.core.concept.AttributeType.DataType.STRING;
 /**
  * Stores identifiers for all concepts in a Grakn
  */
-public class IgniteConceptIdStore implements ConceptStore {
-    private static final Logger LOG = LoggerFactory.getLogger(IgniteConceptIdStore.class);
+public class IgniteConceptStore implements ConceptStore {
+    private static final Logger LOG = LoggerFactory.getLogger(IgniteConceptStore.class);
 
     private HashSet<String> entityTypeLabels;
     private HashSet<String> relationshipTypeLabels;
@@ -89,7 +89,7 @@ public class IgniteConceptIdStore implements ConceptStore {
         DATATYPE_MAPPING = Collections.unmodifiableMap(mapBuilder);
     }
 
-    public IgniteConceptIdStore(HashSet<EntityType> entityTypes, HashSet<RelationshipType> relationshipTypes, HashSet<AttributeType> attributeTypes) {
+    public IgniteConceptStore(HashSet<EntityType> entityTypes, HashSet<RelationshipType> relationshipTypes, HashSet<AttributeType> attributeTypes) {
         LOG.info("Initialising ignite...");
         // Read schema concepts and create ignite tables
         collectTypeLabels(entityTypes, relationshipTypes, attributeTypes);

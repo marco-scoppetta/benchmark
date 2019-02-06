@@ -26,7 +26,7 @@ import java.util.TreeMap;
  * @param <T>
  */
 public class RouletteWheel<T> implements PickableCollection {
-    private final NavigableMap<Double, T> map = new TreeMap<Double, T>();
+    private final NavigableMap<Double, T> map = new TreeMap<>();
     private final Random random;
     private double total = 0;
 

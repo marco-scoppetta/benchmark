@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
-public class FinancialTransactionsDefinition implements SchemaSpecificDefinition {
+public class FinancialTransactionsDefinition extends DataGeneratorDefinition {
 
     private Random random;
     private ConceptStore storage;
@@ -22,7 +22,7 @@ public class FinancialTransactionsDefinition implements SchemaSpecificDefinition
     private RouletteWheel<TypeStrategy> entityStrategies;
     private RouletteWheel<TypeStrategy> relationshipStrategies;
     private RouletteWheel<TypeStrategy> attributeStrategies;
-    private RouletteWheel<RouletteWheel<TypeStrategy>> operationStrategies;
+    private RouletteWheel<RouletteWheel<TypeStrategy>> metaTypeStrategies;
 
     public FinancialTransactionsDefinition(Random random, ConceptStore storage) {
         this.random = random;
@@ -32,16 +32,16 @@ public class FinancialTransactionsDefinition implements SchemaSpecificDefinition
         this.entityStrategies = new RouletteWheel<>(random);
         this.relationshipStrategies = new RouletteWheel<>(random);
         this.attributeStrategies = new RouletteWheel<>(random);
-        this.operationStrategies = new RouletteWheel<>(random);
+        this.metaTypeStrategies = new RouletteWheel<>(random);
 
         buildGenerator();
     }
 
     private void buildGenerator() {
         buildStrategies();
-        this.operationStrategies.add(1.0, entityStrategies);
-        this.operationStrategies.add(1.0, relationshipStrategies);
-        this.operationStrategies.add(1.0, attributeStrategies);
+        this.metaTypeStrategies.add(1.0, entityStrategies);
+        this.metaTypeStrategies.add(1.0, relationshipStrategies);
+        this.metaTypeStrategies.add(1.0, attributeStrategies);
     }
 
     private void buildStrategies() {
@@ -139,8 +139,8 @@ public class FinancialTransactionsDefinition implements SchemaSpecificDefinition
     }
 
     @Override
-    public RouletteWheel<RouletteWheel<TypeStrategy>> getDefinition() {
-        return this.operationStrategies;
+    protected RouletteWheel<RouletteWheel<TypeStrategy>> getDefinition() {
+        return this.metaTypeStrategies;
     }
 
 }
