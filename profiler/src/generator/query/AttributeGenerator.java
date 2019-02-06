@@ -16,9 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.profiler.generator.concept;
+package grakn.benchmark.profiler.generator.query;
 
-import grakn.benchmark.profiler.generator.pick.StreamProviderInterface;
+import grakn.benchmark.profiler.generator.pick.PDFLimitedStreamProvider;
 import grakn.benchmark.profiler.generator.probdensity.FixedConstant;
 import grakn.benchmark.profiler.generator.strategy.AttributeStrategy;
 import grakn.core.graql.Graql;
@@ -50,7 +50,7 @@ public class AttributeGenerator<ValueDatatype> implements QueryGenerator {
     public Stream<InsertQuery> generate() {
         int numInstances = this.strategy.getNumInstancesPDF().sample();
 
-        StreamProviderInterface<ValueDatatype> valuePicker = this.strategy.getPicker();
+        PDFLimitedStreamProvider<ValueDatatype> valuePicker = this.strategy.getPicker();
         valuePicker.reset();
         FixedConstant unityPDF = new FixedConstant(1);
 

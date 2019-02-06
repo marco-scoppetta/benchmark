@@ -1,7 +1,7 @@
 package grakn.benchmark.profiler.generator.definition;
 
 import grakn.benchmark.profiler.generator.pick.CentralStreamProvider;
-import grakn.benchmark.profiler.generator.pick.StreamProvider;
+import grakn.benchmark.profiler.generator.pick.StandardStreamProvider;
 import grakn.benchmark.profiler.generator.pick.StringStreamGenerator;
 import grakn.benchmark.profiler.generator.probdensity.FixedConstant;
 import grakn.benchmark.profiler.generator.probdensity.FixedUniform;
@@ -73,7 +73,7 @@ public class RoadNetworkDefinition extends DataGeneratorDefinition {
                 new AttributeStrategy<>(
                         "name",
                         new FixedUniform(this.random, 10, 30),
-                        new StreamProvider<>(nameStream)
+                        new StandardStreamProvider<>(nameStream)
                 )
         );
 
@@ -101,7 +101,7 @@ public class RoadNetworkDefinition extends DataGeneratorDefinition {
                 "endpoint",
                 "intersection",
                 new FixedUniform(random, 1, 5), // choose 1-5 other role players for an intersection
-                new StreamProvider<>(
+                new StandardStreamProvider<>(
                         new FromIdStorageConceptIdPicker(random, storage, "road")
                 )
         );
@@ -121,7 +121,7 @@ public class RoadNetworkDefinition extends DataGeneratorDefinition {
                 "@has-name-owner",
                 "@has-name",
                 new FixedConstant(1),
-                new StreamProvider<>(
+                new StandardStreamProvider<>(
                         new NotInRelationshipConceptIdPicker(
                                 random,
                                 storage,

@@ -1,9 +1,5 @@
-package grakn.benchmark.profiler.generator;
+package grakn.benchmark.profiler.generator.query;
 
-import grakn.benchmark.profiler.generator.concept.AttributeGenerator;
-import grakn.benchmark.profiler.generator.concept.EntityGenerator;
-import grakn.benchmark.profiler.generator.concept.QueryGenerator;
-import grakn.benchmark.profiler.generator.concept.RelationshipGenerator;
 import grakn.benchmark.profiler.generator.definition.DataGeneratorDefinition;
 import grakn.benchmark.profiler.generator.strategy.AttributeStrategy;
 import grakn.benchmark.profiler.generator.strategy.EntityStrategy;
@@ -22,7 +18,7 @@ public class QueryProvider {
     }
 
     public Stream<InsertQuery> nextQueryBatch(){
-        QueryGenerator<? extends TypeStrategy> queryGenerator;
+        QueryGenerator queryGenerator;
         TypeStrategy typeStrategy = dataGeneratorDefinition.sampleNextStrategy();
 
 

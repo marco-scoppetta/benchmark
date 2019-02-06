@@ -3,7 +3,7 @@ java_test(
     test_class = "grakn.benchmark.runner.SchemaManagerE2E",
     srcs = ["SchemaManagerE2E.java"],
     deps = [
-        "//runner:benchmark-runner",
+        "//profiler:benchmark-runner",
         "//dependencies/maven/artifacts/grakn/core:client",
         "//dependencies/maven/artifacts/grakn/core:grakn-graql",
         "//dependencies/maven/artifacts/grakn/core:util",

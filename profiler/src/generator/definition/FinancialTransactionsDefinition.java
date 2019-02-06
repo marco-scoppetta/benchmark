@@ -1,7 +1,7 @@
 package grakn.benchmark.profiler.generator.definition;
 
 import grakn.benchmark.profiler.generator.pick.CountingStreamGenerator;
-import grakn.benchmark.profiler.generator.pick.StreamProvider;
+import grakn.benchmark.profiler.generator.pick.StandardStreamProvider;
 import grakn.benchmark.profiler.generator.pick.WeightedPicker;
 import grakn.benchmark.profiler.generator.probdensity.FixedConstant;
 import grakn.benchmark.profiler.generator.probdensity.FixedDiscreteGaussian;
@@ -71,7 +71,7 @@ public class FinancialTransactionsDefinition extends DataGeneratorDefinition {
                 new AttributeStrategy<>(
                         "quantity",
                         new FixedDiscreteGaussian(this.random,5,3),
-                        new StreamProvider<>(idGenerator)
+                        new StandardStreamProvider<>(idGenerator)
                 )
         );
 
@@ -86,7 +86,7 @@ public class FinancialTransactionsDefinition extends DataGeneratorDefinition {
                 "transaction",
                 // high variance in the number of role players
                 new ScalingDiscreteGaussian(random, () -> storage.getGraphScale(), 0.01, 0.01),
-                new StreamProvider<>(
+                new StandardStreamProvider<>(
                         new FromIdStorageConceptIdPicker(
                                 random,
                                  this.storage,
@@ -108,7 +108,7 @@ public class FinancialTransactionsDefinition extends DataGeneratorDefinition {
                 "@has-quantity-owner",
                 "@has-quantity",
                 new FixedConstant(1),
-                new StreamProvider<>(
+                new StandardStreamProvider<>(
                         new NotInRelationshipConceptIdPicker(
                                 random,
                                 storage,
@@ -120,7 +120,7 @@ public class FinancialTransactionsDefinition extends DataGeneratorDefinition {
                 "@has-quantity-value",
                 "@has-quantity",
                 new FixedConstant(1),
-                new StreamProvider<>(
+                new StandardStreamProvider<>(
                         new FromIdStorageConceptIdPicker(
                                 random,
                                 this.storage,

@@ -16,18 +16,15 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.profiler.generator.concept;
-
-import grakn.core.graql.InsertQuery;
+package grakn.benchmark.profiler.generator.pick;
 
 import java.util.stream.Stream;
 
 /**
+ * @param <T>
  */
-public interface QueryGenerator {
-    /**
-     * @return
-     */
-    Stream<InsertQuery> generate();
-
+public interface StreamGenerator<T> {
+    Stream<T> getStream();
+    boolean checkAvailable(int requiredLength);
 }
+

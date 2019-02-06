@@ -11,7 +11,7 @@ import java.util.stream.Stream;
  *
  * TODO this has substantial overlap in responsibility with CountingStreamGenerator ie. StreamInterface<T>
  */
-public class StringStreamGenerator implements StreamInterface<String> {
+public class StringStreamGenerator implements StreamGenerator<String> {
 
     public static final String UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     public static final String LOWER = UPPER.toLowerCase(Locale.ROOT);

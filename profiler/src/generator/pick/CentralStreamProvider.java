@@ -40,14 +40,14 @@ import java.util.stream.Stream;
  *
  * @param <T>
  */
-public class CentralStreamProvider<T> implements StreamProviderInterface<T> {
-    StreamInterface<T> streamer;
+public class CentralStreamProvider<T> implements PDFLimitedStreamProvider<T> {
+    StreamGenerator<T> streamer;
     private Boolean isReset;
     private ArrayList<T> conceptIdList;
     private int consumeFrom = 0;
     private ProbabilityDensityFunction centralConceptsPdf;
 
-    public CentralStreamProvider(ProbabilityDensityFunction centralConceptsPdf, StreamInterface<T> streamer) {
+    public CentralStreamProvider(ProbabilityDensityFunction centralConceptsPdf, StreamGenerator<T> streamer) {
         this.streamer = streamer;
         this.isReset = true;
         this.conceptIdList = new ArrayList<>();

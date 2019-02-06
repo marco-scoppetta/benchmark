@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.profiler.generator.concept;
+package grakn.benchmark.profiler.generator.query;
 
 import grakn.benchmark.profiler.generator.strategy.EntityStrategy;
 import grakn.core.graql.Graql;

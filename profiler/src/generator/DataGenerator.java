@@ -18,6 +18,7 @@
 
 package grakn.benchmark.profiler.generator;
 
+import grakn.benchmark.profiler.generator.query.QueryProvider;
 import grakn.benchmark.profiler.generator.storage.ConceptStore;
 import grakn.benchmark.profiler.generator.storage.InsertionAnalysis;
 import grakn.core.GraknTxType;

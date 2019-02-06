@@ -22,7 +22,7 @@ public class CentralStreamProviderTest {
 
         FixedConstant one = new FixedConstant(1);
 
-        StreamInterface<Integer> streamer = mock(StreamInterface.class);
+        StreamGenerator<Integer> streamer = mock(StreamGenerator.class);
         List<Integer> ints = IntStream.range(0, 10).boxed().collect(Collectors.toList());
         when(streamer.getStream()).thenReturn(ints.stream());
 
@@ -43,7 +43,7 @@ public class CentralStreamProviderTest {
 
         FixedConstant three = new FixedConstant(3);
 
-        StreamInterface<Integer> streamer = mock(StreamInterface.class);
+        StreamGenerator<Integer> streamer = mock(StreamGenerator.class);
         List<Integer> ints = IntStream.range(0, 10).boxed().collect(Collectors.toList());
         when(streamer.getStream()).thenReturn(ints.stream());
 
@@ -64,7 +64,7 @@ public class CentralStreamProviderTest {
 
         FixedConstant three = new FixedConstant(3);
 
-        StreamInterface<Integer> streamer = mock(StreamInterface.class);
+        StreamGenerator<Integer> streamer = mock(StreamGenerator.class);
         List<Integer> ints = IntStream.range(0, 10).boxed().collect(Collectors.toList());
         when(streamer.getStream()).thenReturn(ints.stream());
 
@@ -89,7 +89,7 @@ public class CentralStreamProviderTest {
 
         FixedConstant three = new FixedConstant(3);
 
-        StreamInterface<Integer> streamer = mock(StreamInterface.class);
+        StreamGenerator<Integer> streamer = mock(StreamGenerator.class);
         List<Integer> ints = IntStream.range(0, 10).boxed().collect(Collectors.toList());
         when(streamer.getStream()).thenReturn(ints.stream()).thenReturn(ints.stream());
 

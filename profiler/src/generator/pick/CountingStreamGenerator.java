@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 /**
  *
  */
-public class CountingStreamGenerator implements StreamInterface<Integer>{
+public class CountingStreamGenerator implements StreamGenerator<Integer> {
     private int n;
 
     public CountingStreamGenerator(int start) {

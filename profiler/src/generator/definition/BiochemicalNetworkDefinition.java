@@ -1,7 +1,7 @@
 package grakn.benchmark.profiler.generator.definition;
 
 import grakn.benchmark.profiler.generator.pick.CountingStreamGenerator;
-import grakn.benchmark.profiler.generator.pick.StreamProvider;
+import grakn.benchmark.profiler.generator.pick.StandardStreamProvider;
 import grakn.benchmark.profiler.generator.probdensity.FixedConstant;
 import grakn.benchmark.profiler.generator.probdensity.FixedDiscreteGaussian;
 import grakn.benchmark.profiler.generator.probdensity.ScalingDiscreteGaussian;
@@ -80,7 +80,7 @@ public class BiochemicalNetworkDefinition extends DataGeneratorDefinition {
                 new AttributeStrategy<>(
                         "biochem-id",
                         new FixedDiscreteGaussian(this.random, 5, 3),
-                        new StreamProvider<>(idGenerator)
+                        new StandardStreamProvider<>(idGenerator)
                 )
         );
 
@@ -96,7 +96,7 @@ public class BiochemicalNetworkDefinition extends DataGeneratorDefinition {
                 "interaction",
                 // high variance in the number of role players
                 new ScalingDiscreteGaussian(random, () -> storage.getGraphScale(), 0.01, 0.005),
-                new StreamProvider<>(
+                new StandardStreamProvider<>(
                         new FromIdStorageConceptIdPicker(
                                 random,
                                 this.storage,
@@ -108,7 +108,7 @@ public class BiochemicalNetworkDefinition extends DataGeneratorDefinition {
                 "interaction",
                 // high variance in the number of role players
                 new ScalingDiscreteGaussian(random, () -> storage.getGraphScale(), 0.001, 0.001),
-                new StreamProvider<>(
+                new StandardStreamProvider<>(
                         new FromIdStorageConceptIdPicker(
                                 random,
                                 this.storage,
@@ -130,7 +130,7 @@ public class BiochemicalNetworkDefinition extends DataGeneratorDefinition {
                 "@has-biochem-id-owner",
                 "@has-biochem-id",
                 new FixedConstant(1),
-                new StreamProvider<>(
+                new StandardStreamProvider<>(
                         new NotInRelationshipConceptIdPicker(
                                 random,
                                 storage,
@@ -142,7 +142,7 @@ public class BiochemicalNetworkDefinition extends DataGeneratorDefinition {
                 "@has-biochem-id-value",
                 "@has-biochem-id",
                 new FixedConstant(1),
-                new StreamProvider<>(
+                new StandardStreamProvider<>(
                         new NotInRelationshipConceptIdPicker(
                                 random,
                                 storage,
@@ -165,7 +165,7 @@ public class BiochemicalNetworkDefinition extends DataGeneratorDefinition {
                 "@has-biochem-id-owner",
                 "@has-biochem-id",
                 new FixedConstant(1),
-                new StreamProvider<>(
+                new StandardStreamProvider<>(
                         new NotInRelationshipConceptIdPicker(
                                 random,
                                 storage,
@@ -177,7 +177,7 @@ public class BiochemicalNetworkDefinition extends DataGeneratorDefinition {
                 "@has-biochem-id-value",
                 "@has-biochem-id",
                 new FixedConstant(1),
-                new StreamProvider<>(
+                new StandardStreamProvider<>(
                         new NotInRelationshipConceptIdPicker(
                                 random,
                                 storage,

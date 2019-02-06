@@ -4,7 +4,7 @@ java_test(
     test_class = "grakn.benchmark.runner.pick.CentralStreamProviderTest",
     srcs = ["CentralStreamProviderTest.java"],
     deps = [
-        "//runner:benchmark-runner",
+        "//profiler:benchmark-runner",
         "//dependencies/maven/artifacts/org/mockito:mockito-core",
         "//dependencies/maven/artifacts/org/hamcrest:hamcrest-all"
     ]

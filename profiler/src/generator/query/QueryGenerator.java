@@ -16,18 +16,18 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.profiler.generator.pick;
+package grakn.benchmark.profiler.generator.query;
 
-import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction;
+import grakn.core.graql.InsertQuery;
 
 import java.util.stream.Stream;
 
 /**
- * @param <T>
  */
-// TODO rename to PDFLimitedStreamProviderInterface
-public interface StreamProviderInterface<T> {
-        Stream<T> getStream(ProbabilityDensityFunction pdf);  // TODO Change from probdensity to streamLength for the benefit of AttributeGenerator
+public interface QueryGenerator {
+    /**
+     * @return
+     */
+    Stream<InsertQuery> generate();
 
-        void reset();
 }

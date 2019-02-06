@@ -25,10 +25,10 @@ import java.util.stream.Stream;
 /**
  * @param <T>
  */
-public class StreamProvider<T> implements StreamProviderInterface<T> {
-    private StreamInterface<T> streamer;
+public class StandardStreamProvider<T> implements PDFLimitedStreamProvider<T> {
+    private StreamGenerator<T> streamer;
 
-    public StreamProvider(StreamInterface<T> streamer) {
+    public StandardStreamProvider(StreamGenerator<T> streamer) {
         this.streamer = streamer;
     }
 
