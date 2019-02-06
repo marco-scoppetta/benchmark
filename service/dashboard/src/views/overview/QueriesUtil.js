@@ -44,28 +44,29 @@ function buildQueriesTimes(queries, spans, executions, currentScale) {
           span.tags.executionName === exec.id && span.tags.scale == currentScale
       );
       // Compute average time combining all the repetitions
-      const avgTimeMicro =
-        executionQuerySpans.reduce((a, b) => a + b.duration, 0) /
-        executionQuerySpans.length;
-      const stdDeviation = stdDeviationFn(
-        executionQuerySpans.map(x => x.duration),
-        avgTimeMicro
-      );
+      const avgTime = computeAvgTime(executionQuerySpans);
+      const stdDeviation = computeStdDeviation(executionQuerySpans, avgTime);
 
       return {
         commit: exec.commit,
-        avgTime: avgTimeMicro / 1000,
-        stdDeviation: stdDeviation / 1000
+        avgTime: avgTime / 1000,
+        stdDeviation: stdDeviation / 1000,
+        repetitions: executionQuerySpans.length
       };
     });
     return { query, times };
   });
 }
-function stdDeviationFn(numbersArr, avgTime) {
-  let SDprep = 0;
-  for (const key in numbersArr)
-    SDprep += Math.pow(parseFloat(numbersArr[key]) - avgTime, 2);
-  return Math.sqrt(SDprep / numbersArr.length);
+
+function computeAvgTime(spans) {
+  return spans.reduce((a, b) => a + b.duration, 0) / spans.length;
+}
+
+function computeStdDeviation(spans, avgTime) {
+  const sum = spans
+    .map(span => Math.pow(span.duration - avgTime, 2))
+    .reduce((a, b) => a + b, 0);
+  return Math.sqrt(sum / spans.length);
 }
 
 export default {
