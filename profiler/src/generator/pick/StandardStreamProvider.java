@@ -18,39 +18,27 @@
 
 package grakn.benchmark.profiler.generator.pick;
 
-import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction;
-
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 /**
  * @param <T>
  */
-public class StandardStreamProvider<T> implements PDFLimitedStreamProvider<T> {
-    private StreamGenerator<T> streamer;
+public class StandardStreamProvider<T> implements LimitedStreamProvider<T> {
+    private Iterator<T> iterator;
 
-    public StandardStreamProvider(StreamGenerator<T> streamer) {
-        this.streamer = streamer;
+    public StandardStreamProvider(Iterator<T> iterator) {
+        this.iterator = iterator;
     }
 
     @Override
-    public void reset() { }
+    public void resetUniqueness() {
+    }
 
     @Override
-    public Stream<T> getStream(ProbabilityDensityFunction pdf) {
-        // Simply limit the stream of ConceptIds to the number given by the probdensity
-        int streamLength = pdf.sample();
+    public Stream<T> getStream(int streamLength) {
 
-        if (this.streamer.checkAvailable(streamLength)) {
-
-            // limit check for availability of # required
-            Stream<T> stream = this.streamer.getStream();
-
-            //TODO also check the stream in case it curtails with nulls?
-
-            // Return the unadjusted stream but with a limit
-            return stream.limit(streamLength);
-        } else {
-            return Stream.empty();
-        }
+        // Return the unadjusted stream but with a limit
+        return Stream.generate(() -> iterator.next()).limit(streamLength);
     }
 }

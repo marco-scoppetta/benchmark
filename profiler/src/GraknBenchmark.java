@@ -23,9 +23,9 @@ import grakn.benchmark.profiler.generator.DataGenerator;
 import grakn.benchmark.profiler.generator.query.QueryProvider;
 import grakn.benchmark.profiler.generator.definition.DataGeneratorDefinition;
 import grakn.benchmark.profiler.generator.definition.DefinitionFactory;
-import grakn.benchmark.profiler.generator.storage.ConceptStore;
-import grakn.benchmark.profiler.generator.storage.IgniteConceptStore;
-import grakn.benchmark.profiler.generator.storage.IgniteManager;
+import grakn.benchmark.profiler.generator.storage.ConceptStorage;
+import grakn.benchmark.profiler.generator.storage.IgniteConceptStorage;
+import grakn.benchmark.profiler.generator.IgniteManager;
 import grakn.benchmark.profiler.util.SchemaManager;
 import grakn.benchmark.profiler.util.BenchmarkArguments;
 import grakn.benchmark.profiler.util.BenchmarkConfiguration;
@@ -129,7 +129,7 @@ public class GraknBenchmark {
         HashSet<RelationshipType> relationshipTypes = schemaManager.getRelationshipTypes();
         HashSet<AttributeType> attributeTypes = schemaManager.getAttributeTypes();
 
-        ConceptStore storage = new IgniteConceptStore(entityTypes, relationshipTypes, attributeTypes);
+        ConceptStorage storage = new IgniteConceptStorage(entityTypes, relationshipTypes, attributeTypes);
 
         DataGeneratorDefinition dataGeneratorDefinition = DefinitionFactory.getDefinition(graphName, new Random(randomSeed), storage);
 

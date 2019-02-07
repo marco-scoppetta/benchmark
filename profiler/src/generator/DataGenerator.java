@@ -19,7 +19,7 @@
 package grakn.benchmark.profiler.generator;
 
 import grakn.benchmark.profiler.generator.query.QueryProvider;
-import grakn.benchmark.profiler.generator.storage.ConceptStore;
+import grakn.benchmark.profiler.generator.storage.ConceptStorage;
 import grakn.benchmark.profiler.generator.storage.InsertionAnalysis;
 import grakn.core.GraknTxType;
 import grakn.core.client.Grakn;
@@ -47,12 +47,12 @@ public class DataGenerator {
     private final Grakn.Session session;
     private final String graphName;
     private final QueryProvider queryProvider;
-    private final ConceptStore storage;
+    private final ConceptStorage storage;
 
     private int iteration;
 
 
-    public DataGenerator(Grakn.Session session, ConceptStore storage, String graphName, QueryProvider queryProvider) {
+    public DataGenerator(Grakn.Session session, ConceptStorage storage, String graphName, QueryProvider queryProvider) {
         this.session = session;
         this.graphName = graphName;
         this.queryProvider = queryProvider;

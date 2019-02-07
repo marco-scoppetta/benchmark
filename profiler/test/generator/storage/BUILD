@@ -2,7 +2,7 @@
 java_test(
     name = "ignite-conceptid-store-test",
     test_class = "grakn.benchmark.runner.storage.IgniteConceptIdStoreTest",
-    srcs = ["IgniteConceptStoreTest.java"],
+    srcs = ["IgniteConceptStorageTest.java"],
 
     deps = [
         "//profiler:benchmark-runner",

@@ -1,26 +1,31 @@
 package grakn.benchmark.profiler.generator.pick;
 
 
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
  * adapted from https://stackoverflow.com/questions/41107/how-to-generate-a-random-alpha-numeric-string
- *
- * TODO this has substantial overlap in responsibility with CountingStreamGenerator ie. StreamInterface<T>
  */
-public class StringStreamGenerator implements StreamGenerator<String> {
+public class RandomStringIterator implements Iterator<String> {
 
-    public static final String UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    public static final String LOWER = UPPER.toLowerCase(Locale.ROOT);
-    public static final String DIGITS = "0123456789";
-    public static final String ALPHANUM = UPPER + LOWER + DIGITS;
+    private static final String UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final String LOWER = UPPER.toLowerCase(Locale.ROOT);
+    private static final String DIGITS = "0123456789";
+    private static final String ALPHANUM = UPPER + LOWER + DIGITS;
 
     private final Random random;
     private final char[] symbols;
     private final char[] buf;
+
+    @Override
+    public boolean hasNext() {
+        return true;
+    }
 
     /**
      * Generate a random string.
@@ -32,17 +37,19 @@ public class StringStreamGenerator implements StreamGenerator<String> {
     }
 
     @Override
-    public Stream<String> getStream() {
-        return Stream.generate(() -> this.next());
+    public void remove() {
+
     }
 
     @Override
-    public boolean checkAvailable(int requiredLength) {
-        return true;
+    public void forEachRemaining(Consumer action) {
+        while (hasNext()) {
+            action.accept(next());
+        }
     }
 
 
-    public StringStreamGenerator(Random random, int stringLength, String symbols) {
+    private RandomStringIterator(Random random, int stringLength, String symbols) {
         if (stringLength < 1) throw new IllegalArgumentException();
         if (symbols.length() < 2) throw new IllegalArgumentException();
         this.random = Objects.requireNonNull(random);
@@ -53,7 +60,7 @@ public class StringStreamGenerator implements StreamGenerator<String> {
     /**
      * Create an alphanumeric string generator.
      */
-    public StringStreamGenerator(Random random, int stringLength) {
+    public RandomStringIterator(Random random, int stringLength) {
         this(random, stringLength, ALPHANUM);
     }
 

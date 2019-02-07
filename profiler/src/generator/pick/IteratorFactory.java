@@ -18,15 +18,26 @@
 
 package grakn.benchmark.profiler.generator.pick;
 
-import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction;
 
-import java.util.stream.Stream;
+import java.util.Iterator;
+import java.util.Random;
 
 /**
  * @param <T>
  */
-public interface PDFLimitedStreamProvider<T> {
-        Stream<T> getStream(ProbabilityDensityFunction pdf);
+public abstract class IteratorFactory<T> {
+    protected Random rand;
 
-        void reset();
+    public IteratorFactory(Random rand) {
+        this.rand = rand;
+    }
+
+    protected Iterator<Integer> getIteratorOfRandomOffsets() {
+        int typeCount = getConceptCount();
+        return new RandomOffsetIterator(this.rand, typeCount);
+    }
+
+    protected abstract Integer getConceptCount();
+
+    public abstract Iterator<T> getIterator();
 }

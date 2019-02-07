@@ -1,13 +1,13 @@
 package grakn.benchmark.profiler.generator.definition;
 
 import grakn.benchmark.profiler.generator.pick.StandardStreamProvider;
-import grakn.benchmark.profiler.generator.pick.StringStreamGenerator;
+import grakn.benchmark.profiler.generator.pick.RandomStringIterator;
 import grakn.benchmark.profiler.generator.probdensity.FixedConstant;
 import grakn.benchmark.profiler.generator.probdensity.FixedDiscreteGaussian;
 import grakn.benchmark.profiler.generator.probdensity.ScalingBoundedZipf;
 import grakn.benchmark.profiler.generator.probdensity.ScalingDiscreteGaussian;
-import grakn.benchmark.profiler.generator.storage.ConceptStore;
-import grakn.benchmark.profiler.generator.storage.FromIdStorageConceptIdPicker;
+import grakn.benchmark.profiler.generator.storage.ConceptStorage;
+import grakn.benchmark.profiler.generator.storage.ConceptIdStoragePicker;
 import grakn.benchmark.profiler.generator.strategy.AttributeStrategy;
 import grakn.benchmark.profiler.generator.strategy.EntityStrategy;
 import grakn.benchmark.profiler.generator.strategy.RelationshipStrategy;
@@ -22,14 +22,14 @@ import java.util.Random;
 public class SocialNetworkDefinition extends DataGeneratorDefinition {
 
     private Random random;
-    private ConceptStore storage;
+    private ConceptStorage storage;
 
     private WeightedPicker<TypeStrategy> entityStrategies;
     private WeightedPicker<TypeStrategy> relationshipStrategies;
     private WeightedPicker<TypeStrategy> attributeStrategies;
     private WeightedPicker<WeightedPicker<TypeStrategy>> metaTypeStrategies;
 
-    public SocialNetworkDefinition(Random random, ConceptStore storage) {
+    public SocialNetworkDefinition(Random random, ConceptStorage storage) {
         this.random = random;
         this.storage = storage;
 
@@ -73,7 +73,7 @@ public class SocialNetworkDefinition extends DataGeneratorDefinition {
         Attributes
          */
 
-        StringStreamGenerator nameStream = new StringStreamGenerator(random, 6);
+        RandomStringIterator nameStream = new RandomStringIterator(random, 6);
 
         this.attributeStrategies.add(
                 1.0,
@@ -96,7 +96,7 @@ public class SocialNetworkDefinition extends DataGeneratorDefinition {
                 "friendship",
                 new FixedConstant(2),
                 new StandardStreamProvider<>(
-                    new FromIdStorageConceptIdPicker(
+                    new ConceptIdStoragePicker(
                         random,
                         this.storage,
                         "person")
@@ -117,13 +117,13 @@ public class SocialNetworkDefinition extends DataGeneratorDefinition {
                 "liked",
                 "like",
                 new FixedConstant(1),
-                new StandardStreamProvider<>(new FromIdStorageConceptIdPicker(random, storage, "page"))
+                new StandardStreamProvider<>(new ConceptIdStoragePicker(random, storage, "page"))
         );
         RolePlayerTypeStrategy likerPersonRole = new RolePlayerTypeStrategy(
                 "liker",
                 "like",
                 new FixedConstant(1),
-                new StandardStreamProvider<>(new FromIdStorageConceptIdPicker(random, storage, "person"))
+                new StandardStreamProvider<>(new ConceptIdStoragePicker(random, storage, "person"))
         );
         this.relationshipStrategies.add(
                 1.0,
@@ -140,13 +140,13 @@ public class SocialNetworkDefinition extends DataGeneratorDefinition {
                 "@has-name-owner",
                 "@has-name",
                 new FixedConstant(1),
-                new StandardStreamProvider<>(new FromIdStorageConceptIdPicker(random, storage, "person"))
+                new StandardStreamProvider<>(new ConceptIdStoragePicker(random, storage, "person"))
         );
         RolePlayerTypeStrategy nameValue = new RolePlayerTypeStrategy(
                 "@has-name-value",
                 "@has-name",
                 new FixedConstant(1),
-                new StandardStreamProvider<>(new FromIdStorageConceptIdPicker(random, storage, "name"))
+                new StandardStreamProvider<>(new ConceptIdStoragePicker(random, storage, "name"))
         );
         this.relationshipStrategies.add(
                 1.0,

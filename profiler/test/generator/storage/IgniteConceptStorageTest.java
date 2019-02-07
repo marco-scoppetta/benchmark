@@ -44,9 +44,9 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 /**
  *
  */
-public class IgniteConceptStoreTest {
+public class IgniteConceptStorageTest {
 
-    private IgniteConceptStore store;
+    private IgniteConceptStorage store;
     private HashSet<String> typeLabelsSet;
     private ArrayList<ConceptId> conceptIds;
     private ArrayList<Concept> conceptMocks;
@@ -163,7 +163,7 @@ public class IgniteConceptStoreTest {
         when(relConceptTypeMock.label()).thenReturn(Label.of("friendship")); // Type label
 
         // create new ignite store
-        this.store = new IgniteConceptStore(entityTypes, relationshipTypes, attributeTypes);
+        this.store = new IgniteConceptStorage(entityTypes, relationshipTypes, attributeTypes);
     }
 
     @Test

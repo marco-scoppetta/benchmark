@@ -27,17 +27,14 @@ import java.util.List;
 /**
  *
  */
-public interface ConceptStore {
+public interface ConceptStorage {
 
     int getConceptCount(String typeLabel);
 
     ConceptId getConceptId(String typeLabel, int offset);
     List<String> getIdsNotPlayingRole(String typeLabel, String relationshipType, String role);
     Integer numIdsNotPlayingRole(String typeLabel, String relationshipType, String role);
-    String getString(String typeLabel, int offset);
-    Double getDouble(String typeLabel, int offset);
-    Long getLong(String typeLabel, int offset);
-    Boolean getBoolean(String typeLabel, int offset);
+
     Date getDate(String typeLabel, int offset);
 
     void addConcept(Concept concept);

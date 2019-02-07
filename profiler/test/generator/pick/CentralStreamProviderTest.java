@@ -22,9 +22,9 @@ public class CentralStreamProviderTest {
 
         FixedConstant one = new FixedConstant(1);
 
-        StreamGenerator<Integer> streamer = mock(StreamGenerator.class);
+        IteratorFactory<Integer> streamer = mock(IteratorFactory.class);
         List<Integer> ints = IntStream.range(0, 10).boxed().collect(Collectors.toList());
-        when(streamer.getStream()).thenReturn(ints.stream());
+        when(streamer.getIterator()).thenReturn(ints.stream());
 
         FixedConstant five = new FixedConstant(5);
 
@@ -43,9 +43,9 @@ public class CentralStreamProviderTest {
 
         FixedConstant three = new FixedConstant(3);
 
-        StreamGenerator<Integer> streamer = mock(StreamGenerator.class);
+        IteratorFactory<Integer> streamer = mock(IteratorFactory.class);
         List<Integer> ints = IntStream.range(0, 10).boxed().collect(Collectors.toList());
-        when(streamer.getStream()).thenReturn(ints.stream());
+        when(streamer.getIterator()).thenReturn(ints.stream());
 
         FixedConstant five = new FixedConstant(5);
 
@@ -64,9 +64,9 @@ public class CentralStreamProviderTest {
 
         FixedConstant three = new FixedConstant(3);
 
-        StreamGenerator<Integer> streamer = mock(StreamGenerator.class);
+        IteratorFactory<Integer> streamer = mock(IteratorFactory.class);
         List<Integer> ints = IntStream.range(0, 10).boxed().collect(Collectors.toList());
-        when(streamer.getStream()).thenReturn(ints.stream());
+        when(streamer.getIterator()).thenReturn(ints.stream());
 
         FixedConstant five = new FixedConstant(5);
 
@@ -89,9 +89,9 @@ public class CentralStreamProviderTest {
 
         FixedConstant three = new FixedConstant(3);
 
-        StreamGenerator<Integer> streamer = mock(StreamGenerator.class);
+        IteratorFactory<Integer> streamer = mock(IteratorFactory.class);
         List<Integer> ints = IntStream.range(0, 10).boxed().collect(Collectors.toList());
-        when(streamer.getStream()).thenReturn(ints.stream()).thenReturn(ints.stream());
+        when(streamer.getIterator()).thenReturn(ints.stream()).thenReturn(ints.stream());
 
         FixedConstant five = new FixedConstant(5);
 
@@ -102,7 +102,7 @@ public class CentralStreamProviderTest {
         List<Integer> expectedIntegers = Arrays.asList(0, 1, 2, 0, 1);
         Assert.assertThat(centralIntegers, is(expectedIntegers));
 
-        centralStreamProvider.reset();
+        centralStreamProvider.resetUniqueness();
 
         Stream<Integer> centralStreamTwo = centralStreamProvider.getStream(five);
         List<Integer> centralIntegersTwo = centralStreamTwo.collect(Collectors.toList());

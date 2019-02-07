@@ -2,11 +2,11 @@ package grakn.benchmark.profiler.generator.definition;
 
 import grakn.benchmark.profiler.generator.pick.CentralStreamProvider;
 import grakn.benchmark.profiler.generator.pick.StandardStreamProvider;
-import grakn.benchmark.profiler.generator.pick.StringStreamGenerator;
+import grakn.benchmark.profiler.generator.pick.RandomStringIterator;
 import grakn.benchmark.profiler.generator.probdensity.FixedConstant;
 import grakn.benchmark.profiler.generator.probdensity.FixedUniform;
-import grakn.benchmark.profiler.generator.storage.ConceptStore;
-import grakn.benchmark.profiler.generator.storage.FromIdStorageConceptIdPicker;
+import grakn.benchmark.profiler.generator.storage.ConceptStorage;
+import grakn.benchmark.profiler.generator.storage.ConceptIdStoragePicker;
 import grakn.benchmark.profiler.generator.storage.NotInRelationshipConceptIdPicker;
 import grakn.benchmark.profiler.generator.strategy.AttributeStrategy;
 import grakn.benchmark.profiler.generator.strategy.EntityStrategy;
@@ -22,14 +22,14 @@ import java.util.Random;
 public class RoadNetworkDefinition extends DataGeneratorDefinition {
 
     private Random random;
-    private ConceptStore storage;
+    private ConceptStorage storage;
 
     private WeightedPicker<TypeStrategy> entityStrategies;
     private WeightedPicker<TypeStrategy> relationshipStrategies;
     private WeightedPicker<TypeStrategy> attributeStrategies;
     private WeightedPicker<WeightedPicker<TypeStrategy>> metaTypeStrategies;
 
-    public RoadNetworkDefinition(Random random, ConceptStore storage) {
+    public RoadNetworkDefinition(Random random, ConceptStorage storage) {
         this.random = random;
         this.storage = storage;
 
@@ -66,14 +66,14 @@ public class RoadNetworkDefinition extends DataGeneratorDefinition {
         Attributes
          */
 
-        StringStreamGenerator nameStream = new StringStreamGenerator(random, 6);
+        RandomStringIterator nameIterator = new RandomStringIterator(random, 6);
 
         this.attributeStrategies.add(
                 1.0,
                 new AttributeStrategy<>(
                         "name",
                         new FixedUniform(this.random, 10, 30),
-                        new StandardStreamProvider<>(nameStream)
+                        new StandardStreamProvider<>(nameIterator)
                 )
         );
 
@@ -102,7 +102,7 @@ public class RoadNetworkDefinition extends DataGeneratorDefinition {
                 "intersection",
                 new FixedUniform(random, 1, 5), // choose 1-5 other role players for an intersection
                 new StandardStreamProvider<>(
-                        new FromIdStorageConceptIdPicker(random, storage, "road")
+                        new ConceptIdStoragePicker(random, storage, "road")
                 )
         );
 

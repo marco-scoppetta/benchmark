@@ -1,12 +1,12 @@
 package grakn.benchmark.profiler.generator.definition;
 
-import grakn.benchmark.profiler.generator.storage.ConceptStore;
+import grakn.benchmark.profiler.generator.storage.ConceptStorage;
 
 import java.util.Random;
 
 public class DefinitionFactory {
 
-    public static DataGeneratorDefinition getDefinition(String name, Random random, ConceptStore storage) {
+    public static DataGeneratorDefinition getDefinition(String name, Random random, ConceptStorage storage) {
         switch (name) {
             case "social_network":
                 return new SocialNetworkDefinition(random, storage);

@@ -62,7 +62,7 @@ public class RelationshipGenerator implements QueryGenerator {
         Set<RolePlayerTypeStrategy> rolePlayerTypeStrategies = this.strategy.getRolePlayerTypeStrategies();
         for (RolePlayerTypeStrategy rolePlayerTypeStrategy : rolePlayerTypeStrategies) {
             // Reset the roleplayer pickers to cater for the case where they are central
-            rolePlayerTypeStrategy.getPicker().reset();
+            rolePlayerTypeStrategy.getStreamProvider().resetUniqueness();
         }
 
         String relationshipTypeLabel = strategy.getTypeLabel();
@@ -86,7 +86,7 @@ public class RelationshipGenerator implements QueryGenerator {
 
                 // Find random role-players matching this type
                 // Pick ids from the list of concept ids
-                Stream<ConceptId> conceptIdStream = rolePlayerTypeStrategy.getPicker().getStream(rolePlayerTypeStrategy.getNumInstancesPDF());
+                Stream<ConceptId> conceptIdStream = rolePlayerTypeStrategy.getConceptIds();
 
                 Iterator<ConceptId> iter = conceptIdStream.iterator();
 

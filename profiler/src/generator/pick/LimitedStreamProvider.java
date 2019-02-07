@@ -16,30 +16,15 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.profiler.generator.storage;
+package grakn.benchmark.profiler.generator.pick;
 
-
-import grakn.benchmark.profiler.generator.pick.Picker;
-import java.util.Random;
+import java.util.stream.Stream;
 
 /**
- * Base class for the various different FromIdStoragePickers
- * This removes the need for generics in children
  * @param <T>
  */
-public abstract class FromIdStoragePicker<T> extends Picker<T> {
+public interface LimitedStreamProvider<T> {
+        Stream<T> getStream(int length);
 
-    protected ConceptStore conceptStore;
-    protected String typeLabel;
-
-    public FromIdStoragePicker(Random rand, ConceptStore conceptStore, String typeLabel) {
-        super(rand);
-        this.conceptStore = conceptStore;
-        this.typeLabel = typeLabel;
-    }
-
-
-    protected Integer getConceptCount() {
-        return this.conceptStore.getConceptCount(this.typeLabel);
-    }
+        void resetUniqueness();
 }

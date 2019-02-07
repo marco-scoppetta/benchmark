@@ -18,7 +18,7 @@
 
 package grakn.benchmark.profiler.generator.query;
 
-import grakn.benchmark.profiler.generator.pick.PDFLimitedStreamProvider;
+import grakn.benchmark.profiler.generator.pick.LimitedStreamProvider;
 import grakn.benchmark.profiler.generator.probdensity.FixedConstant;
 import grakn.benchmark.profiler.generator.strategy.AttributeStrategy;
 import grakn.core.graql.Graql;
@@ -50,15 +50,15 @@ public class AttributeGenerator<ValueDatatype> implements QueryGenerator {
     public Stream<InsertQuery> generate() {
         int numInstances = this.strategy.getNumInstancesPDF().sample();
 
-        PDFLimitedStreamProvider<ValueDatatype> valuePicker = this.strategy.getPicker();
-        valuePicker.reset();
+        LimitedStreamProvider<ValueDatatype> valuePicker = this.strategy.getPicker();
+        valuePicker.resetUniqueness();
         FixedConstant unityPDF = new FixedConstant(1);
 
         String attributeTypeLabel = this.strategy.getTypeLabel();
 
         return Stream.generate(() -> {
             Var attr = Graql.var().asUserDefined();
-            Stream<ValueDatatype> valueStream = valuePicker.getStream(unityPDF);
+            Stream<ValueDatatype> valueStream = valuePicker.getStream(unityPDF.sample());
             ValueDatatype value = valueStream.findFirst().get();
             return Graql.insert(attr.isa(attributeTypeLabel), attr.val(value));
         }).limit(numInstances).filter(Objects::nonNull);

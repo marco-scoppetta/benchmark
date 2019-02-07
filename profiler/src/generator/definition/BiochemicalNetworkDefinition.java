@@ -1,12 +1,12 @@
 package grakn.benchmark.profiler.generator.definition;
 
-import grakn.benchmark.profiler.generator.pick.CountingStreamGenerator;
+import grakn.benchmark.profiler.generator.pick.CountingIterator;
 import grakn.benchmark.profiler.generator.pick.StandardStreamProvider;
 import grakn.benchmark.profiler.generator.probdensity.FixedConstant;
 import grakn.benchmark.profiler.generator.probdensity.FixedDiscreteGaussian;
 import grakn.benchmark.profiler.generator.probdensity.ScalingDiscreteGaussian;
-import grakn.benchmark.profiler.generator.storage.ConceptStore;
-import grakn.benchmark.profiler.generator.storage.FromIdStorageConceptIdPicker;
+import grakn.benchmark.profiler.generator.storage.ConceptStorage;
+import grakn.benchmark.profiler.generator.storage.ConceptIdStoragePicker;
 import grakn.benchmark.profiler.generator.storage.NotInRelationshipConceptIdPicker;
 import grakn.benchmark.profiler.generator.strategy.AttributeStrategy;
 import grakn.benchmark.profiler.generator.strategy.EntityStrategy;
@@ -22,14 +22,14 @@ import java.util.Random;
 public class BiochemicalNetworkDefinition extends DataGeneratorDefinition {
 
     private Random random;
-    private ConceptStore storage;
+    private ConceptStorage storage;
 
     private WeightedPicker<TypeStrategy> entityStrategies;
     private WeightedPicker<TypeStrategy> relationshipStrategies;
     private WeightedPicker<TypeStrategy> attributeStrategies;
     private WeightedPicker<WeightedPicker<TypeStrategy>> metaTypeStrategies;
 
-    public BiochemicalNetworkDefinition(Random random, ConceptStore storage) {
+    public BiochemicalNetworkDefinition(Random random, ConceptStorage storage) {
         this.random = random;
         this.storage = storage;
 
@@ -74,7 +74,7 @@ public class BiochemicalNetworkDefinition extends DataGeneratorDefinition {
         Attributes
          */
 
-        CountingStreamGenerator idGenerator = new CountingStreamGenerator(0);
+        CountingIterator idGenerator = new CountingIterator(0);
         this.attributeStrategies.add(
                 1.0,
                 new AttributeStrategy<>(
@@ -97,7 +97,7 @@ public class BiochemicalNetworkDefinition extends DataGeneratorDefinition {
                 // high variance in the number of role players
                 new ScalingDiscreteGaussian(random, () -> storage.getGraphScale(), 0.01, 0.005),
                 new StandardStreamProvider<>(
-                        new FromIdStorageConceptIdPicker(
+                        new ConceptIdStoragePicker(
                                 random,
                                 this.storage,
                                 "chemical")
@@ -109,7 +109,7 @@ public class BiochemicalNetworkDefinition extends DataGeneratorDefinition {
                 // high variance in the number of role players
                 new ScalingDiscreteGaussian(random, () -> storage.getGraphScale(), 0.001, 0.001),
                 new StandardStreamProvider<>(
-                        new FromIdStorageConceptIdPicker(
+                        new ConceptIdStoragePicker(
                                 random,
                                 this.storage,
                                 "enzyme")

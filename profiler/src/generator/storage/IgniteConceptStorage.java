@@ -56,8 +56,8 @@ import static grakn.core.concept.AttributeType.DataType.STRING;
 /**
  * Stores identifiers for all concepts in a Grakn
  */
-public class IgniteConceptStore implements ConceptStore {
-    private static final Logger LOG = LoggerFactory.getLogger(IgniteConceptStore.class);
+public class IgniteConceptStorage implements ConceptStorage {
+    private static final Logger LOG = LoggerFactory.getLogger(IgniteConceptStorage.class);
 
     private HashSet<String> entityTypeLabels;
     private HashSet<String> relationshipTypeLabels;
@@ -89,7 +89,7 @@ public class IgniteConceptStore implements ConceptStore {
         DATATYPE_MAPPING = Collections.unmodifiableMap(mapBuilder);
     }
 
-    public IgniteConceptStore(HashSet<EntityType> entityTypes, HashSet<RelationshipType> relationshipTypes, HashSet<AttributeType> attributeTypes) {
+    public IgniteConceptStorage(HashSet<EntityType> entityTypes, HashSet<RelationshipType> relationshipTypes, HashSet<AttributeType> attributeTypes) {
         LOG.info("Initialising ignite...");
         // Read schema concepts and create ignite tables
         collectTypeLabels(entityTypes, relationshipTypes, attributeTypes);
@@ -495,67 +495,6 @@ public class IgniteConceptStore implements ConceptStore {
             try (ResultSet rs = stmt.executeQuery(sqlGetId(typeLabel, offset))) {
                 if (rs != null && rs.next()) { // Need to do this to increment one line in the ResultSet
                     return ConceptId.of(rs.getString(ID_INDEX));
-                }
-            } catch (SQLException e) {
-                LOG.trace(e.getMessage(), e);
-            }
-        } catch (SQLException e) {
-            LOG.trace(e.getMessage(), e);
-        }
-        return null;
-    }
-
-    public String getString(String typeLabel, int offset) {
-        try (Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(sqlGetAttrValue(typeLabel, offset))) {
-                if (rs != null && rs.next()) { // Need to do this to increment one line in the ResultSet
-                    return rs.getString(ID_INDEX);
-                }
-            } catch (SQLException e) {
-                LOG.trace(e.getMessage(), e);
-            }
-        } catch (SQLException e) {
-            LOG.trace(e.getMessage(), e);
-        }
-        return null;
-
-    }
-
-    public Double getDouble(String typeLabel, int offset) {
-        try (Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(sqlGetAttrValue(typeLabel, offset))) {
-                if (rs != null && rs.next()) { // Need to do this to increment one line in the ResultSet
-                    return rs.getDouble(ID_INDEX);
-                }
-            } catch (SQLException e) {
-                LOG.trace(e.getMessage(), e);
-            }
-        } catch (SQLException e) {
-            LOG.trace(e.getMessage(), e);
-        }
-        return null;
-    }
-
-    public Long getLong(String typeLabel, int offset) {
-        try (Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(sqlGetAttrValue(typeLabel, offset))) {
-                if (rs != null && rs.next()) { // Need to do this to increment one line in the ResultSet
-                    return rs.getLong(ID_INDEX);
-                }
-            } catch (SQLException e) {
-                LOG.trace(e.getMessage(), e);
-            }
-        } catch (SQLException e) {
-            LOG.trace(e.getMessage(), e);
-        }
-        return null;
-    }
-
-    public Boolean getBoolean(String typeLabel, int offset) {
-        try (Statement stmt = conn.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(sqlGetAttrValue(typeLabel, offset))) {
-                if (rs != null && rs.next()) { // Need to do this to increment one line in the ResultSet
-                    return rs.getBoolean(ID_INDEX);
                 }
             } catch (SQLException e) {
                 LOG.trace(e.getMessage(), e);

@@ -18,29 +18,40 @@
 
 package grakn.benchmark.profiler.generator.pick;
 
-import java.util.HashSet;
-import java.util.Random;
-import java.util.stream.Stream;
+import java.util.Iterator;
+import java.util.function.Consumer;
 
 /**
  *
  */
-public class RandomOffsetGenerator {
+public class CountingIterator implements Iterator<Integer> {
+    private int n;
 
-    public static Stream<Integer> generate(Random rand, int offsetBound) {
+    public CountingIterator(int start) {
+        this.n = start - 1;
+    }
 
-        HashSet<Object> previousRandomOffsets = new HashSet<>();
+    @Override
+    public boolean hasNext() {
+        return true;
+    }
 
-        return Stream.generate(() -> {
+    @Override
+    public Integer next() {
+        this.n++;
+        return this.n;
+    }
 
-            boolean foundUnique = false;
 
-            int nextChoice = 0;
-            while (!foundUnique) {
-                nextChoice = rand.nextInt(offsetBound);
-                foundUnique = previousRandomOffsets.add(nextChoice);
-            }
-            return nextChoice;
-        }).limit(offsetBound);
+    @Override
+    public void remove() {
+
+    }
+
+    @Override
+    public void forEachRemaining(Consumer action) {
+        while (hasNext()) {
+            action.accept(next());
+        }
     }
 }
