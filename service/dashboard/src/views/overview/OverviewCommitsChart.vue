@@ -111,7 +111,7 @@ export default {
     redirectToInspect(){
       const currentQuery = Object.keys(this.queriesMap).filter(
             x => this.queriesMap[x] === this.clickedPointArgs.seriesName
-          );
+          )[0];
       
       InspectStore.setGraph(this.name);
       InspectStore.setScale(this.currentScale);

@@ -6,10 +6,10 @@
       :router="true"
     >
       <div class="logo"><img src="assets/grakn-logo.png" /></div>
-      <el-menu-item index="overview">
+      <el-menu-item index="/overview">
         <i class="el-icon-menu"></i> <span slot="title">Overview</span>
       </el-menu-item>
-      <el-menu-item index="executions">
+      <el-menu-item index="/executions">
         <i class="el-icon-document"></i> <span slot="title">Executions</span>
       </el-menu-item>
     </el-menu>

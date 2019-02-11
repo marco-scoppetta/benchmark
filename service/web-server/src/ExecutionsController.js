@@ -80,6 +80,8 @@ const typeDefs = `
       order: String,
       offset: Int, 
       limit: Int): [Execution]
+
+    executionById(id: String!): Execution
   }
 
   type Execution {
@@ -128,6 +130,9 @@ const root = {
     const queryObject = Object.assign({}, SEARCH_EXECUTIONS_OBJECT, { body });
     return context.client.search(queryObject).then(result => result.hits.hits.map(res => Object.assign(res._source, {id: res._id})));
   },
+  executionById: (object, args, context) => {
+    return context.client.get(Object.assign({}, SEARCH_EXECUTIONS_OBJECT, { id: args.id})).then(res => Object.assign(res._source, {id: res._id}));
+  }
 };
 
 const schema = makeExecutableSchema({ typeDefs , resolvers:{ Query: root}});
