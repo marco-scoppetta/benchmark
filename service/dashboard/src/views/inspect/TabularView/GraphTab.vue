@@ -11,9 +11,10 @@
         </el-row>
         <el-row>
             <el-col :span="12">Query</el-col>
-            <el-col :span="4">Min</el-col>
-            <el-col :span="4">Med</el-col>
-            <el-col :span="4">Max</el-col>
+            <el-col :span="3">Min (rep)</el-col>
+            <el-col :span="3">Med</el-col>
+            <el-col :span="3">Max (rep)</el-col>
+            <el-col :span="3">Reps</el-col>
         </el-row>
         <div v-for="query in queries" :key="query">
             <query-line :query="query" :currentScale="currentScale" :spans="filterSpans(query)"></query-line>

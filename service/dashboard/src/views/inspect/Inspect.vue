@@ -85,7 +85,7 @@ export default {
             this.execution = resp.data.executionById;
         });
         BenchmarkClient.getSpans( `{ querySpans( limit: 500, executionName: "${this.executionId}"){ 
-            id name duration tags { graphName executionName query scale }} }`)
+            id name duration tags { graphName executionName query scale repetition }} }`)
             .then((resp) => {
               this.spans = resp.data.querySpans;
               this.graphs = Array.from(
