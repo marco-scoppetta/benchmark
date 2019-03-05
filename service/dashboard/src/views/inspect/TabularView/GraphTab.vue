@@ -9,12 +9,12 @@
                 <div @click="currentScale=scale" class="scale-tab" :class="{'active':scale==currentScale}">{{scale}}</div>
             </div>
         </el-row>
-        <el-row>
-            <el-col :span="12">Query</el-col>
+        <el-row class="queries">
+            <el-col :span="12" :offset="1">Query</el-col>
             <el-col :span="3">Min (rep)</el-col>
             <el-col :span="3">Med</el-col>
             <el-col :span="3">Max (rep)</el-col>
-            <el-col :span="3">Reps</el-col>
+            <el-col :span="2">Reps</el-col>
         </el-row>
         <div v-for="query in queries" :key="query">
             <query-line :query="query" :currentScale="currentScale" :spans="filterSpans(query)"></query-line>
@@ -37,6 +37,7 @@ export default {
     created(){
         this.scales = Array.from(new Set(this.spans.map(span => span.tags.scale)));
         this.queries = Array.from(new Set(this.spans.map(span => span.tags.query)));
+        this.queries.sort();
         this.currentScale = this.scales[0];
     },
     computed:{
@@ -52,6 +53,10 @@ export default {
 }
 </script>
 <style scoped>
+.queries{
+    font-weight: bold;
+    margin-top: 10px;
+}
 .scale-tab{
   padding-bottom: 5px;
   cursor: pointer;

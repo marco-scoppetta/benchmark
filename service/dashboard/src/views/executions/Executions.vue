@@ -31,6 +31,7 @@ export default {
   created() {
     BenchmarkClient.getExecutions(
       `{ executions(status:["COMPLETED"], orderBy: "prMergedAt"){ 
+          id
           prMergedAt 
           prNumber 
           prUrl 

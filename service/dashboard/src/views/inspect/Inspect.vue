@@ -5,19 +5,21 @@
             <el-card :body-style="{padding: '15px'}">
                 <el-row style="margin-bottom: 5px; font-weight: bold; text-align:center;">
                     <el-col :span="3">STATUS</el-col>
+                    <el-col :span="4">REPOSITORY</el-col>
                     <el-col :span="7">COMMIT</el-col>
-                    <el-col :span="4">PR</el-col>
-                    <el-col :span="5">STARTED AT</el-col>
-                    <el-col :span="5">COMPLETED AT</el-col>
+                    <el-col :span="2">PR</el-col>
+                    <el-col :span="4">STARTED AT</el-col>
+                    <el-col :span="4">COMPLETED AT</el-col>
                 </el-row>
                 <el-row type="flex" align="middle" style="text-align:center;">
                     <el-col :span="3">
                         <el-tag size="mini" :type="(execution.status=='COMPLETED') ? 'success' : 'danger'">{{execution.status}}</el-tag>
                     </el-col>
+                    <el-col :span="4"><a :href="execution.repoUrl">{{execution.repoUrl | substringRepo}}</a></el-col>
                     <el-col :span="7"><a :href="execution.repoUrl+'/commit/'+execution.commit">{{execution.commit}}</a></el-col>
-                    <el-col :span="4"><a :href="execution.prUrl">#{{execution.prNumber}}</a></el-col>
-                    <el-col :span="5">{{execution.executionStartedAt}}</el-col>
-                    <el-col :span="5">{{execution.executionCompletedAt}}</el-col>
+                    <el-col :span="2"><a :href="execution.prUrl">#{{execution.prNumber}}</a></el-col>
+                    <el-col :span="4">{{execution.executionStartedAt}}</el-col>
+                    <el-col :span="4">{{execution.executionCompletedAt}}</el-col>
                 </el-row>
             </el-card>
             <!-- <el-card :body-style="{padding: '15px'}">
@@ -58,6 +60,12 @@ import BenchmarkClient from "@/util/BenchmarkClient.js";
 import TabularView from "./TabularView/TabularView.vue";
 export default {
     components:{ TabularView },
+    filters:{
+        substringRepo(repoUrl){
+            if(!repoUrl) return;
+            return repoUrl.substring(19);
+        }
+    },
     data(){
         return {
             executionId: this.$route.params.executionId,
