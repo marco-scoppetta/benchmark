@@ -1,6 +1,6 @@
 /*
  *  GRAKN.AI - THE KNOWLEDGE GRAPH
- *  Copyright (C) 2018 Grakn Labs Ltd
+ *  Copyright (C) 2018 GraknClient Labs Ltd
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -18,23 +18,24 @@
 
 package grakn.benchmark.profiler;
 
-import brave.Span;
-import brave.Tracer;
 import brave.Tracing;
-import grakn.core.GraknTxType;
-import grakn.core.client.Grakn;
-import grakn.core.graql.Graql;
-import grakn.core.graql.Query;
-import grakn.core.graql.answer.Answer;
-import grakn.core.graql.answer.Value;
+import grakn.core.client.GraknClient;
+import grakn.core.concept.answer.Numeric;
+import graql.lang.Graql;
+import graql.lang.query.GraqlQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static grakn.core.graql.Graql.var;
+import static graql.lang.Graql.var;
+
 
 /**
  *
@@ -45,80 +46,70 @@ public class QueryProfiler {
 
     private final String executionName;
     private final String graphName;
-    private final List<Query> queries;
-    private final Grakn.Session session;
+    private final List<GraqlQuery> queries;
+    private boolean commitQueries;
+    private final List<GraknClient.Session> sessions;
+    private ExecutorService executorService;
 
-    public QueryProfiler(Grakn.Session session, String executionName, String graphName, List<String> queryStrings) {
-        this.session = session;
+    public QueryProfiler(List<GraknClient.Session> sessions, String executionName, String graphName, List<String> queryStrings, boolean commitQueries) {
+        this.sessions = sessions;
 
         this.executionName = executionName;
         this.graphName = graphName;
 
-        // convert Graql strings into Query types
+        // convert Graql strings into GraqlQuery types
         this.queries = queryStrings.stream()
-                        .map(q -> (Query)Graql.parser().parseQuery(q))
-                        .collect(Collectors.toList());
+                .map(q -> (GraqlQuery) Graql.parse(q))
+                .collect(Collectors.toList());
+
+        this.commitQueries = commitQueries;
+
+        // create 1 thread per client session
+        executorService = Executors.newFixedThreadPool(sessions.size());
     }
 
     public void processStaticQueries(int numRepeats, int numConcepts) {
         LOG.trace("Starting processStaticQueries");
-        this.processQueries(queries.stream(), numRepeats, numConcepts);
+        this.processQueries(queries, numRepeats, numConcepts);
         LOG.trace("Finished processStaticQueries");
     }
 
-    public int aggregateCount() {
-        try (Grakn.Transaction tx = session.transaction(GraknTxType.READ)) {
-            List<Value> count = tx.graql().match(var("x").isa("thing")).aggregate(Graql.count()).execute();
+    public int aggregateCount(GraknClient.Session session) {
+        try (GraknClient.Transaction tx = session.transaction().read()) {
+            List<Numeric> count = tx.execute(Graql.match(var("x").isa("thing")).get().count());
             return count.get(0).number().intValue();
         }
     }
 
-    void processQueries(Stream<Query> queryStream, int repetitions, int numConcepts) {
-        try (Grakn.Transaction tx = session.transaction(GraknTxType.WRITE)) {
-            Tracer tracer = Tracing.currentTracer();
+    void processQueries(List<GraqlQuery> queries, int repetitions, int numConcepts) {
+        List<Future> runningConcurrentQueries = new LinkedList<>();
 
-            List<Query> queries = queryStream.collect(Collectors.toList());
+        long start = System.currentTimeMillis();
 
-            for (int rep = 0; rep < repetitions; rep++) {
+        for (int i = 0; i < sessions.size(); i++) {
+            GraknClient.Session session = sessions.get(i);
+            ConcurrentQueries processor = new ConcurrentQueries(executionName, i, graphName, Tracing.currentTracer(), queries, repetitions, numConcepts, session, commitQueries);
 
-                for (Query rawQuery : queries) {
-                    Query query = rawQuery.withTx(tx);
-
-                    this.eraselinePrint(String.format("Profiling... (repetition %d/%d):\t%s", rep+1, repetitions, query.toString()));
-                    LOG.trace("Profiling... repetition " + rep + "/" + repetitions + ": " + query.toString());
-                    Span querySpan = tracer.newTrace().name("query");
-                    querySpan.tag("scale", Integer.toString(numConcepts));
-                    querySpan.tag("query", query.toString());
-                    querySpan.tag("executionName", this.executionName);
-                    querySpan.tag("repetitions", Integer.toString(repetitions));
-                    querySpan.tag("graphName", this.graphName);
-                    querySpan.tag("repetition", Integer.toString(rep));
-                    querySpan.start();
-                    LOG.trace("Opened query span");
-
-                    // perform trace in thread-local storage on the client
-                    try (Tracer.SpanInScope ws = tracer.withSpanInScope(querySpan)) {
-                        List<Answer> answer = query.execute();
-                        LOG.trace("executed query successfully");
-                    } finally {
-                        querySpan.finish();
-                        LOG.trace("Closed query span");
-                    }
-                }
-                // wait for out-of-band reporting to complete
-                Thread.sleep(500);
-            }
-            // wait for out-of-band reporting to complete
-            Thread.sleep(1500);
-        } catch (InterruptedException e) {
-            LOG.error("Thread sleeps during data generation were interrupted", e);
-            Thread.currentThread().interrupt();
+            runningConcurrentQueries.add(executorService.submit(processor));
         }
-        System.out.print("\n\n");
+
+        // wait until all threads have finished
+        try {
+            for (Future future : runningConcurrentQueries) {
+                future.get();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        long length = System.currentTimeMillis() - start;
+        System.out.println("Time: " + length);
     }
 
-    private void eraselinePrint(String msg) {
-        System.out.print("\r");
-        System.out.print(msg);
+    public void cleanup() {
+        executorService.shutdown();
     }
 }
+

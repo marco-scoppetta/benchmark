@@ -1,6 +1,0 @@
-graphName: "web_content"
-schema: "web_content_schema.gql"
-queries: "queries.yml"
-scales:
-  - 2000
-repeatsPerQuery: 0

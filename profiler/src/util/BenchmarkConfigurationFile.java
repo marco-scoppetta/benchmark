@@ -18,7 +18,6 @@
 
 package grakn.benchmark.profiler.util;
 
-
 import java.util.List;
 
 /**
@@ -31,6 +30,9 @@ public class BenchmarkConfigurationFile {
     private String queries;
     private List<Integer> scalesToProfile;
     private Integer repeatsPerQuery;
+
+    private boolean commitQueries;
+    private Concurrency concurrency;
 
     public void setGraphName(String graphName) {
         this.graphName = graphName;
@@ -53,6 +55,13 @@ public class BenchmarkConfigurationFile {
         return this.queries;
     }
 
+    public void setCommitQueries(Boolean commitQueries) {
+        this.commitQueries = commitQueries;
+    }
+    public Boolean commitQueries() {
+        return commitQueries;
+    }
+
     public void setScales(List<Integer> scales) {
         this.scalesToProfile = scales;
     }
@@ -66,5 +75,35 @@ public class BenchmarkConfigurationFile {
     public int getRepeatsPerQuery() {
         return this.repeatsPerQuery;
     }
+
+    // --- concurrency configs ---
+    public void setConcurrency(Concurrency concurrency) {
+        this.concurrency = concurrency;
+    }
+    public Integer concurrentClients() {
+        return this.concurrency.clients();
+    }
+    public Boolean uniqueConcurrentKeyspaces() {
+        return this.concurrency.uniqueKeyspaces();
+    }
 }
 
+
+class Concurrency {
+    private Integer clients;
+    private Boolean separateKeyspaces;
+
+    private void setClients(Integer clients) {
+        this.clients= clients;
+    }
+    public Integer clients() {
+        return clients;
+    }
+
+    private void setUniqueKeyspaces(Boolean uniqueKeyspaces) {
+        this.separateKeyspaces = uniqueKeyspaces;
+    }
+    public Boolean uniqueKeyspaces() {
+        return separateKeyspaces;
+    }
+}

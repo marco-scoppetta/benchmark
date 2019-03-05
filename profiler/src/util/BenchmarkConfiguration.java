@@ -22,7 +22,6 @@ package grakn.benchmark.profiler.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import grakn.benchmark.profiler.BootupException;
-import grakn.core.Keyspace;
 import org.apache.commons.cli.CommandLine;
 
 import java.io.IOException;
@@ -36,6 +35,7 @@ import static grakn.benchmark.profiler.util.BenchmarkArguments.CONFIG_ARGUMENT;
 import static grakn.benchmark.profiler.util.BenchmarkArguments.EXECUTION_NAME_ARGUMENT;
 import static grakn.benchmark.profiler.util.BenchmarkArguments.GRAKN_URI;
 import static grakn.benchmark.profiler.util.BenchmarkArguments.KEYSPACE_ARGUMENT;
+import static grakn.benchmark.profiler.util.BenchmarkArguments.LOAD_SCHEMA_ARGUMENT;
 import static grakn.benchmark.profiler.util.BenchmarkArguments.NO_DATA_GENERATION_ARGUMENT;
 
 /**
@@ -49,6 +49,7 @@ public class BenchmarkConfiguration {
     private static final String DEFAULT_GRAKN_URI = "localhost:48555";
 
     private final boolean generateData;
+    private final boolean loadSchema;
     private List<String> queries;
     private List<String> graqlSchema;
     private BenchmarkConfigurationFile benchmarkConfigFile;
@@ -77,6 +78,9 @@ public class BenchmarkConfiguration {
 
         // If --no-data-generation is specified, don't generate any data (work with existing keyspace)
         this.generateData = !(arguments.hasOption(NO_DATA_GENERATION_ARGUMENT));
+
+        // If --load-schema is specified, load a schema even if data generation is disabled
+        this.loadSchema = arguments.hasOption(LOAD_SCHEMA_ARGUMENT);
     }
 
     public String graknUri() {
@@ -91,8 +95,8 @@ public class BenchmarkConfiguration {
         return this.benchmarkConfigFile.getGraphName();
     }
 
-    public Keyspace getKeyspace() {
-        return Keyspace.of(this.keyspace);
+    public String getKeyspace() {
+        return this.keyspace;
     }
 
     public List<String> getGraqlSchema() {
@@ -111,8 +115,22 @@ public class BenchmarkConfiguration {
         return generateData;
     }
 
+    public boolean loadSchema() { return loadSchema; }
+
     public int numQueryRepetitions() {
         return this.benchmarkConfigFile.getRepeatsPerQuery();
+    }
+
+    public boolean commitQueries() {
+        return benchmarkConfigFile.commitQueries();
+    }
+
+    public int concurrentClients() {
+        return benchmarkConfigFile.concurrentClients();
+    }
+
+    public boolean uniqueConcurrentKeyspaces() {
+        return benchmarkConfigFile.uniqueConcurrentKeyspaces();
     }
 
 

@@ -19,30 +19,25 @@
 package grakn.benchmark.profiler.generator.strategy;
 
 import grakn.benchmark.profiler.generator.probdensity.ProbabilityDensityFunction;
-import grakn.core.concept.ConceptId;
-import grakn.benchmark.profiler.generator.pick.StreamProviderInterface;
+import grakn.benchmark.profiler.generator.provider.concept.ConceptIdProvider;
 
 /**
- *
+ * A container for the three things required for how to generate a batch of role players:
+ * - The role label
+ * - A PDF that can be sampled to indicate how big the new batch of roles players is going to be
+ * - A provider of Concepts that is going to fill the role in the relationship
  */
-public class RolePlayerTypeStrategy extends TypeStrategy implements HasPicker {
+public class RolePlayerTypeStrategy extends TypeStrategy {
 
-    private final String roleLabel;
-    private StreamProviderInterface<ConceptId> conceptPicker;
+    private ConceptIdProvider conceptIdProvider;
 
-    public RolePlayerTypeStrategy(String roleLabel, String relationshipLabel, ProbabilityDensityFunction numInstancesPDF, StreamProviderInterface<ConceptId> conceptPicker) {
-        super(relationshipLabel, numInstancesPDF);
-        this.roleLabel = roleLabel;
-        this.conceptPicker = conceptPicker;
+    public RolePlayerTypeStrategy(String roleLabel, ProbabilityDensityFunction numInstancesPDF, ConceptIdProvider conceptIdProvider) {
+        super(roleLabel, numInstancesPDF);
+        this.conceptIdProvider = conceptIdProvider;
     }
 
-    public StreamProviderInterface<ConceptId> getPicker() {
-         return conceptPicker;
+    public ConceptIdProvider getConceptProvider() {
+        return conceptIdProvider;
     }
-
-    public String getRoleLabel() {
-        return this.roleLabel;
-    }
-
 }
 

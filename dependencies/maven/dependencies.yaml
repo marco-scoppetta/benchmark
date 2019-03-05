@@ -32,25 +32,6 @@ options:
 
 
 dependencies:
-  # -- Grakn --
-  grakn.core:
-    client:
-      version: "1.5.0-48e57e1c848a5a2d61dc8d3e1b4e6a8d2a3d8f22-SNAPSHOT"
-      lang: java
-      exclude:
-        - "org.slf4j:slf4j-log4j12"
-    grakn-graql:
-      version: "1.5.0-48e57e1c848a5a2d61dc8d3e1b4e6a8d2a3d8f22-SNAPSHOT"
-      lang: java
-      exclude:
-        - "org.slf4j:slf4j-log4j12"
-    protocol:
-      version: "1.5.0-48e57e1c848a5a2d61dc8d3e1b4e6a8d2a3d8f22-SNAPSHOT"
-      lang: java
-    util:
-      version: "1.5.0-48e57e1c848a5a2d61dc8d3e1b4e6a8d2a3d8f22-SNAPSHOT"
-      lang: java
-
 
   # -- YAML parsing --
   com.fasterxml.jackson.core:
@@ -135,13 +116,6 @@ dependencies:
       version: "3.6.1"
       lang: java
 
-
-  # -- Google Guava (needed for interfacing with Graql Admin classes) --
-  com.google.guava:
-    guava:
-      version: "23.0"
-      lang: java
-
   # -- Testing --
   # NOTE: junit version 4 is from 2014!
   junit:
@@ -154,12 +128,11 @@ dependencies:
       version: "2.6.4"
       lang: java
 
-
   io.grpc:
-   grpc-core:
+    grpc-core:
       version: "1.15.0"
       lang: java
-   grpc-netty-shaded:
+    grpc-netty-shaded:
      version: "1.15.0"
      lang: java
 
