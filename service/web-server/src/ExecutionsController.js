@@ -19,7 +19,6 @@ ExecutionsController.prototype.addExecution = function add(execution) {
           prMergedAt: execution.prMergedAt,
           prUrl: execution.prUrl,
           prNumber: execution.prNumber,
-          repoId: execution.repoId,
           repoUrl: execution.repoUrl,
           executionStartedAt: execution.executionStartedAt,
           executionCompletedAt: execution.executionCompletedAt,
@@ -88,10 +87,9 @@ const typeDefs = `
     id: String!,
     commit: String!
     repoUrl: String!
-    repoId: String!
-    prMergedAt: String!,
-    prUrl: String!,
-    prNumber: String!,
+    prMergedAt: String,
+    prUrl: String,
+    prNumber: String,
     executionStartedAt: String
     executionCompletedAt: String
     status: String!

@@ -23,8 +23,27 @@ app.use(express.static(__dirname + '/../../dashboard/dist'));
 // parse application/json
 app.use(bodyParser.json())
 
+/**
+ * End-point used to trigger new execution when PR is merged
+ */
 app.post('/pull_request', checkPullRequestIsMerged, (req, res) => {
-    const execution = utils.extractPRInfo(req);
+    const execution = utils.parseMergedPR(req);
+    executionsController.addExecution(execution)
+        .then(()=> {
+            utils.startBenchmarking(LAUNCH_EXECUTOR_SCRIPT_PATH, execution);
+            console.log("New execution added to ES.");
+            res.status(200).json({ triggered: true });
+        }).catch((err) => { 
+            res.status(500).json({ triggered: false, error: true });
+            console.error(err); 
+        });
+});
+
+/**
+ * End-point used to manually trigger a new execution providing repoUrl and commit
+ */
+app.post('/execution/new', (req, res) => {
+    const execution = utils.createExecutionObject(req);
     executionsController.addExecution(execution)
         .then(()=> {
             utils.startBenchmarking(LAUNCH_EXECUTOR_SCRIPT_PATH, execution);
