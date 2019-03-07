@@ -24,7 +24,7 @@ echo "Creating google cloud compute instance $INSTANCE_NAME..." | tee -a $LOG
 gcloud compute instances create $INSTANCE_NAME          \
     --image-family grakn-benchmark-executor             \
     --image-project grakn-dev                           \
-    --machine-type n1-standard-8                        \
+    --machine-type n1-standard-16                        \
     --zone=$ZONE                                        \
     2>&1 | tee -a $LOG
 
