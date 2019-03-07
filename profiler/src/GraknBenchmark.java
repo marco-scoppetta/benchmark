@@ -100,8 +100,8 @@ public class GraknBenchmark {
             throw new BootupException("Cannot currently perform data generation into more than 1 keyspace");
         }
 
-        GraknClient client = TracingGraknClient.get(config.graknUri());
-        List<GraknClient.Session> concurrentSessions = initKeyspaces(client);
+        GraknClient tracingClient = TracingGraknClient.get(config.graknUri());
+        List<GraknClient.Session> concurrentSessions = initKeyspaces(tracingClient);
         QueryProfiler queryProfiler = new QueryProfiler(concurrentSessions, config.executionName(), config.graphName(), config.getQueries(), config.commitQueries());
 
         if (config.generateData()) {
@@ -117,7 +117,6 @@ public class GraknBenchmark {
                     queryProfiler.processStaticQueries(config.numQueryRepetitions(), numConcepts);
                 }
             } catch (Exception e) {
-                client.close(); //If we catch exception, before re-throwing it we make sure to close all the clients () TODO this might not be needed
                 throw e;
             } finally {
                 dataGeneratorClient.close();
@@ -134,7 +133,7 @@ public class GraknBenchmark {
             session.close();
         }
         queryProfiler.cleanup();
-        client.close();
+        tracingClient.close();
     }
 
     /**
