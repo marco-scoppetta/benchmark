@@ -77,7 +77,7 @@ public class GraknBenchmark {
             LOG.error("Error in data generator: ", e);
         } catch (Exception e) {
             exitCode = 1;
-            LOG.error("Unable to start GraknClient Benchmark:", e);
+            LOG.error("Exception while running Grakn Benchmark:", e);
         } finally {
             System.out.println("Exiting benchmark with exit code " + exitCode);
             System.exit(exitCode);
@@ -100,14 +100,16 @@ public class GraknBenchmark {
             throw new BootupException("Cannot currently perform data generation into more than 1 keyspace");
         }
 
-        List<GraknClient.Session> concurrentSessions = initKeyspaces();
+        GraknClient client = TracingGraknClient.get(config.graknUri());
+        List<GraknClient.Session> concurrentSessions = initKeyspaces(client);
         QueryProfiler queryProfiler = new QueryProfiler(concurrentSessions, config.executionName(), config.graphName(), config.getQueries(), config.commitQueries());
 
         if (config.generateData()) {
             Ignite ignite = IgniteManager.initIgnite();
+            GraknClient dataGeneratorClient = TracingGraknClient.get(config.graknUri());
             try {
                 // data generator has its own non-benchmarking client to the keyspace
-                DataGenerator dataGenerator = initDataGenerator(TracingGraknClient.get(config.graknUri()), config.getKeyspace());
+                DataGenerator dataGenerator = initDataGenerator(dataGeneratorClient, config.getKeyspace());
                 List<Integer> numConceptsInRun = config.scalesToProfile();
                 for (int numConcepts : numConceptsInRun) {
                     LOG.info("Generating graph to scale... " + numConcepts);
@@ -117,6 +119,7 @@ public class GraknBenchmark {
             } catch (Exception e) {
                 throw e;
             } finally {
+                dataGeneratorClient.close();
                 ignite.close();
             }
 
@@ -130,6 +133,7 @@ public class GraknBenchmark {
             session.close();
         }
         queryProfiler.cleanup();
+        client.close();
     }
 
     /**
@@ -137,13 +141,12 @@ public class GraknBenchmark {
      * If profiling a pre-populated keyspace, just instantiate the required concurrent sessions
      * @return
      */
-    private List<GraknClient.Session> initKeyspaces() {
+    private List<GraknClient.Session> initKeyspaces(GraknClient client) {
 
         String keyspace = config.getKeyspace();
         List<GraknClient.Session> sessions = new LinkedList<>();
 
         for (int i = 0; i < config.concurrentClients(); i++) {
-            GraknClient client = TracingGraknClient.get(config.graknUri());
 
             if (config.generateData() || config.loadSchema()) {
                 // if we generate data or load a schema at all
@@ -204,7 +207,7 @@ public class GraknBenchmark {
 
         SchemaManager schemaManager = new SchemaManager(client.session(keyspace), config.getGraqlSchema());
         HashSet<EntityType> entityTypes = schemaManager.getEntityTypes();
-        HashSet<RelationType> relationshipTypes = schemaManager.getRelationshipTypes();
+        HashSet<RelationType> relationshipTypes = schemaManager.getRelationTypes();
         HashSet<AttributeType> attributeTypes = schemaManager.getAttributeTypes();
 
         ConceptStorage storage = new IgniteConceptStorage(entityTypes, relationshipTypes, attributeTypes);

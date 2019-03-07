@@ -1,6 +1,6 @@
 /*
  *  GRAKN.AI - THE KNOWLEDGE GRAPH
- *  Copyright (C) 2018 GraknClient Labs Ltd
+ *  Copyright (C) 2018 Grakn Labs Ltd
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -104,8 +104,8 @@ public class SchemaManager {
     public HashSet<AttributeType> getAttributeTypes(){
         return getTypesOfMetaType("attribute");
     }
-    public HashSet<RelationType> getRelationshipTypes(){
-        return getTypesOfMetaType("relationship");
+    public HashSet<RelationType> getRelationTypes(){
+        return getTypesOfMetaType("relation");
     }
     public HashSet<EntityType> getEntityTypes(){
         return getTypesOfMetaType("entity");

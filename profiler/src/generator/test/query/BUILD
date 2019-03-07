@@ -25,7 +25,7 @@ java_test(
 java_test(
     name = "relationship-generator-test",
     test_class = "grakn.benchmark.profiler.generator.query.RelationshipGeneratorTest",
-    srcs = ["RelationshipGeneratorTest.java"],
+    srcs = ["RelationGeneratorTest.java"],
     deps = [
         "@graknlabs_graql//java:graql",
         "@graknlabs_grakn_core//concept:concept",
