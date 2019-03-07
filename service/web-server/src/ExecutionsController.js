@@ -7,9 +7,16 @@ const SEARCH_EXECUTIONS_OBJECT = { index: GRAKN_BENCHMARK_INDEX, type: BENCHMARK
 
 function ExecutionsController(client){
     this.client = client
+    this.addExecution = addExecution;
+    this.deleteExecution = deleteExecution;
+    this.updateExecutionStatus = updateExecutionStatus;
+    this.queryExecutions = queryExecutions;
 }
 
-ExecutionsController.prototype.addExecution = function add(execution) {
+module.exports = ExecutionsController;
+
+
+function addExecution(execution) {
     return this.client.create({
         index: GRAKN_BENCHMARK_INDEX,
         type: BENCHMARK_EXECUTION_TYPE,
@@ -20,6 +27,7 @@ ExecutionsController.prototype.addExecution = function add(execution) {
           prUrl: execution.prUrl,
           prNumber: execution.prNumber,
           repoUrl: execution.repoUrl,
+          executionInitialisedAt: execution.executionInitialisedAt,
           executionStartedAt: execution.executionStartedAt,
           executionCompletedAt: execution.executionCompletedAt,
           status: execution.status,
@@ -28,47 +36,29 @@ ExecutionsController.prototype.addExecution = function add(execution) {
       });
 }
 
-ExecutionsController.prototype.executionRunning = function started(execution) {
-    return this.client.update({
+function deleteExecution(execution) {
+    return this.client.delete({
         index: GRAKN_BENCHMARK_INDEX,
         type: BENCHMARK_EXECUTION_TYPE,
-        id: execution.executionId,
-        body: {
-          doc: {
-            status: 'RUNNING',
-            executionStartedAt: new Date().toISOString()
-          }
-        }
+        id: execution.id
       });
 }
 
-ExecutionsController.prototype.executionCompleted = function completed(execution) {
-    return this.client.update({
-        index: GRAKN_BENCHMARK_INDEX,
-        type: BENCHMARK_EXECUTION_TYPE,
-        id: execution.executionId,
-        body: {
-          doc: {
-            status: 'COMPLETED',
-            executionCompletedAt: new Date().toISOString()
-          }
+function updateExecutionStatus(execution, status) {
+  return this.client.update({
+      index: GRAKN_BENCHMARK_INDEX,
+      type: BENCHMARK_EXECUTION_TYPE,
+      id: execution.executionId || execution.id,
+      body: {
+        doc: {
+          status,
+          executionCompletedAt: new Date().toISOString()
         }
-      });
+      }
+    });
 }
 
-ExecutionsController.prototype.executionFailed = function failed(execution) {
-    return this.client.update({
-        index: GRAKN_BENCHMARK_INDEX,
-        type: BENCHMARK_EXECUTION_TYPE,
-        id: execution.executionId,
-        body: {
-          doc: {
-            status: 'FAILED',
-            executionCompletedAt: new Date().toISOString()
-          }
-        }
-      });
-}
+// ----------------- GraphQL Schema, Methods and Middleware ---------------- //
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = `
@@ -90,6 +80,7 @@ const typeDefs = `
     prMergedAt: String,
     prUrl: String,
     prNumber: String,
+    executionInitialisedAt: String
     executionStartedAt: String
     executionCompletedAt: String
     status: String!
@@ -126,21 +117,25 @@ const root = {
     }
     Object.assign(body, limitQuery(args.offset, args.limit));
     const queryObject = Object.assign({}, SEARCH_EXECUTIONS_OBJECT, { body });
-    return context.client.search(queryObject).then(result => result.hits.hits.map(res => Object.assign(res._source, {id: res._id})));
+    return context.client.search(queryObject).then(result => result.hits.hits.map(res => Object.assign(res._source, {id: res._id})))
+    .catch(e => {
+      if(e.body.error.type === "index_not_found_exception"){
+        return []; // Return empty response as this exception only means there are no Executions in ES yet.
+      }
+      else {
+        throw e;
+      }
+    });
   },
   executionById: (object, args, context) => {
     return context.client.get(Object.assign({}, SEARCH_EXECUTIONS_OBJECT, { id: args.id})).then(res => Object.assign(res._source, {id: res._id}));
   }
 };
 
-const schema = makeExecutableSchema({ typeDefs , resolvers:{ Query: root}});
 
-
-ExecutionsController.prototype.queryExecutions = function query() {
+function queryExecutions() {
   return graphqlHTTP({
-    schema,
+    schema: makeExecutableSchema({ typeDefs , resolvers:{ Query: root}}),
     context: { client: this.client},
   });
 }
-
-module.exports = ExecutionsController;

@@ -1,4 +1,6 @@
 #!/bin/bash
+echo "All received parameters:"
+echo $@
 
 set -e #Exit immediately if any error occurs so that we dont invoke the /completed, which leads to deletion of current VM
 
@@ -25,23 +27,13 @@ cd grakn
 git checkout $COMMIT 
 # git checkout $COMMIT
 
-# TODO remove;
-# copy over backwards compatible update.sh for now
-cp ~/executor/update_backwards_compat.sh dependencies/maven/update.sh
-chmod +x dependencies/maven/update.sh
-
 ./dependencies/maven/update.sh
-bazel build //:distribution --incompatible_remove_native_http_archive=false --incompatible_package_name_is_a_function=false --incompatible_remove_native_git_repository=false
+bazel build //:distribution
 
 # unzip grakn
 cd bazel-genfiles
-if [ ! -f grakn-core-all.zip ]
-then
-    # older versions put the zip under bazel-genfiles/dist
-    unzip dist/grakn-core-all.zip 
-else
-    unzip grakn-core-all.zip 
-fi
+unzip grakn-core-all.zip 
+
 
 # start grakn
 cd grakn-core-all
@@ -58,7 +50,7 @@ git clone https://github.com/graknlabs/benchmark.git
 cd benchmark
 
 ./dependencies/maven/update.sh
-bazel build //:distribution --incompatible_remove_native_git_repository=false --incompatible_remove_native_http_archive=false --incompatible_package_name_is_a_function=false
+bazel build //:distribution
 
 # unzip benchmark
 cd bazel-genfiles

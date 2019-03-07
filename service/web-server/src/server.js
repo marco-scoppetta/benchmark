@@ -55,32 +55,48 @@ app.post('/execution/new', (req, res) => {
         });
 });
 
-
-// Executions end points
 app.post('/execution/start', (req, res) => {
-    executionsController.executionRunning(req.body)
+    executionsController.updateExecutionStatus(req.body, 'RUNNING')
         .then(()=> { console.log("Execution marked as RUNNING."); })
         .catch((err) => { console.error(err); });
     res.status(200).json({});
 });
 
 app.post('/execution/completed', (req, res) => {
-    executionsController.executionCompleted(req.body)
+    executionsController.updateExecutionStatus(req.body, 'COMPLETED')
         .then(()=> { console.log("Execution marked as COMPLETED."); })
         .catch((err) => { console.error(err); })
     utils.deleteInstance(DELETE_INSTANCE_SCRIPT_PATH, req.body.vmName);
     res.status(200).json({});
 });
 
+app.post('/execution/stop', (req, res) => {
+    executionsController.updateExecutionStatus(req.body, 'STOPPED')
+        .then(()=> { console.log("Execution marked as STOPPED."); })
+        .catch((err) => { console.error(err); })
+    utils.deleteInstance(DELETE_INSTANCE_SCRIPT_PATH, req.body.vmName);
+    res.status(200).json({});
+});
+
+app.post('/execution/delete', (req, res) => {
+    executionsController.deleteExecution(req.body)
+        .then(()=> { console.log("Execution deleted."); })
+        .catch((err) => { console.error(err); })
+    utils.deleteInstance(DELETE_INSTANCE_SCRIPT_PATH, req.body.vmName);
+    res.status(200).json({});
+});
+
 app.post('/execution/failed', (req, res) => {
-    executionsController.executionFailed(req.body)
+    executionsController.updateExecutionStatus(req.body, 'FAILED')
         .then(()=> { console.log("Execution marked as FAILED."); })
         .catch((err) => { console.error(err); });
     res.status(200).json({});
 });
 
+// Register GraphQL middleware for execution queries
 app.use('/execution/query', executionsController.queryExecutions());
 
+// Register GraphQL middleware for span queries
 app.use('/span/query', spans.query());
 
 // Middleware used by /pull_request end-point

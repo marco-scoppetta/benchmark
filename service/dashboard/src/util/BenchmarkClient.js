@@ -18,22 +18,38 @@ function getSpans(query) {
 function getExecutions(query) {
   return postData("/execution/query", { query });
 }
+function stopExecution(execution) {
+  return postData("/execution/stop", execution);
+}
+function deleteExecution(execution) {
+  return postData("/execution/delete", execution);
+}
+function triggerExecution(execution) {
+  return postData("/execution/new", execution);
+}
+function getLatestCompletedExecutions(number){
+  return getExecutions(
+    `{ executions(status: ["COMPLETED"], orderBy: "prMergedAt", order:"desc", limit: ${number}){ id commit prMergedAt} }`
+  ).then(executions => executions.data.executions);
+}
+function getExecutionsSpans(executions){
+  return Promise.all(
+    executions.map(exec =>
+      getSpans(
+        `{ querySpans( limit: 300, executionName: "${
+          exec.id
+        }"){ id name duration tags { graphName executionName query scale }} }`
+      ).then(res => res.data.querySpans)
+    )
+  ).then(nestedSpans => nestedSpans.flatMap(x => x));
+}
 
 export default {
   getExecutions,
+  stopExecution,
+  deleteExecution,
   getSpans,
-  getExecutionsSpans: executions =>
-    Promise.all(
-      executions.map(exec =>
-        getSpans(
-          `{ querySpans( limit: 300, executionName: "${
-            exec.id
-          }"){ id name duration tags { graphName executionName query scale }} }`
-        ).then(res => res.data.querySpans)
-      )
-    ).then(nestedSpans => nestedSpans.flatMap(x => x)),
-  getLatestCompletedExecutions: number =>
-    getExecutions(
-      `{ executions(status: ["COMPLETED"], orderBy: "prMergedAt", order:"desc", limit: ${number}){ id commit prMergedAt} }`
-    ).then(executions => executions.data.executions)
+  getExecutionsSpans,
+  getLatestCompletedExecutions,
+  triggerExecution
 };

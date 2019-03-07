@@ -43,7 +43,7 @@ gcloud compute scp --recurse ~/executor ubuntu@$INSTANCE_NAME:~ --zone=$ZONE 2>&
 
 # collect this instance's IP
 echo "Retrieving this instance's IP..." | tee -a $LOG
-THIS_IP=`curl -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip 2>&1 | tee -a $LOG `
+THIS_IP=`curl -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip`
 
 # install tmux so we can detach and set script execution permissions
 echo "Initialising new instance..." | tee -a $LOG

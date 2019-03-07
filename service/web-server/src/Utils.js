@@ -12,7 +12,7 @@ function displayStream(stream){
           
         stream.on('close', (code) => {
             if(code !== 0){
-                console.err(`Script terminated with code ${code}`);
+                console.error(`Script terminated with code ${code}`);
             }
         });
     })
@@ -28,8 +28,7 @@ module.exports = {
             prMergedAt: req.body.pull_request.merged_at,
             prUrl: req.body.pull_request.html_url,
             prNumber: req.body.pull_request.number,
-            executionStartedAt: '',
-            executionCompletedAt: '',
+            executionInitialisedAt: new Date().toISOString(),
             status: 'INITIALISING',
             vmName: 'benchmark-executor-'+ req.body.pull_request.merge_commit_sha
         }
@@ -39,8 +38,7 @@ module.exports = {
             id : req.body.commit + Date.now(),
             commit: req.body.commit,
             repoUrl: req.body.repoUrl,
-            executionStartedAt: '',
-            executionCompletedAt: '',
+            executionInitialisedAt: new Date().toISOString(),
             status: 'INITIALISING',
             vmName: 'benchmark-executor-'+ req.body.commit
         } 
