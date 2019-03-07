@@ -1,6 +1,4 @@
 #!/bin/bash
-echo "All received parameters:"
-echo $@
 
 set -e #Exit immediately if any error occurs so that we dont invoke the /completed, which leads to deletion of current VM
 
