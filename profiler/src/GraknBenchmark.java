@@ -117,6 +117,7 @@ public class GraknBenchmark {
                     queryProfiler.processStaticQueries(config.numQueryRepetitions(), numConcepts);
                 }
             } catch (Exception e) {
+                client.close(); //If we catch exception, before re-throwing it we make sure to close all the clients () TODO this might not be needed
                 throw e;
             } finally {
                 dataGeneratorClient.close();
