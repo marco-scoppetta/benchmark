@@ -70,7 +70,7 @@ curl --header "Content-Type: application/json" \
 ./benchmark --config ./conf/road_network/road_config.yml --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
 ./benchmark --config ./conf/financial_transactions/financial_config.yml --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
 ./benchmark --config ./conf/social_network/social_network_config.yml --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
-./benchmark --config ./conf/biochem_network/biochem_config.yml --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
+./benchmark --config ./conf/biochemical_network/biochemical_config.yml --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
 
 # TODO report log files
 
