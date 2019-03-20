@@ -47,7 +47,7 @@ queries:
       (bigger: $c1, smaller: $s1) isa sizing;
       ($s1, $c2) isa relation;
       ($c2, $s2) isa interaction;
-      ($c2, $b) isa ;
+      ($c2, $b) isa sizing;
       get;limit 5;"
 
   # highly connected square - edges, diagonals, ternary relation and quaternary relations

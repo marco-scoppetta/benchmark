@@ -71,7 +71,7 @@ app.post('/execution/completed', (req, res) => {
 });
 
 app.post('/execution/stop', (req, res) => {
-    executionsController.updateExecutionStatus(req.body, 'STOPPED')
+    executionsController.updateExecutionStatus(req.body, { status : 'STOPPED', executionCompletedAt: new Date().toISOString()})
         .then(()=> { console.log("Execution marked as STOPPED."); })
         .catch((err) => { console.error(err); })
     utils.deleteInstance(DELETE_INSTANCE_SCRIPT_PATH, req.body.vmName);
@@ -87,7 +87,7 @@ app.post('/execution/delete', (req, res) => {
 });
 
 app.post('/execution/failed', (req, res) => {
-    executionsController.updateExecutionStatus(req.body, 'FAILED')
+    executionsController.updateExecutionStatus(req.body, { status : 'FAILED', executionCompletedAt: new Date().toISOString()})
         .then(()=> { console.log("Execution marked as FAILED."); })
         .catch((err) => { console.error(err); });
     res.status(200).json({});
