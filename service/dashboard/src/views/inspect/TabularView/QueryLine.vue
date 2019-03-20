@@ -36,7 +36,6 @@ export default {
             return this.spans.filter(span => span.tags.scale === this.currentScale);
         },
         min(){
-            debugger;
             let min = this.currentSpans[0];
             this.currentSpans.forEach(span => {
                 if(span.duration < min.duration){

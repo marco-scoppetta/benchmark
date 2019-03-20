@@ -26,12 +26,11 @@ git checkout $COMMIT
 # git checkout $COMMIT
 
 ./dependencies/maven/update.sh
-bazel build //:distribution
+bazel build //:assemble-linux-targz
 
 # unzip grakn
 cd bazel-genfiles
-unzip grakn-core-all.zip 
-
+tar -xf grakn-core-all-linux.tar.gz
 
 # start grakn
 cd grakn-core-all

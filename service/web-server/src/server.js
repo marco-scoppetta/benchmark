@@ -56,14 +56,14 @@ app.post('/execution/new', (req, res) => {
 });
 
 app.post('/execution/start', (req, res) => {
-    executionsController.updateExecutionStatus(req.body, 'RUNNING')
+    executionsController.updateExecutionStatus(req.body, { status : 'RUNNING', executionStartedAt: new Date().toISOString()})
         .then(()=> { console.log("Execution marked as RUNNING."); })
         .catch((err) => { console.error(err); });
     res.status(200).json({});
 });
 
 app.post('/execution/completed', (req, res) => {
-    executionsController.updateExecutionStatus(req.body, 'COMPLETED')
+    executionsController.updateExecutionStatus(req.body, { status : 'RUNNING', executionCompletedAt: new Date().toISOString()})
         .then(()=> { console.log("Execution marked as COMPLETED."); })
         .catch((err) => { console.error(err); })
     utils.deleteInstance(DELETE_INSTANCE_SCRIPT_PATH, req.body.vmName);
