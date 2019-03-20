@@ -33,9 +33,8 @@ cd bazel-genfiles
 tar -xf grakn-core-all-linux.tar.gz
 
 # start grakn
-cd grakn-core-all
+cd grakn-core-all-linux
 ./grakn server start --benchmark
-
 
 # reset dir
 cd ~
@@ -70,11 +69,11 @@ curl --header "Content-Type: application/json" \
 ./benchmark --config ./conf/generic/config_write.yml --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
 
 # -- read queries --
-./benchmark --config ./conf/road_network/road_config_read.yml --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
+./benchmark --config ./conf/road_network/road_config_read.yml                --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200 --keyspace road_network_read
 ./benchmark --config ./conf/financial_transactions/financial_config_read.yml --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
-./benchmark --config ./conf/social_network/social_network_config_read.yml --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
-./benchmark --config ./conf/biochem_network/biochem_config_read.yml --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
-./benchmark --config ./conf/generic/config_read.yml --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
+./benchmark --config ./conf/social_network/social_network_config_read.yml    --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
+./benchmark --config ./conf/biochemical_network/biochemical_config_read.yml  --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200
+./benchmark --config ./conf/generic/config_read.yml                          --execution-name "$EXECUTION_ID" --elastic-uri $SERVICE_IP:9200 --keyspace generic_uniform_network_read
 
 # TODO report log files
 

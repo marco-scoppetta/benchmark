@@ -4,9 +4,8 @@ dataGenerator: "generic_uniform_network"
 schema: "schema.gql"
 scales:
   - 2000
+  - 4000
   - 8000
-  - 16000
-  - 32000
 
 repeatsPerQuery: 3
 

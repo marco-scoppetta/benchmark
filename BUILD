@@ -62,8 +62,6 @@ distribution_zip(
         "//profiler:conf/generic/config_write.yml": "conf/generic/config_write.yml",
         "//profiler:conf/generic/schema.gql" : "conf/generic/schema.gql",
 
-        "//profiler/src:logback": "conf/logback.xml",
-
         # External dependencies: Elasticsearch and Zipkin
         "//profiler:setup.sh": "external-dependencies/setup.sh",
         "@external-dependencies-zipkin//file": "external-dependencies/zipkin.jar",
