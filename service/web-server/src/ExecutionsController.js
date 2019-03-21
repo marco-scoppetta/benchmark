@@ -85,7 +85,7 @@ const typeDefs = `
 
 
 function queryFilteredByStatus(statusArray){
-  const should = statusArray.map(status => ({ match: { status}}));
+  const should = statusArray.map(status => ({ match: { status }}));
   return { query: { bool: { should } } } ;
 }
 
@@ -95,7 +95,7 @@ function sortResults(orderBy, order){
 }
 
 function limitQuery(offset, limit){
-  return {from : offset || 0 , size : limit || 50};
+  return { from : offset || 0 , size : limit || 50 };
 }
 
 // The root provides a resolver function for each API endpoint

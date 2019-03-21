@@ -20,7 +20,7 @@ beforeEach(()=>{
 
 describe('/execution/query tests', ()=>{
 
-    test.only('When asking for INITIALISING execution, get only execution that is initialising', async (done) => {
+    test('When asking for INITIALISING execution, get only execution that is initialising', async (done) => {
 
         // await addInitialisingExecution();
         // await addCompletedExecution();
@@ -62,21 +62,38 @@ describe('/execution/query tests', ()=>{
         });
     });
 
-    test('When asking for spans, get all spans', async (done) => {
+    test.only('When asking for spans, get all spans', async (done) => {
 
         
         request(app).get('/span/query')
         .query({ query: `{ querySpans(
-                                limit: 100, 
-                                graphName: "societal_model", 
-                                executionName: "1234e7de3586be3c05068ad3a9119019b8009ca5f2f81548760002642"
+                                limit: 100,
+                                parentId: "4340f5862047187d"
                             ){ 
                                 name 
                                 duration 
-                                tags { graphName executionName }} }` })
+                                parentId
+                                tags { type query repetition repetitions}} }` })
         .expect(200)
         .then((res)=>{
-            expect(res.body.data.executions).toHaveLength(2);
+            expect(res.body.data.querySpans).toHaveLength(100);
+            done();
+        });
+    });
+
+    test('When asking for spans, get all spans', async (done) => {
+
+        
+        request(app).get('/span/query')
+        .query({ query: `{ executionSpans(
+                                executionName: "execution-1233455"
+                            ){ 
+                                id
+                                name
+                                tags { configurationName graphGeneratorDefinition}} }` })
+        .expect(200)
+        .then((res)=>{
+            expect(res.body.data.querySpans).toHaveLength(100);
             done();
         });
     });
