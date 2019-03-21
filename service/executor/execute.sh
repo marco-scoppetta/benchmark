@@ -8,7 +8,7 @@ report_failure() {
 
   exit 1
 }
-
+ # catch any error - report failure to Service and exit the script
 trap report_failure ERR
 
 if [ $# -ne 5 ]
@@ -32,9 +32,7 @@ git clone $GRAKN_REPOSITORY_URL
 # build grakn
 cd grakn
 git checkout $COMMIT 
-# git checkout $COMMIT
 
-./dependencies/maven/update.sh
 bazel build //:assemble-linux-targz
 
 # unzip grakn
