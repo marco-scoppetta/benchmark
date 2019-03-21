@@ -27,7 +27,7 @@ EXECUTION_ID=$5
 cd ~
 
 # --- get grakn ---
-git clnione $GRAKN_REPOSITORY_URL
+git clone $GRAKN_REPOSITORY_URL
 
 # build grakn
 cd grakn
