@@ -60,8 +60,8 @@ export default {
 .overview-section {
   overflow: scroll;
 }
-.el-main{
-    padding: 20px 50px;
+.el-main {
+  padding: 20px 50px;
 }
 .el-container {
   background-color: #f4f3ef;

@@ -27,12 +27,12 @@ function deleteExecution(execution) {
 function triggerExecution(execution) {
   return postData("/execution/new", execution);
 }
-function getLatestCompletedExecutions(number){
+function getLatestCompletedExecutions(number) {
   return getExecutions(
     `{ executions(status: ["COMPLETED"], orderBy: "prMergedAt", order:"desc", limit: ${number}){ id commit prMergedAt} }`
   ).then(executions => executions.data.executions);
 }
-function getExecutionsSpans(executions){
+function getExecutionsSpans(executions) {
   return Promise.all(
     executions.map(exec =>
       getSpans(

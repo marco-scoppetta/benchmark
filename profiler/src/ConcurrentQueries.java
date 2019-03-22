@@ -60,9 +60,10 @@ class ConcurrentQueries implements Runnable {
             concurrentExecutionSpan.tag("description", description);
             concurrentExecutionSpan.tag("executionName", executionName);
             concurrentExecutionSpan.tag("concurrentClient", Integer.toString(concurrentId));
-            concurrentExecutionSpan.tag("graphGeneratorDefinition", dataGenerator);
             concurrentExecutionSpan.tag("queryRepetitions", Integer.toString(repetitions));
             concurrentExecutionSpan.tag("graphScale", Integer.toString(numConcepts));
+            concurrentExecutionSpan.tag("graphType", dataGenerator);
+
             concurrentExecutionSpan.start();
 
             int counter = 0;

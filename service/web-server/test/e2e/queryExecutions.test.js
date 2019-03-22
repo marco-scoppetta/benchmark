@@ -76,6 +76,7 @@ describe('/execution/query tests', ()=>{
                                 tags { type query repetition repetitions}} }` })
         .expect(200)
         .then((res)=>{
+            debugger;
             expect(res.body.data.querySpans).toHaveLength(100);
             done();
         });

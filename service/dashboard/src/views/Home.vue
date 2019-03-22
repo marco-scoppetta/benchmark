@@ -14,8 +14,7 @@ export default {
 };
 </script>
 <style>
-.main-super{
+.main-super {
   height: 100%;
 }
 </style>
-

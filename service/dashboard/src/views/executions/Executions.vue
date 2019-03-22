@@ -4,24 +4,35 @@
     <main class="el-main">
       <h2>Benchmark Executions</h2>
       <el-row>
-          <el-popover
-            placement="right-start"
-            title="Create Execution"
-            width="200"
-            trigger="manual"
-            v-model="popoverVisible">
-            <el-row>
-              Repo URL: <el-input v-model="newExecution.repoUrl"></el-input>
-            </el-row>
-            <el-row>
-              Commit: <el-input v-model="newExecution.commit"></el-input>
-            </el-row>
-            <div style="text-align: right; margin: 0">
-              <el-button size="mini" type="text" @click="popoverVisible=false">cancel</el-button>
-              <el-button type="primary" size="mini" @click="triggerExecution">send</el-button>
-            </div>
-        <el-button type="success" circle icon="el-icon-plus" slot="reference" @click="popoverVisible=!popoverVisible"></el-button>
-          </el-popover>
+        <el-popover
+          placement="right-start"
+          title="Create Execution"
+          width="200"
+          trigger="manual"
+          v-model="popoverVisible"
+        >
+          <el-row>
+            Repo URL: <el-input v-model="newExecution.repoUrl"></el-input>
+          </el-row>
+          <el-row>
+            Commit: <el-input v-model="newExecution.commit"></el-input>
+          </el-row>
+          <div style="text-align: right; margin: 0">
+            <el-button size="mini" type="text" @click="popoverVisible = false"
+              >cancel</el-button
+            >
+            <el-button type="primary" size="mini" @click="triggerExecution"
+              >send</el-button
+            >
+          </div>
+          <el-button
+            type="success"
+            circle
+            icon="el-icon-plus"
+            slot="reference"
+            @click="popoverVisible = !popoverVisible"
+          ></el-button>
+        </el-popover>
         <!-- <el-button type="success" circle icon="el-icon-plus"></el-button> -->
       </el-row>
       <execution-card
@@ -67,21 +78,23 @@ export default {
       this.executions = execs.data.executions;
     });
   },
-  methods:{
-    async triggerExecution(){
-      await BenchmarkClient.triggerExecution(this.newExecution).then(() =>{ 
-        // TODO re-fetch In Progress executions to update the page
-        this.$notify({
-          title: 'Success',
-          message: 'New Execution triggered successfully!',
-          type: 'success'
-        });
-      }).catch(() => {
-         this.$notify.error({
-            title: 'Error',
-            message: 'It was not possible to trigger new Execution.'
+  methods: {
+    async triggerExecution() {
+      await BenchmarkClient.triggerExecution(this.newExecution)
+        .then(() => {
+          // TODO re-fetch In Progress executions to update the page
+          this.$notify({
+            title: "Success",
+            message: "New Execution triggered successfully!",
+            type: "success"
           });
-      });
+        })
+        .catch(() => {
+          this.$notify.error({
+            title: "Error",
+            message: "It was not possible to trigger new Execution."
+          });
+        });
       this.newExecution.commit = undefined;
     }
   }

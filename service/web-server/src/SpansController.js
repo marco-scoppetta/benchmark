@@ -15,7 +15,7 @@ const typeDefs = `
 
     executionSpans(
         executionName: String,
-        graphTypeName: String
+        graphType: String
     ): [ExecutionSpan]
   }
 
@@ -31,7 +31,7 @@ const typeDefs = `
     description: String,
     executionName: String,
     concurrentClient: Int,
-    graphGeneratorDefinition: String,
+    graphType: String,
     queryRepetitions: Int,
     graphScale: Int
   }
@@ -54,9 +54,9 @@ const typeDefs = `
 
 
 function filterExecutionSpans(args){
-    const must = [{ match: { name: "concurrent-execution"} } ];
-    if(args.graphGeneratorDefinition) {
-        must.push({ match: { "tags.graphGeneratorDefinition": args.graphGeneratorDefinition }});
+    const must = [{ term: { name: "concurrent-execution"} } ];
+    if(args.graphType) {
+        must.push({ match: { "tags.graphType": args.graphType }});
     }
     if(args.executionName) {
         must.push({ match: { "tags.executionName": args.executionName }});
@@ -69,7 +69,7 @@ function limitQuery(offset, limit){
 }
 
 function filterQuerySpans(args){
-    const must = [{ match: { name: "query"} } ];
+    const must = [{ term: { name: "query"} } ];
     if(args.parentId) {
         must.push({ match: { "parentId": args.parentId }});
     }
