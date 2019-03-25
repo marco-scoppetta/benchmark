@@ -23,7 +23,7 @@
       <query-line
         :query="query"
         :currentScale="currentScale"
-        :spans="filterSpans(query)"
+        :spans="filterQuerySpans(query)"
       ></query-line>
     </div>
   </div>
@@ -39,7 +39,7 @@ export default {
     return {
       scales: [],
       queries: [],
-      querySpans: null,
+      querySpans: [],
       currentScale: null
     };
   },
@@ -47,29 +47,43 @@ export default {
     this.scales = Array.from(
       new Set(this.executionSpans.map(span => span.tags.graphScale))
     );
-    this.scales.sort();
+    this.scales.sort((a, b) => parseInt(a) - parseInt(b));
     this.currentScale = this.scales[0];
   },
   watch: {
-      currentScale(scale){
-        this.queries = [];
-          // Take all executionSpans with current scale (it's usually 2: 1 executionSpan for writes and 1 for reads)
-          // and then update queries when scale changes
-        this.executionSpans.filter(span => span.tags.graphScale == scale).forEach(executionSpan => {
-            BenchmarkClient.getSpans(
-            `{ querySpans( parentId: "${executionSpan.id}" limit: 500){ 
-                    id name duration tags { query type repetition repetitions }} }`
-            ).then((resp )=>{
-                this.querySpans = resp.data.querySpans;
-                this.queries.push(...Array.from(new Set(this.querySpans.map(span => span.tags.query))));
-                this.queries.sort();
-            });
-        });
-      }
+    // Every time the current scale changes -> recompute queries and query spans to show in table
+    currentScale(scale) {
+      this.computeQueriesAndSpans(scale);
+    }
   },
   methods: {
-    filterSpans(query) {
+    // Filter query spans by query so that each QueryLine component only receives the relevant query spans to compute max min med etc..
+    filterQuerySpans(query) {
       return this.querySpans.filter(span => span.tags.query === query);
+    },
+    computeQueriesAndSpans(scale) {
+      // Take all executionSpans with current scale (it's usually 2: 1 executionSpan for writes and 1 for reads)
+      // and load all the query spans associated to those.
+      const querySpanPromises = this.executionSpans
+        .filter(span => span.tags.graphScale == scale)
+        .map(executionSpan =>
+          BenchmarkClient.getSpans(
+            `{ querySpans( parentId: "${
+              executionSpan.id
+            }" limit: 500){ id name duration tags { query type repetition repetitions }} }`
+          )
+        );
+      //Wait on all promises and extract queries and query spans from responses
+      Promise.all(querySpanPromises).then(responses => {
+        this.querySpans = responses.reduce(
+          (acc, resp) => acc.concat(resp.data.querySpans),
+          []
+        ); //flatMap the responses
+        this.queries = Array.from(
+          new Set(this.querySpans.map(span => span.tags.query))
+        );
+        this.queries.sort();
+      });
     }
   }
 };

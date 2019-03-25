@@ -18,22 +18,30 @@
             <el-tag
               size="mini"
               :type="execution.status == 'COMPLETED' ? 'success' : 'danger'"
-              >{{ execution.status }}</el-tag>
+              >{{ execution.status }}</el-tag
+            >
           </el-col>
           <el-col :span="4"
             ><a :href="execution.repoUrl">{{
               execution.repoUrl | substringRepo
-            }}</a></el-col>
+            }}</a></el-col
+          >
           <el-col :span="7"
             ><a :href="execution.repoUrl + '/commit/' + execution.commit">{{
               execution.commit
-            }}</a></el-col>
-          <el-col :span="2"><a :href="execution.prUrl">#{{ execution.prNumber }}</a></el-col>
+            }}</a></el-col
+          >
+          <el-col :span="2"
+            ><a :href="execution.prUrl">#{{ execution.prNumber }}</a></el-col
+          >
           <el-col :span="4">{{ execution.executionStartedAt }}</el-col>
           <el-col :span="4">{{ execution.executionCompletedAt }}</el-col>
         </el-row>
       </el-card>
-      <tabular-view :graphs="graphs" :executionSpans="executionSpans"></tabular-view>
+      <tabular-view
+        :graphs="graphs"
+        :executionSpans="executionSpans"
+      ></tabular-view>
     </el-main>
   </el-container>
 </template>
@@ -43,56 +51,50 @@ import BenchmarkClient from "@/util/BenchmarkClient.js";
 import TabularView from "./TabularView/TabularView.vue";
 export default {
   components: { TabularView },
-  filters: {
-    substringRepo(repoUrl) {
-      if (!repoUrl) return;
-      return repoUrl.substring(19);
-    }
-  },
   data() {
     return {
       executionId: this.$route.params.executionId,
-      currentGraph: InspectStore.getGraph(), // used when coming from Overview page to investigate a specifically slow query
-      currentScale: InspectStore.getScale(), // used when coming from Overview page to investigate a specifically slow query
-      currentQuery: InspectStore.getQuery(), // used when coming from Overview page to investigate a specifically slow query
+      // TODO inject following 3 variables down to TabularView
+      currentGraph: InspectStore.getGraph(), // used when coming from Overview page to investigate a particularly slow query
+      currentScale: InspectStore.getScale(), // used when coming from Overview page to investigate a particularly slow query
+      currentQuery: InspectStore.getQuery(), // used when coming from Overview page to investigate a particularly slow query
       execution: {},
       executionSpans: [],
       graphs: []
     };
   },
   created() {
-    BenchmarkClient.getExecutions(
-      `{ executionById(id: "${this.executionId}"){ 
-            prMergedAt 
-            prNumber 
-            prUrl 
-            commit 
-            status 
-            executionStartedAt 
-            executionCompletedAt 
-            repoUrl
-            } }`
-    ).then(resp => {
-      this.execution = resp.data.executionById;
-    });
-    BenchmarkClient.getSpans(
-      `{ executionSpans( executionName: "${this.executionId}"){ 
-            id name duration tags { graphType executionName graphScale }} }`
-    ).then(resp => {
-      this.executionSpans = resp.data.executionSpans;
-      this.graphs = Array.from(
-        new Set(
-          this.executionSpans.map(span => span.tags.graphType)
-        )
-      );
-    });
+    this.fetchExecutionDetails();
+    this.fetchExecutionSpans();
   },
-  watch: {
-    currentGraph(current, previous) {
-      if (current !== previous) {
-        this.currentScale = null;
-        this.currentQuery = null;
-      }
+  methods: {
+    fetchExecutionDetails() {
+      BenchmarkClient.getExecutions(
+        `{ executionById(id: "${
+          this.executionId
+        }"){ prMergedAt prNumber prUrl commit status executionStartedAt executionCompletedAt repoUrl} }`
+      ).then(resp => {
+        this.execution = resp.data.executionById;
+      });
+    },
+    fetchExecutionSpans() {
+      BenchmarkClient.getSpans(
+        `{ executionSpans( executionName: "${
+          this.executionId
+        }"){ id name duration tags { graphType executionName graphScale }} }`
+      ).then(resp => {
+        this.executionSpans = resp.data.executionSpans;
+        // Extract Graph types from execution spans
+        this.graphs = Array.from(
+          new Set(this.executionSpans.map(span => span.tags.graphType))
+        );
+      });
+    }
+  },
+  filters: {
+    substringRepo(repoUrl) {
+      if (!repoUrl) return;
+      return repoUrl.substring(19);
     }
   }
 };

@@ -4,10 +4,10 @@
       ><i class="el-icon-circle-plus-outline" @click="expand = !expand"></i
     ></el-col>
     <el-col :span="12">{{ query }}</el-col>
-    <!-- <el-col :span="3"
+    <el-col :span="3"
       >{{ min.duration | fixedMs }} ({{ min.tags.repetition + 1 }})</el-col
     >
-    <el-col :span="3">{{ med | fixedMs }}</el-col> -->
+    <el-col :span="3">{{ med | fixedMs }}</el-col>
     <el-col :span="3"
       >{{ max.duration | fixedMs }} ({{ max.tags.repetition + 1 }})</el-col
     >
@@ -17,7 +17,11 @@
 </template>
 <style scoped>
 .el-row {
-  margin: 10px 0px;
+  margin: 5px 0px;
+  padding: 5px;
+}
+.el-row:hover {
+  background-color: #fcdaba;
 }
 i {
   cursor: pointer;

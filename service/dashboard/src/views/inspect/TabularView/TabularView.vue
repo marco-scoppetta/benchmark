@@ -1,7 +1,10 @@
 <template>
   <el-tabs type="border-card" class="wrapper">
     <el-tab-pane v-for="graph in graphs" :key="graph" :label="graph">
-      <graph-tab :graph="graph" :executionSpans="filterSpans(graph)"></graph-tab>
+      <graph-tab
+        :graph="graph"
+        :executionSpans="filterSpans(graph)"
+      ></graph-tab>
     </el-tab-pane>
   </el-tabs>
 </template>
@@ -13,9 +16,7 @@ export default {
   components: { GraphTab },
   methods: {
     filterSpans(name) {
-      return this.executionSpans.filter(
-        span => span.tags.graphType === name
-      );
+      return this.executionSpans.filter(span => span.tags.graphType === name);
     }
   }
 };
