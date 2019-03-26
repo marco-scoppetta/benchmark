@@ -5,12 +5,18 @@
       class="el-menu-vertical-demo"
       :router="true"
     >
-      <div class="logo"><img src="assets/grakn-logo.png" /></div>
+      <div class="logo">
+        <img src="assets/grakn-logo.png">
+      </div>
       <el-menu-item index="/overview">
-        <i class="el-icon-menu"></i> <span slot="title">Overview</span>
+        <i class="el-icon-menu" /> <span slot="title">
+          Overview
+        </span>
       </el-menu-item>
       <el-menu-item index="/executions">
-        <i class="el-icon-document"></i> <span slot="title">Executions</span>
+        <i class="el-icon-document" /> <span slot="title">
+          Executions
+        </span>
       </el-menu-item>
     </el-menu>
   </aside>
@@ -20,7 +26,7 @@ export default {
   data() {
     return {};
   },
-  methods: {}
+  methods: {},
 };
 </script>
 <style scoped>

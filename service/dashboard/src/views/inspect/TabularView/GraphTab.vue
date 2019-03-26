@@ -1,13 +1,9 @@
 <template>
   <div>
-    <el-row type="flex" justify="end" class="header-row">
+    <el-row type="flex" justify="end">
       <span class="label">Scale:</span>
-      <div v-for="scale in scales" :span="1" v-bind:key="scale">
-        <div
-          @click="currentScale = scale"
-          class="scale-tab"
-          :class="{ active: scale == currentScale }"
-        >
+      <div v-for="scale in scales" :key="scale" :span="1">
+        <div class="scale-tab" :class="{ active: scale == currentScale }" @click="currentScale = scale">
           {{ scale }}
         </div>
       </div>
@@ -22,39 +18,37 @@
     <div v-for="query in queries" :key="query">
       <query-line
         :query="query"
-        :currentScale="currentScale"
+        :current-scale="currentScale"
         :spans="filterQuerySpans(query)"
-      ></query-line>
+      />
     </div>
   </div>
 </template>
 <script>
-import QueryLine from "./QueryLine.vue";
-import BenchmarkClient from "@/util/BenchmarkClient.js";
+import BenchmarkClient from '@/util/BenchmarkClient.js';
+import QueryLine from './QueryLine.vue';
 
 export default {
-  props: ["graph", "executionSpans"],
   components: { QueryLine },
+  props: ['graph', 'executionSpans'],
   data() {
     return {
       scales: [],
       queries: [],
       querySpans: [],
-      currentScale: null
+      currentScale: null,
     };
-  },
-  created() {
-    this.scales = Array.from(
-      new Set(this.executionSpans.map(span => span.tags.graphScale))
-    );
-    this.scales.sort((a, b) => parseInt(a) - parseInt(b));
-    this.currentScale = this.scales[0];
   },
   watch: {
     // Every time the current scale changes -> recompute queries and query spans to show in table
     currentScale(scale) {
       this.computeQueriesAndSpans(scale);
-    }
+    },
+  },
+  created() {
+    this.scales = [...new Set(this.executionSpans.map(span => span.tags.graphScale))];
+    this.scales.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+    this.currentScale = this.scales[0];
   },
   methods: {
     // Filter query spans by query so that each QueryLine component only receives the relevant query spans to compute max min med etc..
@@ -65,28 +59,30 @@ export default {
       // Take all executionSpans with current scale (it's usually 2: 1 executionSpan for writes and 1 for reads)
       // and load all the query spans associated to those.
       const querySpanPromises = this.executionSpans
-        .filter(span => span.tags.graphScale == scale)
-        .map(executionSpan =>
-          BenchmarkClient.getSpans(
-            `{ querySpans( parentId: "${
-              executionSpan.id
-            }" limit: 500){ id name duration tags { query type repetition repetitions }} }`
-          )
-        );
-      //Wait on all promises and extract queries and query spans from responses
-      Promise.all(querySpanPromises).then(responses => {
-        this.querySpans = responses.reduce(
-          (acc, resp) => acc.concat(resp.data.querySpans),
-          []
-        ); //flatMap the responses
-        this.queries = Array.from(
-          new Set(this.querySpans.map(span => span.tags.query))
-        );
-        this.queries.sort();
-      });
-    }
-  }
+        .filter(span => span.tags.graphScale === scale)
+        .map(executionSpan => getQuerySpansRequest(executionSpan.id));
+      // Wait on all promises and extract queries and query spans from responses
+      Promise.all(querySpanPromises)
+        .then((responses) => {
+          this.querySpans = flatMapResponse(responses);
+          this.queries = uniqueQueriesSortedArray(this.querySpans);
+        });
+    },
+  },
 };
+
+/**
+ * Helper functions
+ */
+function flatMapResponse(responses) {
+  return responses.reduce((acc, resp) => acc.concat(resp.data.querySpans), []);
+}
+function getQuerySpansRequest(id) {
+  return BenchmarkClient.getSpans(`{ querySpans( parentId: "${id}" limit: 500){ id name duration tags { query type repetition repetitions }} }`);
+}
+function uniqueQueriesSortedArray(querySpans) {
+  return [...new Set(querySpans.map(span => span.tags.query))].sort();
+}
 </script>
 <style scoped>
 .queries {
@@ -98,10 +94,8 @@ export default {
   cursor: pointer;
   text-align: center;
   margin: 0 5px;
-  -webkit-user-select: none; /* Chrome all / Safari all */
-  -moz-user-select: none; /* Firefox all */
-  -ms-user-select: none; /* IE 10+ */
   user-select: none;
+  margin-bottom: 6px;
 }
 .active {
   border-bottom: 2px solid #409eff;
@@ -109,5 +103,9 @@ export default {
 }
 .el-col{
     text-align: center;
+}
+.label{
+  font-weight: bold;
+  margin-right: 5px;
 }
 </style>

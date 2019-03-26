@@ -5,50 +5,91 @@
         <el-row
           style="margin-bottom: 5px; font-weight: bold; text-align:center;"
         >
-          <el-col :span="3">STATUS</el-col>
-          <el-col :span="4">REPOSITORY</el-col>
-          <el-col :span="7">COMMIT</el-col>
-          <el-col :span="2">PR</el-col>
-          <el-col :span="4">STARTED AT</el-col>
-          <el-col :span="4">COMPLETED AT</el-col>
+          <el-col :span="3">
+            STATUS
+          </el-col>
+          <el-col :span="4">
+            REPOSITORY
+          </el-col>
+          <el-col :span="7">
+            COMMIT
+          </el-col>
+          <el-col :span="2">
+            PR
+          </el-col>
+          <el-col :span="4">
+            STARTED AT
+          </el-col>
+          <el-col :span="4">
+            COMPLETED AT
+          </el-col>
         </el-row>
-        <el-row type="flex" align="middle" style="text-align:center;">
+        <el-row
+          type="flex"
+          align="middle"
+          style="text-align:center;"
+        >
           <el-col :span="3">
             <el-tag
               size="mini"
               :type="execution.status == 'COMPLETED' ? 'success' : 'danger'"
-              >{{ execution.status }}</el-tag>
+            >
+              {{ execution.status }}
+            </el-tag>
           </el-col>
-          <el-col :span="4"
-            ><a :href="execution.repoUrl">{{
-              execution.repoUrl | substringRepo
-            }}</a></el-col
+          <el-col
+            :span="4"
           >
-          <el-col :span="7"
-            ><a :href="execution.repoUrl + '/commit/' + execution.commit">{{
-              execution.commit
-            }}</a></el-col
+            <a :href="execution.repoUrl">
+              {{
+                execution.repoUrl | substringRepo
+              }}
+            </a>
+          </el-col>
+          <el-col
+            :span="7"
           >
-          <el-col :span="2"
-            ><a :href="execution.prUrl">#{{ execution.prNumber }}</a></el-col
+            <a :href="execution.repoUrl + '/commit/' + execution.commit">
+              {{
+                execution.commit
+              }}
+            </a>
+          </el-col>
+          <el-col
+            :span="2"
           >
-          <el-col :span="4">{{ execution.executionStartedAt }}</el-col>
-          <el-col :span="4">{{ execution.executionCompletedAt }}</el-col>
+            <a :href="execution.prUrl">
+              #{{ execution.prNumber }}
+            </a>
+          </el-col>
+          <el-col :span="4">
+            {{ execution.executionStartedAt }}
+          </el-col>
+          <el-col :span="4">
+            {{ execution.executionCompletedAt }}
+          </el-col>
         </el-row>
       </el-card>
       <tabular-view
         :graphs="graphs"
-        :executionSpans="executionSpans"
-      ></tabular-view>
+        :execution-spans="executionSpans"
+      />
     </el-main>
   </el-container>
 </template>
 <script>
-import InspectStore from "@/util/InspectSharedStore";
-import BenchmarkClient from "@/util/BenchmarkClient.js";
-import TabularView from "./TabularView/TabularView.vue";
+import InspectStore from '@/util/InspectSharedStore';
+import BenchmarkClient from '@/util/BenchmarkClient.js';
+import TabularView from './TabularView/TabularView.vue';
+
 export default {
   components: { TabularView },
+  filters: {
+    substringRepo(repoUrl) {
+      if (!repoUrl) return '';
+      return repoUrl.substring(19);
+    },
+  },
   data() {
     return {
       executionId: this.$route.params.executionId,
@@ -58,7 +99,7 @@ export default {
       currentQuery: InspectStore.getQuery(), // used when coming from Overview page to investigate a particularly slow query
       execution: {},
       executionSpans: [],
-      graphs: []
+      graphs: [],
     };
   },
   created() {
@@ -70,8 +111,8 @@ export default {
       BenchmarkClient.getExecutions(
         `{ executionById(id: "${
           this.executionId
-        }"){ prMergedAt prNumber prUrl commit status executionStartedAt executionCompletedAt repoUrl} }`
-      ).then(resp => {
+        }"){ prMergedAt prNumber prUrl commit status executionStartedAt executionCompletedAt repoUrl} }`,
+      ).then((resp) => {
         this.execution = resp.data.executionById;
       });
     },
@@ -79,22 +120,16 @@ export default {
       BenchmarkClient.getSpans(
         `{ executionSpans( executionName: "${
           this.executionId
-        }"){ id name duration tags { graphType executionName graphScale }} }`
-      ).then(resp => {
+        }"){ id name duration tags { graphType executionName graphScale }} }`,
+      ).then((resp) => {
         this.executionSpans = resp.data.executionSpans;
         // Extract Graph types from execution spans
         this.graphs = Array.from(
-          new Set(this.executionSpans.map(span => span.tags.graphType))
+          new Set(this.executionSpans.map(span => span.tags.graphType)),
         );
       });
-    }
+    },
   },
-  filters: {
-    substringRepo(repoUrl) {
-      if (!repoUrl) return;
-      return repoUrl.substring(19);
-    }
-  }
 };
 </script>
 <style scoped>

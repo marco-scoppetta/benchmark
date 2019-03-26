@@ -1,32 +1,54 @@
 <template>
   <div>
-    <el-row type="flex" justify="end" class="header-row">
-      <span class="label">Scale:</span>
-      <div v-for="scale in scales" :span="1" v-bind:key="scale">
+    <el-row
+      type="flex"
+      justify="end"
+      class="header-row"
+    >
+      <span class="label">
+        Scale:
+      </span>
+      <div
+        v-for="scale in scales"
+        :key="scale"
+        :span="1"
+      >
         <div
-          @click="currentScale = scale"
           class="scale-tab"
           :class="{ active: scale == currentScale }"
+          @click="currentScale = scale"
         >
           {{ scale }}
         </div>
       </div>
     </el-row>
-    <div ref="chart" class="chart-wrapper" @click="clickOnCanvas"></div>
+    <div
+      ref="chart"
+      class="chart-wrapper"
+      @click="clickOnCanvas"
+    />
     <transition name="el-fade-in-linear">
       <el-popover
         ref="popover"
+        v-model="popoverVisible"
         width="150"
         trigger="manual"
-        v-model="popoverVisible"
       >
         <div style="text-align: center; margin: 0">
-          <el-button size="mini" type="text" @click="popoverVisible = false"
-            >Cancel</el-button
+          <el-button
+            size="mini"
+            type="text"
+            @click="popoverVisible = false"
           >
-          <el-button type="primary" size="mini" @click="redirectToInspect"
-            >Inspect</el-button
+            Cancel
+          </el-button>
+          <el-button
+            type="primary"
+            size="mini"
+            @click="redirectToInspect"
           >
+            Inspect
+          </el-button>
         </div>
       </el-popover>
     </transition>
@@ -58,12 +80,12 @@
 }
 </style>
 <script>
-import ChartFactory from "./ChartFactory";
-import QueriesUtil from "./QueriesUtil";
-import InspectStore from "@/util/InspectSharedStore";
+import InspectStore from '@/util/InspectSharedStore';
+import ChartFactory from './ChartFactory';
+import QueriesUtil from './QueriesUtil';
 
 export default {
-  props: ["name", "executions", "spans"],
+  props: ['name', 'executions', 'spans'],
   data() {
     return {
       popoverVisible: false,
@@ -72,8 +94,14 @@ export default {
       queries: null,
       queriesMap: null,
       chart: null,
-      clickedPointArgs: null
+      clickedPointArgs: null,
     };
+  },
+  watch: {
+    currentScale(val, previous) {
+      if (val === previous) return;
+      this.drawChart();
+    },
   },
   created() {
     window.onresize = () => {
@@ -90,19 +118,19 @@ export default {
       this.drawChart();
 
       const popover = this.$refs.popover.$el;
-      popover.style.position = "absolute";
-      popover.style.display = "block";
-      this.chart.on("click", args => {
+      popover.style.position = 'absolute';
+      popover.style.display = 'block';
+      this.chart.on('click', (args) => {
         if (args.targetType) {
           // TODO: finish this
         } else {
           this.clickedPointArgs = args;
           args.event.event.stopPropagation();
-          popover.style.left = args.event.offsetX + "px";
-          popover.style.top = args.event.offsetY + "px";
-          popover.childNodes[0].style.transform = `translate(-50%, -${25 +
-            args.data.symbolSize / 2 +
-            4}px)`;
+          popover.style.left = `${args.event.offsetX}px`;
+          popover.style.top = `${args.event.offsetY}px`;
+          popover.childNodes[0].style.transform = `translate(-50%, -${25
+            + args.data.symbolSize / 2
+            + 4}px)`;
           this.popoverVisible = true;
         }
       });
@@ -115,14 +143,14 @@ export default {
     },
     redirectToInspect() {
       const currentQuery = Object.keys(this.queriesMap).filter(
-        x => this.queriesMap[x] === this.clickedPointArgs.seriesName
+        x => this.queriesMap[x] === this.clickedPointArgs.seriesName,
       )[0];
 
       InspectStore.setGraph(this.name);
       InspectStore.setScale(this.currentScale);
       InspectStore.setQuery(currentQuery);
       this.$router.push({
-        path: `inspect/${this.clickedPointArgs.data.executionId}`
+        path: `inspect/${this.clickedPointArgs.data.executionId}`,
       });
     },
     drawChart() {
@@ -132,21 +160,15 @@ export default {
         this.queries,
         this.spans,
         this.executions,
-        this.currentScale
+        this.currentScale,
       );
 
       this.chart = ChartFactory.createChart(
         chartComponent,
         queriesTimes,
-        this.queriesMap
+        this.queriesMap,
       );
-    }
+    },
   },
-  watch: {
-    currentScale(val, previous) {
-      if (val == previous) return;
-      this.drawChart();
-    }
-  }
 };
 </script>

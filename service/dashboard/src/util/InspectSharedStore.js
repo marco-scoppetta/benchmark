@@ -2,7 +2,7 @@ export default {
   state: {
     graphName: null,
     currentScale: null,
-    query: null
+    query: null,
   },
   setGraph(graphName) {
     this.state.graphName = graphName;
@@ -21,5 +21,5 @@ export default {
   },
   getQuery() {
     return this.state.query;
-  }
+  },
 };

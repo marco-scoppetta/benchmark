@@ -1,21 +1,43 @@
 <template>
-<div>
-  <el-row class="currentRow">
-    <el-col :span="14" class="query-column" style="text-align: left;">
-        <i :class="{ 'el-icon-arrow-right': !expand, 'el-icon-arrow-down': expand }" @click="expandLine"></i>
+  <div>
+    <el-row class="currentRow">
+      <el-col
+        :span="14"
+        class="query-column"
+        style="text-align: left;"
+      >
+        <i
+          :class="{ 'el-icon-arrow-right': !expand, 'el-icon-arrow-down': expand }"
+          @click="expandLine"
+        />
         <div>{{ query }}</div>
-    </el-col>
-    <el-col :span="3"
-      >{{ min.duration | fixedMs }} ({{ min.tags.repetition + 1 }})</el-col
-    >
-    <el-col :span="3">{{ med | fixedMs }}</el-col>
-    <el-col :span="3"
-      >{{ max.duration | fixedMs }} ({{ max.tags.repetition + 1 }})</el-col
-    >
-    <el-col :span="1">{{ reps }}</el-col>
-  </el-row>
-  <el-row v-if="expand"><step-line v-for="stepNumber in stepNumbers" :key="stepNumber" :spans="filterSpansByStep(stepNumber)" padding="15"></step-line></el-row>
-</div>
+      </el-col>
+      <el-col
+        :span="3"
+      >
+        {{ min.duration | fixedMs }} ({{ min.tags.repetition + 1 }})
+      </el-col>
+      <el-col :span="3">
+        {{ med | fixedMs }}
+      </el-col>
+      <el-col
+        :span="3"
+      >
+        {{ max.duration | fixedMs }} ({{ max.tags.repetition + 1 }})
+      </el-col>
+      <el-col :span="1">
+        {{ reps }}
+      </el-col>
+    </el-row>
+    <el-row v-if="expand">
+      <step-line
+        v-for="stepNumber in stepNumbers"
+        :key="stepNumber"
+        :spans="filterSpansByStep(stepNumber)"
+        padding="15"
+      />
+    </el-row>
+  </div>
 </template>
 <style scoped>
 .currentRow {
@@ -39,57 +61,29 @@ i {
 </style>
 
 <script>
-import BenchmarkClient from "@/util/BenchmarkClient.js";
-import StepLine from "./StepLine.vue";
+import BenchmarkClient from '@/util/BenchmarkClient.js';
+import StepLine from './StepLine.vue';
 
 export default {
-  name: "QueryLine",
-  props: ["query", "spans", "currentScale"],
+  name: 'QueryLine',
   components: { StepLine },
+  filters: {
+    fixedMs(num) {
+      return `${Number(num / 1000).toFixed(3)} ms`;
+    },
+  },
+  props: ['query', 'spans', 'currentScale'],
   data() {
     return {
       expand: false,
       children: [],
-      stepNumbers: null
+      stepNumbers: null,
     };
-  },
-  filters: {
-    fixedMs(num) {
-      return `${Number(num / 1000).toFixed(3)} ms`;
-    }
-  },
-  methods: {
-    expandLine(){
-      this.expand = !this.expand;
-      if(!this.expand) return;
-      this.fetchChildrenSpans();
-    },
-    fetchChildrenSpans(){
-        BenchmarkClient.getSpans(
-            `{ childrenSpans( parentId: [${
-              this.spans.map(span => `"${span.id}"`).join()
-              }] limit: 500){ id name duration parentId tags { childNumber }} }`
-          ).then((resp)=>{
-            this.children = this.attachRepetition(resp.data.childrenSpans);
-            this.stepNumbers = Array.from(new Set(this.children.map(child => child.tags.childNumber)));
-            this.stepNumbers.sort();
-          })
-    },
-    filterSpansByStep(stepNumber){
-      return this.children.filter(child => child.tags.childNumber === stepNumber);
-    },
-    attachRepetition(childrenSpans){
-      // Children spans don't have the tags repetition and repetitions, so we attach them here taking the values from parent
-      return childrenSpans.map(span => {
-        const parentTag = this.spans.filter(parent => parent.id == span.parentId)[0].tags;
-        return Object.assign({ repetition: parentTag.repetition, repetitions: parentTag.repetitions }, span);
-      });
-    }
   },
   computed: {
     min() {
       let min = this.spans[0];
-      this.spans.forEach(span => {
+      this.spans.forEach((span) => {
         if (span.duration < min.duration) {
           min = span;
         }
@@ -98,7 +92,7 @@ export default {
     },
     max() {
       let max = this.spans[0];
-      this.spans.forEach(span => {
+      this.spans.forEach((span) => {
         if (span.duration > max.duration) {
           max = span;
         }
@@ -116,7 +110,35 @@ export default {
     },
     reps() {
       return this.spans.length;
-    }
-  }
+    },
+  },
+  methods: {
+    expandLine() {
+      this.expand = !this.expand;
+      if (!this.expand) return;
+      this.fetchChildrenSpans();
+    },
+    fetchChildrenSpans() {
+      BenchmarkClient.getSpans(
+        `{ childrenSpans( parentId: [${
+          this.spans.map(span => `"${span.id}"`).join()
+        }] limit: 500){ id name duration parentId tags { childNumber }} }`,
+      ).then((resp) => {
+        this.children = this.attachRepetition(resp.data.childrenSpans);
+        this.stepNumbers = Array.from(new Set(this.children.map(child => child.tags.childNumber)));
+        this.stepNumbers.sort();
+      });
+    },
+    filterSpansByStep(stepNumber) {
+      return this.children.filter(child => child.tags.childNumber === stepNumber);
+    },
+    attachRepetition(childrenSpans) {
+      // Children spans don't have the tags repetition and repetitions, so we attach them here taking the values from parent
+      return childrenSpans.map((span) => {
+        const parentTag = this.spans.filter(parent => parent.id == span.parentId)[0].tags;
+        return Object.assign({ repetition: parentTag.repetition, repetitions: parentTag.repetitions }, span);
+      });
+    },
+  },
 };
 </script>

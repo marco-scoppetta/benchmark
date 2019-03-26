@@ -3,55 +3,55 @@
     <el-main>
       <h2>Benchmark Overview</h2>
       <el-row
-        class="panel"
         v-for="graphName in graphNames"
-        v-bind:key="graphName"
+        :key="graphName"
+        class="panel"
       >
         <overview-commits-chart
           :name="graphName"
           :executions="completedExecutions"
           :spans="filterSpans(graphName)"
-        ></overview-commits-chart>
+        />
       </el-row>
     </el-main>
   </el-container>
 </template>
 
 <script>
-import BenchmarkClient from "@/util/BenchmarkClient.js";
-import OverviewCommitsChart from "./OverviewCommitsChart.vue";
+import BenchmarkClient from '@/util/BenchmarkClient.js';
+import OverviewCommitsChart from './OverviewCommitsChart.vue';
 
 export default {
-  name: "OverviewPage",
+  name: 'OverviewPage',
   components: { OverviewCommitsChart },
   data() {
     return {
       numberOfCompletedExecutions: 3,
       completedExecutions: null,
       graphNames: [],
-      spans: null
+      spans: null,
     };
   },
   async created() {
     // Get the last N completed executions
     // Note: we need to reverse the array because in the chart we want to show the most recent execution not as first but as last (rightmost)
     this.completedExecutions = (await BenchmarkClient.getLatestCompletedExecutions(
-      this.numberOfCompletedExecutions
+      this.numberOfCompletedExecutions,
     )).reverse();
     // Get all the spans relative to those executions
     this.spans = await BenchmarkClient.getExecutionsSpans(
-      this.completedExecutions
+      this.completedExecutions,
     );
     // Compute graph names from spans, for each graph name we draw a chart
     this.graphNames = Array.from(
-      new Set(this.spans.map(span => span.tags.graphName))
+      new Set(this.spans.map(span => span.tags.graphName)),
     );
   },
   methods: {
     filterSpans(name) {
       return this.spans.filter(span => span.tags.graphName === name);
-    }
-  }
+    },
+  },
 };
 </script>
 

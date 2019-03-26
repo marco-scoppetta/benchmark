@@ -1,31 +1,27 @@
-import echarts from "echarts";
+import echarts from 'echarts';
 
 function mapToSerie(x, queriesMap) {
   return {
     name: queriesMap[x.query],
-    type: "line",
-    data: x.times.map(x => {
-      return {
-        value: Number(x.avgTime).toFixed(3),
-        symbolSize: Math.min(x.stdDeviation / 10, 45) + 5,
-        symbol: "circle",
-        stdDeviation: x.stdDeviation,
-        repetitions: x.repetitions,
-        executionId: x.executionId
-      };
-    }),
+    type: 'line',
+    data: x.times.map(x => ({
+      value: Number(x.avgTime).toFixed(3),
+      symbolSize: Math.min(x.stdDeviation / 10, 45) + 5,
+      symbol: 'circle',
+      stdDeviation: x.stdDeviation,
+      repetitions: x.repetitions,
+      executionId: x.executionId,
+    })),
     smooth: true,
-    emphasis: { label: { show: false }, itemStyle: { color: "yellow" } },
+    emphasis: { label: { show: false }, itemStyle: { color: 'yellow' } },
     showAllSymbol: true,
     tooltip: {
-      formatter: args => {
-        return `
+      formatter: args => `
         query: ${args.seriesName}
         <br> avgTime: ${Number(args.data.value).toFixed(3)} ms 
         <br> stdDeviation: ${Number(args.data.stdDeviation).toFixed(3)} ms
-        <br> repetitions: ${args.data.repetitions}`;
-      }
-    }
+        <br> repetitions: ${args.data.repetitions}`,
+    },
   };
 }
 
@@ -35,11 +31,11 @@ function createChart(htmlComponent, queriesTimes, queriesMap) {
   const option = {
     tooltip: {
       show: true,
-      trigger: "item"
+      trigger: 'item',
     },
     legend: {
-      type: "scroll",
-      orient: "vertical",
+      type: 'scroll',
+      orient: 'vertical',
       right: 10,
       top: 20,
       bottom: 20,
@@ -47,43 +43,41 @@ function createChart(htmlComponent, queriesTimes, queriesMap) {
       tooltip: {
         show: true,
         showDelay: 500,
-        triggerOn: "mousemove",
-        formatter: args => {
-          return Object.keys(queriesMap).filter(
-            x => queriesMap[x] === args.name
-          );
-        }
-      }
+        triggerOn: 'mousemove',
+        formatter: args => Object.keys(queriesMap).filter(
+          x => queriesMap[x] === args.name,
+        ),
+      },
     },
     calculable: true,
     xAxis: [
       {
-        type: "category",
+        type: 'category',
         boundaryGap: false,
         data: queriesTimes[0].times.map(x => ({
           value: x.commit.substring(0, 15),
-          commit: x.commit
+          commit: x.commit,
         })),
-        triggerEvent: true
-      }
+        triggerEvent: true,
+      },
     ],
     yAxis: [
       {
-        type: "value",
+        type: 'value',
         axisLabel: {
-          formatter: "{value} ms"
-        }
-      }
+          formatter: '{value} ms',
+        },
+      },
     ],
     series: queriesTimes.map(x => mapToSerie(x, queriesMap)),
     dataZoom: [
       {
-        type: "inside",
-        zoomOnMouseWheel: "ctrl",
-        filterMode: "none",
-        orient: "vertical"
-      }
-    ]
+        type: 'inside',
+        zoomOnMouseWheel: 'ctrl',
+        filterMode: 'none',
+        orient: 'vertical',
+      },
+    ],
   };
   overviewChart.setOption(option);
   return overviewChart;

@@ -1,24 +1,31 @@
 <template>
-  <el-tabs type="border-card" class="wrapper">
-    <el-tab-pane v-for="graph in graphs" :key="graph" :label="graph">
+  <el-tabs
+    type="border-card"
+    class="wrapper"
+  >
+    <el-tab-pane
+      v-for="graph in graphs"
+      :key="graph"
+      :label="graph"
+    >
       <graph-tab
         :graph="graph"
-        :executionSpans="filterSpans(graph)"
-      ></graph-tab>
+        :execution-spans="filterSpans(graph)"
+      />
     </el-tab-pane>
   </el-tabs>
 </template>
 <script>
-import GraphTab from "./GraphTab.vue";
+import GraphTab from './GraphTab.vue';
 
 export default {
-  props: ["graphs", "executionSpans"],
   components: { GraphTab },
+  props: ['graphs', 'executionSpans'],
   methods: {
     filterSpans(name) {
       return this.executionSpans.filter(span => span.tags.graphType === name);
-    }
-  }
+    },
+  },
 };
 </script>
 <style scoped>
