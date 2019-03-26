@@ -1,65 +1,63 @@
 <template>
 <div>
-  <el-row class="currentRow">
-    <el-col :span="14" class="query-column" style="text-align: left;">
-        <i :class="{ 'el-icon-arrow-right': !expand, 'el-icon-arrow-down': expand }" @click="expandLine"></i>
-        <div>{{ query }}</div>
+   <el-row class="currentRow">
+    <el-col :span="14" class="name-column" :style="styleObject">
+        <i :class="{ 'el-icon-circle-plus-outline': !expand, 'el-icon-remove-outline': expand }" @click="expandLine"></i>
+        <div>{{ spans[0].name }}</div>
     </el-col>
     <el-col :span="3"
-      >{{ min.duration | fixedMs }} ({{ min.tags.repetition + 1 }})</el-col
+      >{{ min.duration | fixedMs }} ({{ min.repetition + 1 }})</el-col
     >
     <el-col :span="3">{{ med | fixedMs }}</el-col>
     <el-col :span="3"
-      >{{ max.duration | fixedMs }} ({{ max.tags.repetition + 1 }})</el-col
+      >{{ max.duration | fixedMs }} ({{ max.repetition + 1 }})</el-col
     >
     <el-col :span="1">{{ reps }}</el-col>
   </el-row>
-  <el-row v-if="expand"><step-line v-for="stepNumber in stepNumbers" :key="stepNumber" :spans="filterSpansByStep(stepNumber)" padding="15"></step-line></el-row>
+  <el-row v-if="expand"><step-line v-for="stepNumber in stepNumbers" :key="stepNumber" :spans="filterSpansByStep(stepNumber)" :padding="parseInt(padding)+10"></step-line></el-row>
 </div>
 </template>
 <style scoped>
-.currentRow {
-  margin: 5px 0px;
-  padding: 5px;
+.currentRow{
+  margin: 3px 0px;
+  padding: 3px;
 }
 .currentRow:hover {
-  background-color: #fcdaba;
+  background-color: #fa8d7e;
 }
-.query-column{
+.name-column{
   display: flex;
   justify-content: start;
-}
-.el-col{
-  text-align: center;
 }
 i {
   cursor: pointer;
   margin-right: 5px;
 }
+.el-col{
+    text-align: center;
+}
 </style>
 
 <script>
 import BenchmarkClient from "@/util/BenchmarkClient.js";
-import StepLine from "./StepLine.vue";
 
 export default {
-  name: "QueryLine",
-  props: ["query", "spans", "currentScale"],
-  components: { StepLine },
-  data() {
-    return {
-      expand: false,
-      children: [],
-      stepNumbers: null
-    };
-  },
-  filters: {
-    fixedMs(num) {
-      return `${Number(num / 1000).toFixed(3)} ms`;
-    }
-  },
-  methods: {
-    expandLine(){
+    name:"StepLine",
+    props: ["spans", "padding"],
+    data(){
+        return {
+            expand: false,
+            children: null,
+            stepNumbers: null,
+            styleObject: {
+                "padding-left": this.padding + 'px',
+                "text-align": "left",
+                "font-style": "italic"
+            }
+        }
+    },
+    methods: {
+     expandLine(){
       this.expand = !this.expand;
       if(!this.expand) return;
       this.fetchChildrenSpans();
@@ -68,25 +66,30 @@ export default {
         BenchmarkClient.getSpans(
             `{ childrenSpans( parentId: [${
               this.spans.map(span => `"${span.id}"`).join()
-              }] limit: 500){ id name duration parentId tags { childNumber }} }`
+              }]){ id name duration parentId tags { childNumber }} }`
           ).then((resp)=>{
             this.children = this.attachRepetition(resp.data.childrenSpans);
             this.stepNumbers = Array.from(new Set(this.children.map(child => child.tags.childNumber)));
             this.stepNumbers.sort();
           })
     },
-    filterSpansByStep(stepNumber){
-      return this.children.filter(child => child.tags.childNumber === stepNumber);
-    },
     attachRepetition(childrenSpans){
       // Children spans don't have the tags repetition and repetitions, so we attach them here taking the values from parent
       return childrenSpans.map(span => {
-        const parentTag = this.spans.filter(parent => parent.id == span.parentId)[0].tags;
-        return Object.assign({ repetition: parentTag.repetition, repetitions: parentTag.repetitions }, span);
+        const parent = this.spans.filter(parent => parent.id == span.parentId)[0];
+        return Object.assign({ repetition: parent.repetition, repetitions: parent.repetitions }, span);
       });
+    },
+    filterSpansByStep(stepNumber){
+      return this.children.filter(child => child.tags.childNumber === stepNumber);
     }
-  },
-  computed: {
+    },
+    filters: {
+        fixedMs(num) {
+        return `${Number(num / 1000).toFixed(3)} ms`;
+        }
+    },
+     computed: {
     min() {
       let min = this.spans[0];
       this.spans.forEach(span => {
@@ -118,5 +121,5 @@ export default {
       return this.spans.length;
     }
   }
-};
+}
 </script>

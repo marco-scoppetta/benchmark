@@ -1,7 +1,6 @@
 <template>
   <el-container>
     <el-main>
-      <h2>Inspect Execution</h2>
       <el-card :body-style="{ padding: '15px' }">
         <el-row
           style="margin-bottom: 5px; font-weight: bold; text-align:center;"
@@ -18,8 +17,7 @@
             <el-tag
               size="mini"
               :type="execution.status == 'COMPLETED' ? 'success' : 'danger'"
-              >{{ execution.status }}</el-tag
-            >
+              >{{ execution.status }}</el-tag>
           </el-col>
           <el-col :span="4"
             ><a :href="execution.repoUrl">{{

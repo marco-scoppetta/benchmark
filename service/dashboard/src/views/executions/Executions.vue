@@ -1,6 +1,5 @@
 <template>
   <section class="el-container is-vertical page-container">
-    <!-- <header class="el-header">Header</header> -->
     <main class="el-main">
       <h2>Benchmark Executions</h2>
       <el-row>
@@ -79,10 +78,9 @@ export default {
     });
   },
   methods: {
-    async triggerExecution() {
-      await BenchmarkClient.triggerExecution(this.newExecution)
+    triggerExecution() {
+      BenchmarkClient.triggerExecution(this.newExecution)
         .then(() => {
-          // TODO re-fetch In Progress executions to update the page
           this.$notify({
             title: "Success",
             message: "New Execution triggered successfully!",

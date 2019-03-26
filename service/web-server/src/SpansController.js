@@ -15,8 +15,28 @@ const typeDefs = `
 
     executionSpans(
         executionName: String,
-        graphType: String
+        graphType: String,
+        offset: Int, 
+        limit: Int
     ): [ExecutionSpan]
+
+    childrenSpans(
+        parentId: [String],
+        offset: Int, 
+        limit: Int
+    ): [ChildSpan]
+  }
+
+  type ChildSpan {
+    id: String!
+    duration: Int!
+    name: String!
+    tags: ChildSpanTag,
+    parentId: String
+  }
+
+  type ChildSpanTag {
+      childNumber: Int
   }
 
   type ExecutionSpan {
@@ -76,6 +96,14 @@ function filterQuerySpans(args){
     return { query: { bool: { must } } };
 }
 
+function filterChildrenSpans(args){
+    let should = [];
+    if(args.parentId) {
+        should = args.parentId.map(parentId => ({ match: { parentId }}));
+    }
+    return { query: { bool: { should } } } ;    
+}
+
 const resolvers = {
     Query: {
         querySpans: (object, args, context, info) => {
@@ -87,7 +115,15 @@ const resolvers = {
         },
         executionSpans: (object, args, context, info) => {
             let body = {};
+            Object.assign(body, limitQuery(args.offset, args.limit));
             Object.assign(body, filterExecutionSpans(args));
+            const queryObject = Object.assign({index: "benchmark*", type: "span"}, { body });
+            return context.client.search(queryObject).then(result => result.hits.hits.map(res => res._source));
+        },
+        childrenSpans: (object, args, context, info) => {
+            let body = {};
+            Object.assign(body, limitQuery(args.offset, args.limit));
+            Object.assign(body, filterChildrenSpans(args));
             const queryObject = Object.assign({index: "benchmark*", type: "span"}, { body });
             return context.client.search(queryObject).then(result => result.hits.hits.map(res => res._source));
         }

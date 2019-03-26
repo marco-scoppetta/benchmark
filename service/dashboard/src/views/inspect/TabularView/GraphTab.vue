@@ -13,11 +13,11 @@
       </div>
     </el-row>
     <el-row class="queries">
-      <el-col :span="12" :offset="1">Query</el-col>
+      <el-col :span="14">Query</el-col>
       <el-col :span="3">Min (rep)</el-col>
       <el-col :span="3">Med</el-col>
       <el-col :span="3">Max (rep)</el-col>
-      <el-col :span="2">Reps</el-col>
+      <el-col :span="1">Reps</el-col>
     </el-row>
     <div v-for="query in queries" :key="query">
       <query-line
@@ -106,5 +106,8 @@ export default {
 .active {
   border-bottom: 2px solid #409eff;
   color: #409eff;
+}
+.el-col{
+    text-align: center;
 }
 </style>
