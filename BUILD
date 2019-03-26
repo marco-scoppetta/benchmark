@@ -1,6 +1,6 @@
 #
 # GRAKN.AI - THE KNOWLEDGE GRAPH
-# Copyright (C) 2018 Grakn Labs Ltd
+# Copyright (C) 2019 Grakn Labs Ltd
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -38,29 +38,29 @@ distribution_zip(
     additional_files = {
         "//profiler:benchmark": "benchmark",
 
-        "//profiler:conf/road_network/queries_read.yml": "conf/road_network/queries_read.yml",
-        "//profiler:conf/road_network/queries_write.yml": "conf/road_network/queries_write.yml",
-        "//profiler:conf/road_network/road_config_read.yml": "conf/road_network/road_config_read.yml",
-        "//profiler:conf/road_network/road_config_write.yml": "conf/road_network/road_config_write.yml",
-        "//profiler:conf/road_network/road_network.gql": "conf/road_network/road_network.gql",
+        "//common/configuration/scenario:road_network/queries_read.yml": "scenario/road_network/queries_read.yml",
+        "//common/configuration/scenario:road_network/queries_write.yml": "scenario/road_network/queries_write.yml",
+        "//common/configuration/scenario:road_network/road_config_read.yml": "scenario/road_network/road_config_read.yml",
+        "//common/configuration/scenario:road_network/road_config_write.yml": "scenario/road_network/road_config_write.yml",
+        "//common/configuration/scenario:road_network/road_network.gql": "scenario/road_network/road_network.gql",
 
-        "//profiler:conf/social_network/queries_read.yml": "conf/social_network/queries_read.yml",
-        "//profiler:conf/social_network/social_network_config_read.yml": "conf/social_network/social_network_config_read.yml",
-        "//profiler:conf/social_network/social_network.gql": "conf/social_network/social_network.gql",
+        "//common/configuration/scenario:social_network/social_network_config_read.yml": "scenario/social_network/social_network_config_read.yml",
+        "//common/configuration/scenario:social_network/queries_read.yml": "scenario/social_network/queries_read.yml",
+        "//common/configuration/scenario:social_network/social_network.gql": "scenario/social_network/social_network.gql",
 
-        "//profiler:conf/financial_transactions/queries_read.yml": "conf/financial_transactions/queries_read.yml",
-        "//profiler:conf/financial_transactions/financial_config_read.yml": "conf/financial_transactions/financial_config_read.yml",
-        "//profiler:conf/financial_transactions/financial.gql": "conf/financial_transactions/financial.gql",
+        "//common/configuration/scenario:financial_transactions/queries_read.yml": "scenario/financial_transactions/queries_read.yml",
+        "//common/configuration/scenario:financial_transactions/financial_config_read.yml": "scenario/financial_transactions/financial_config_read.yml",
+        "//common/configuration/scenario:financial_transactions/financial.gql": "scenario/financial_transactions/financial.gql",
 
-        "//profiler:conf/biochemical_network/queries_read.yml": "conf/biochemical_network/queries_read.yml",
-        "//profiler:conf/biochemical_network/biochemical_config_read.yml": "conf/biochemical_network/biochemical_config_read.yml",
-        "//profiler:conf/biochemical_network/biochemical_network.gql": "conf/biochemical_network/biochemical_network.gql",
+        "//common/configuration/scenario:biochemical_network/queries_read.yml": "scenario/biochemical_network/queries_read.yml",
+        "//common/configuration/scenario:biochemical_network/biochemical_config_read.yml": "scenario/biochemical_network/biochemical_config_read.yml",
+        "//common/configuration/scenario:biochemical_network/biochemical_network.gql": "scenario/biochemical_network/biochemical_network.gql",
 
-        "//profiler:conf/generic/queries_complex_read.yml": "conf/generic/queries_complex_read.yml",
-        "//profiler:conf/generic/queries_complex_write.yml": "conf/generic/queries_complex_write.yml",
-        "//profiler:conf/generic/config_read.yml": "conf/generic/config_read.yml",
-        "//profiler:conf/generic/config_write.yml": "conf/generic/config_write.yml",
-        "//profiler:conf/generic/schema.gql" : "conf/generic/schema.gql",
+        "//common/configuration/scenario:complex/queries_complex_read.yml": "scenario/complex/queries_complex_read.yml",
+        "//common/configuration/scenario:complex/queries_complex_write.yml": "scenario/complex/queries_complex_write.yml",
+        "//common/configuration/scenario:complex/config_read.yml": "scenario/complex/config_read.yml",
+        "//common/configuration/scenario:complex/config_write.yml": "scenario/complex/config_write.yml",
+        "//common/configuration/scenario:complex/schema.gql" : "scenario/complex/schema.gql",
 
         # External dependencies: Elasticsearch and Zipkin
         "//profiler:setup.sh": "external-dependencies/setup.sh",

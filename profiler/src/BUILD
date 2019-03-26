@@ -1,6 +1,6 @@
 #
 #  GRAKN.AI - THE KNOWLEDGE GRAPH
-#  Copyright (C) 2018 Grakn Labs Ltd
+#  Copyright (C) 2019 Grakn Labs Ltd
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU Affero General Public License as
@@ -20,9 +20,10 @@ java_library(
     name = "benchmark-profiler",
     srcs = glob(["*.java", "util/*.java"]),
     deps = [
-        "//lib:lib",
-        "//profiler/src/analysis:insert-query-analyser",
-        "//profiler/src/generator:data-generator",
+        "//common/analysis:insert-query-analyser",
+        "//common/configuration:benchmark-configuration",
+        "//common/exception:benchmark-exception",
+        "//generator:data-generator",
 
         "@graknlabs_client_java//:client-java",
         "@graknlabs_grakn_core//api:api",
@@ -30,13 +31,9 @@ java_library(
         "@graknlabs_graql//java:graql",
         "@graknlabs_grakn_core//concept:concept",
 
-
-        # TODO should this be via grakn-core's deps?
+        # together these can be used to create clients with tracing enabled
+        "//lib:client-instrumentation",
         "//dependencies/maven/artifacts/io/grpc:grpc-core",
-
-        "//dependencies/maven/artifacts/com/fasterxml/jackson/core:jackson-core",
-        "//dependencies/maven/artifacts/com/fasterxml/jackson/core:jackson-databind",
-        "//dependencies/maven/artifacts/com/fasterxml/jackson/dataformat:jackson-dataformat-yaml",
 
         "//dependencies/maven/artifacts/io/zipkin/brave:brave",
 
@@ -45,10 +42,9 @@ java_library(
         "//dependencies/maven/artifacts/org/apache/httpcomponents:httpcore",
         "//dependencies/maven/artifacts/org/apache/httpcomponents:httpclient",
 
-        "//dependencies/maven/artifacts/commons-cli",
-
         "//dependencies/maven/artifacts/org/apache/ignite:ignite-core",
 
+        "//dependencies/maven/artifacts/commons-cli",
     ],
     runtime_deps = [
         "//dependencies/maven/artifacts/io/grpc:grpc-netty-shaded",

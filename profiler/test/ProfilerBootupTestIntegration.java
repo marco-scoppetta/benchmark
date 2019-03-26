@@ -1,8 +1,25 @@
+/*
+ *  GRAKN.AI - THE KNOWLEDGE GRAPH
+ *  Copyright (C) 2019 Grakn Labs Ltd
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package grakn.benchmark.profiler;
 
-import grakn.benchmark.profiler.BootupException;
-import grakn.benchmark.profiler.GraknBenchmark;
-import grakn.benchmark.profiler.util.BenchmarkArguments;
+import grakn.benchmark.common.configuration.parse.BenchmarkArguments;
+import grakn.benchmark.common.exception.BootupException;
 import grakn.core.client.GraknClient;
 import grakn.core.concept.answer.ConceptMap;
 import graql.lang.Graql;
@@ -46,6 +63,21 @@ public class ProfilerBootupTestIntegration {
     }
 
     @Test
+    public void whenProvidingAbsolutePathToExistingConfig_benchmarkShouldStart() {
+        String[] args = new String[]{"--config", WEB_CONTENT_CONFIG_PATH.toAbsolutePath().toString(), "--execution-name", "grakn-benchmark-test"};
+        CommandLine commandLine = BenchmarkArguments.parse(args);
+        GraknBenchmark graknBenchmark = new GraknBenchmark(commandLine);
+    }
+
+    @Test
+    public void whenProvidingRelativePathToExistingConfig_benchmarkShouldStart() {
+        String[] args = new String[]{"--config", "web_content_config_test.yml", "--execution-name", "grakn-benchmark-test"};
+        System.setProperty("working.dir", WEB_CONTENT_CONFIG_PATH.getParent().toString());
+        CommandLine commandLine = BenchmarkArguments.parse(args);
+        GraknBenchmark graknBenchmark = new GraknBenchmark(commandLine);
+    }
+
+    @Test
     public void whenSchemaExistsInKeyspace_throwException() {
 
         try (GraknClient.Transaction tx = session.transaction().write()) {
@@ -54,7 +86,7 @@ public class ProfilerBootupTestIntegration {
         }
 
         expectedException.expect(BootupException.class);
-        expectedException.expectMessage("not empty, contains a schema");
+        expectedException.expectMessage("is not empty");
         String[] args = new String[]{"--config", WEB_CONTENT_CONFIG_PATH.toAbsolutePath().toString(), "--keyspace", keyspace, "--execution-name", "testing"};
         CommandLine commandLine = BenchmarkArguments.parse(args);
         GraknBenchmark graknBenchmark = new GraknBenchmark(commandLine);
@@ -71,7 +103,7 @@ public class ProfilerBootupTestIntegration {
         }
 
         expectedException.expect(BootupException.class);
-        expectedException.expectMessage("not empty, contains concept instances");
+        expectedException.expectMessage("is not empty");
         String[] args = new String[] {"--config", WEB_CONTENT_CONFIG_PATH.toAbsolutePath().toString(), "--keyspace", keyspace, "--execution-name", "testing"};
         CommandLine commandLine = BenchmarkArguments.parse(args);
         GraknBenchmark graknBenchmark = new GraknBenchmark(commandLine);

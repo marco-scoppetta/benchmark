@@ -1,6 +1,6 @@
 #
 #  GRAKN.AI - THE KNOWLEDGE GRAPH
-#  Copyright (C) 2018 Grakn Labs Ltd
+#  Copyright (C) 2019 Grakn Labs Ltd
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU Affero General Public License as
@@ -16,7 +16,7 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-exports_files(glob(["conf/**/*"]) + ["benchmark"] + ["setup.sh"], visibility = ["//visibility:public"])
+exports_files(glob(["scenario/**/*"]) + ["benchmark"] + ["setup.sh"], visibility = ["//visibility:public"])
 
 java_binary(
     name = "benchmark-profiler-binary",
@@ -27,4 +27,3 @@ java_binary(
     classpath_resources = ["//profiler/src:logback"],
     visibility = ["//visibility:public"]
 )
-

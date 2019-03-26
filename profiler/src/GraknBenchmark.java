@@ -1,6 +1,6 @@
 /*
  *  GRAKN.AI - THE KNOWLEDGE GRAPH
- *  Copyright (C) 2018 GraknClient Labs Ltd
+ *  Copyright (C) 2019 Grakn Labs Ltd
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -21,21 +21,23 @@ package grakn.benchmark.profiler;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import grakn.benchmark.profiler.generator.DataGenerator;
-import grakn.benchmark.profiler.generator.DataGeneratorException;
-import grakn.benchmark.profiler.generator.definition.DataGeneratorDefinition;
-import grakn.benchmark.profiler.generator.definition.DefinitionFactory;
-import grakn.benchmark.profiler.generator.query.QueryProvider;
-import grakn.benchmark.profiler.generator.storage.ConceptStorage;
-import grakn.benchmark.profiler.generator.storage.IgniteConceptStorage;
-import grakn.benchmark.profiler.generator.util.IgniteManager;
-import grakn.benchmark.profiler.util.BenchmarkArguments;
-import grakn.benchmark.profiler.util.BenchmarkConfiguration;
+import grakn.benchmark.common.configuration.parse.BenchmarkArguments;
+import grakn.benchmark.common.configuration.BenchmarkConfiguration;
+import grakn.benchmark.common.exception.BootupException;
+import grakn.benchmark.generator.DataGenerator;
+import grakn.benchmark.generator.DataGeneratorException;
+import grakn.benchmark.generator.definition.DataGeneratorDefinition;
+import grakn.benchmark.generator.definition.DefinitionFactory;
+import grakn.benchmark.generator.query.QueryProvider;
+import grakn.benchmark.generator.storage.ConceptStorage;
+import grakn.benchmark.generator.storage.IgniteConceptStorage;
+import grakn.benchmark.generator.util.IgniteManager;
+import grakn.benchmark.generator.util.SchemaManager;
 import grakn.benchmark.profiler.util.ElasticSearchManager;
-import grakn.benchmark.profiler.util.SchemaManager;
 import grakn.benchmark.profiler.util.TracingGraknClient;
 import grakn.core.client.GraknClient;
 import grakn.core.concept.type.AttributeType;
+import graql.lang.query.GraqlQuery;
 import org.apache.commons.cli.CommandLine;
 import org.apache.ignite.Ignite;
 import org.slf4j.Logger;
@@ -47,12 +49,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static graql.lang.Graql.parseList;
 
 /**
  * Class in charge of
  * - initialising Benchmark dependencies and BenchmarkConfiguration
  * - run data generation (populate empty keyspace) (DataGenerator)
- * - run benchmark on queries (QueryProfiler)
+ * - run benchmark on queries (ThreadedProfiler + QueryProfiler)
  */
 public class GraknBenchmark {
     private static final Logger LOG = LoggerFactory.getLogger(GraknBenchmark.class);
@@ -106,7 +112,7 @@ public class GraknBenchmark {
 
             GraknClient tracingClient = TracingGraknClient.get(config.graknUri());
             traceKeyspaceCreation(tracingClient);
-            QueryProfiler queryProfiler = new QueryProfiler(tracingClient, Collections.singletonList(config.getKeyspace()), config);
+            ThreadedProfiler threadedProfiler = new ThreadedProfiler(tracingClient, Collections.singletonList(config.getKeyspace()), config);
 
             Ignite ignite = IgniteManager.initIgnite();
             GraknClient client = new GraknClient(config.graknUri());
@@ -114,16 +120,15 @@ public class GraknBenchmark {
             List<Integer> numConceptsInRun = config.scalesToProfile();
 
             try {
-
                 for (int numConcepts : numConceptsInRun) {
                     LOG.info("Generating graph to scale... " + numConcepts);
                     dataGenerator.generate(numConcepts);
-                    queryProfiler.processStaticQueries(config.numQueryRepetitions(), numConcepts);
+                    threadedProfiler.processStaticQueries(config.numQueryRepetitions(), numConcepts);
                 }
             } catch (Exception e) {
                 throw e;
             } finally {
-                queryProfiler.cleanup();
+                threadedProfiler.cleanup();
                 tracingClient.close();
                 client.close();
                 ignite.close();
@@ -142,10 +147,10 @@ public class GraknBenchmark {
                 keyspaces = Collections.singletonList(config.getKeyspace());
             }
 
-            QueryProfiler queryProfiler = new QueryProfiler(tracingClient, keyspaces, config);
+            ThreadedProfiler threadedProfiler = new ThreadedProfiler(tracingClient, keyspaces, config);
             int numConcepts = 0;
-            queryProfiler.processStaticQueries(config.numQueryRepetitions(), numConcepts);
-            queryProfiler.cleanup();
+            threadedProfiler.processStaticQueries(config.numQueryRepetitions(), numConcepts);
+            threadedProfiler.cleanup();
             tracingClient.close();
 
         } else {  // USECASE:  Profile an existing keyspace using queries from config file.
@@ -156,12 +161,12 @@ public class GraknBenchmark {
             }
 
             GraknClient client = new GraknClient(config.graknUri());
-            QueryProfiler queryProfiler = new QueryProfiler(client, Collections.singletonList(config.getKeyspace()), config);
+            ThreadedProfiler threadedProfiler = new ThreadedProfiler(client, Collections.singletonList(config.getKeyspace()), config);
 
-//            int numConcepts = queryProfiler.aggregateCount();
+//            int numConcepts = threadedProfiler.aggregateCount();
             int numConcepts = 0; // TODO re-add this properly for concurrent clients
-            queryProfiler.processStaticQueries(config.numQueryRepetitions(), numConcepts);
-            queryProfiler.cleanup();
+            threadedProfiler.processStaticQueries(config.numQueryRepetitions(), numConcepts);
+            threadedProfiler.cleanup();
             client.close();
         }
     }
@@ -203,15 +208,27 @@ public class GraknBenchmark {
         try (Tracer.SpanInScope ws = Tracing.currentTracer().withSpanInScope(span)) {
             span.annotate("Opening new session");
             session = client.session(keyspace);
-            SchemaManager manager = new SchemaManager(session, config.getGraqlSchema());
+            SchemaManager manager = new SchemaManager(session);
             span.annotate("Verifying keyspace is empty");
-            manager.verifyEmptyKeyspace();
+            if (!manager.verifyEmptyKeyspace()) {
+                throw new BootupException("Keyspace " + keyspace + " is not empty");
+            }
             span.annotate("Loading qraql schema");
-            manager.loadSchema();
+            loadSchema(session, config.getGraqlSchema());
         }
 
         span.finish();
         return session;
+    }
+
+    private void loadSchema(GraknClient.Session session, List<String> schemaQueries) {
+        // load schema
+        LOG.info("Initialising keyspace `" + session.keyspace() + "`...");
+        try (GraknClient.Transaction tx = session.transaction().write()) {
+            Stream<GraqlQuery> query = parseList(schemaQueries.stream().collect(Collectors.joining("\n")));
+            query.forEach(q -> tx.execute(q));
+            tx.commit();
+        }
     }
 
 
@@ -222,7 +239,7 @@ public class GraknBenchmark {
         int randomSeed = 0;
         String dataGenerator= config.dataGenerator();
         GraknClient.Session session = client.session(keyspace);
-        SchemaManager schemaManager = new SchemaManager(session, config.getGraqlSchema());
+        SchemaManager schemaManager = new SchemaManager(session);
         HashSet<String> entityTypeLabels = schemaManager.getEntityTypes();
         HashSet<String> relationshipTypeLabels = schemaManager.getRelationTypes();
         Map<String, AttributeType.DataType<?>> attributeTypeLabels = schemaManager.getAttributeTypes();
