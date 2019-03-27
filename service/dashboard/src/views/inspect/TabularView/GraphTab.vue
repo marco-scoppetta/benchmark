@@ -29,6 +29,7 @@ import BenchmarkClient from '@/util/BenchmarkClient';
 import QueryLine from './QueryLine.vue';
 
 export default {
+  name: 'GraphTab',
   components: { QueryLine },
   props: ['graph', 'executionSpans'],
   data() {
@@ -47,7 +48,7 @@ export default {
   },
   created() {
     this.scales = [...new Set(this.executionSpans.map(span => span.tags.graphScale))];
-    this.scales.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+    this.scales.sort((a, b) => a - b);
     this.currentScale = this.scales[0];
   },
   methods: {

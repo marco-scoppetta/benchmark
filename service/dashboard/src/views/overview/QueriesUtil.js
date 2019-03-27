@@ -43,6 +43,9 @@ function computeStdDeviation(spans, avgTime) {
  *                              },
  *                              ...
  *                           ]
+ * For each query we register all the times per commit, this is because
+ * queries will become series in the chart.
+ * E.g. query A is the first serie wiht an avgTime per commit(x axis)
  */
 function buildQueriesTimes(queries, spans, executions, currentScale) {
   return queries.map((query) => {
@@ -52,7 +55,7 @@ function buildQueriesTimes(queries, spans, executions, currentScale) {
     const times = executions.map((exec) => {
       // Collect all the spans relative to this current commit and query
       const executionQuerySpans = querySpans.filter(
-        span => span.tags.executionName === exec.id && span.tags.scale === currentScale,
+        span => span.executionName === exec.id && span.scale === currentScale,
       );
       // Compute average time combining all the repetitions
       const avgTime = computeAvgTime(executionQuerySpans);

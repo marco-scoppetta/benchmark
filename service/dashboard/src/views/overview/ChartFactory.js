@@ -1,16 +1,17 @@
 import echarts from 'echarts';
 
-function mapToSerie(x, queriesMap) {
+function mapToSerie(queryTimes, queriesMap) {
+  debugger;
   return {
-    name: queriesMap[x.query],
+    name: queriesMap[queryTimes.query],
     type: 'line',
-    data: x.times.map(x => ({
+    data: queryTimes.times.map(x => ({
       value: Number(x.avgTime).toFixed(3),
       symbolSize: Math.min(x.stdDeviation / 10, 45) + 5,
       symbol: 'circle',
-      stdDeviation: x.stdDeviation,
-      repetitions: x.repetitions,
-      executionId: x.executionId,
+      stdDeviation: queryTimes.stdDeviation,
+      repetitions: queryTimes.repetitions,
+      executionId: queryTimes.executionId,
     })),
     smooth: true,
     emphasis: { label: { show: false }, itemStyle: { color: 'yellow' } },
@@ -69,7 +70,7 @@ function createChart(htmlComponent, queriesTimes, queriesMap) {
         },
       },
     ],
-    series: queriesTimes.map(x => mapToSerie(x, queriesMap)),
+    series: queriesTimes.map(queryTimes => mapToSerie(queryTimes, queriesMap)),
     dataZoom: [
       {
         type: 'inside',

@@ -9,6 +9,7 @@
 import GraphTab from './GraphTab.vue';
 
 export default {
+  name: 'TabularView',
   components: { GraphTab },
   props: ['graphs', 'executionSpans'],
   methods: {

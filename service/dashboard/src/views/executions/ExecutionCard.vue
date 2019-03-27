@@ -4,33 +4,20 @@
       <el-col :span="2">
         {{ execution.status }}
       </el-col>
-      <el-col
-        :span="8"
-        @click.native="inspectExecution(execution.id)"
-      >
-        {{
-          execution.id
-        }}
+      <el-col :span="8" @click.native="inspectExecution(execution.id)">
+        {{execution.id}}
       </el-col>
       <el-col :span="4">
-        {{
-          execution.executionInitialisedAt | parseDate
-        }}
+        {{execution.executionInitialisedAt | parseDate}}
       </el-col>
       <el-col :span="3">
         {{ execution.executionStartedAt | parseDate }}
       </el-col>
       <el-col :span="3">
-        {{
-          execution.executionCompletedAt | parseDate
-        }}
+        {{ execution.executionCompletedAt | parseDate}}
       </el-col>
       <el-col :span="2">
-        <el-dropdown
-          split-button
-          type="primary"
-          trigger="click"
-        >
+        <el-dropdown split-button type="primary" trigger="click">
           Actions
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item
@@ -57,7 +44,7 @@
   </el-card>
 </template>
 <script>
-import BenchmarkClient from '@/util/BenchmarkClient.js';
+import BenchmarkClient from '@/util/BenchmarkClient';
 
 export default {
   filters: {
@@ -70,10 +57,11 @@ export default {
   props: ['execution'],
   computed: {
     isInProgress() {
-      return (
-        this.execution.status === 'INITIALISING'
-        || this.execution.status === 'RUNNING'
-      );
+      return false;
+      // return
+      //   this.execution.status === 'INITIALISING'
+      //   || this.execution.status === 'RUNNING'
+      // ;
     },
   },
   methods: {

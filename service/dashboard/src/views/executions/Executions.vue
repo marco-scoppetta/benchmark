@@ -2,7 +2,7 @@
   <section class="el-container is-vertical page-container">
     <main class="el-main">
       <h2>Benchmark Executions</h2>
-      <el-row>
+      <!-- <el-row>
         <el-popover
           v-model="popoverVisible"
           placement="right-start"
@@ -40,8 +40,8 @@
             @click="popoverVisible = !popoverVisible"
           />
         </el-popover>
-        <!-- <el-button type="success" circle icon="el-icon-plus"></el-button> -->
-      </el-row>
+        <el-button type="success" circle icon="el-icon-plus"></el-button>
+      </el-row> -->
       <execution-card
         v-for="exec in executions"
         :key="exec.id"
@@ -53,7 +53,7 @@
 
 <script>
 import ExecutionCard from './ExecutionCard.vue';
-import BenchmarkClient from '@/util/BenchmarkClient.js';
+import BenchmarkClient from '@/util/BenchmarkClient';
 
 export default {
   name: 'ExecutionsPage',

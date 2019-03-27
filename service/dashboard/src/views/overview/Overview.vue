@@ -3,14 +3,14 @@
     <el-main>
       <h2>Benchmark Overview</h2>
       <el-row
-        v-for="graphName in graphNames"
-        :key="graphName"
+        v-for="graphType in graphTypes"
+        :key="graphType"
         class="panel"
       >
         <overview-commits-chart
-          :name="graphName"
+          :name="graphType"
           :executions="completedExecutions"
-          :spans="filterSpans(graphName)"
+          :executionSpans="filterSpans(graphType)"
         />
       </el-row>
     </el-main>
@@ -28,8 +28,8 @@ export default {
     return {
       numberOfCompletedExecutions: 3,
       completedExecutions: null,
-      graphNames: [],
-      spans: null,
+      graphTypes: [],
+      executionSpans: null,
     };
   },
   async created() {
@@ -38,24 +38,18 @@ export default {
     this.completedExecutions = (await BenchmarkClient.getLatestCompletedExecutions(
       this.numberOfCompletedExecutions,
     )).reverse();
-    // Get all the spans relative to those executions
-    this.spans = await BenchmarkClient.getExecutionsSpans(
-      this.completedExecutions,
-    );
+    // Get all the execution spans relative to those executions
+    this.executionSpans = await BenchmarkClient.getExecutionsSpans(this.completedExecutions);
     // Compute graph names from spans, for each graph name we draw a chart
-    this.graphNames = Array.from(
-      new Set(this.spans.map(span => span.tags.graphName)),
-    );
+    this.graphTypes = [...new Set(this.executionSpans.map(span => span.tags.graphType))];
   },
   methods: {
     filterSpans(name) {
-      return this.spans.filter(span => span.tags.graphName === name);
+      return this.executionSpans.filter(span => span.tags.graphType === name);
     },
   },
 };
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .overview-section {
   overflow: scroll;

@@ -57,7 +57,7 @@ i {
 </style>
 
 <script>
-import BenchmarkClient from '@/util/BenchmarkClient.js';
+import BenchmarkClient from '@/util/BenchmarkClient';
 import StepLine from './StepLine.vue';
 
 export default {

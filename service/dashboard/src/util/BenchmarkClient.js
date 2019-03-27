@@ -35,10 +35,10 @@ function getLatestCompletedExecutions(number) {
 function getExecutionsSpans(executions) {
   return Promise.all(
     executions.map(exec => getSpans(
-      `{ querySpans( limit: 300, executionName: "${
+      `{ executionSpans( executionName: "${
         exec.id
-      }"){ id name duration tags { graphName executionName query scale }} }`,
-    ).then(res => res.data.querySpans)),
+      }"){ id name duration tags { graphType executionName graphScale }} }`,
+    ).then(res => res.data.executionSpans)),
   ).then(nestedSpans => nestedSpans.flatMap(x => x));
 }
 
