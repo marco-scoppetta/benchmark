@@ -18,7 +18,7 @@
 </template>
 
 <script>
-import BenchmarkClient from '@/util/BenchmarkClient.js';
+import BenchmarkClient from '@/util/BenchmarkClient';
 import OverviewCommitsChart from './OverviewCommitsChart.vue';
 
 export default {

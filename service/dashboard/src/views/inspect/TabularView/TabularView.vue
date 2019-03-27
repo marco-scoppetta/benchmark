@@ -1,17 +1,7 @@
 <template>
-  <el-tabs
-    type="border-card"
-    class="wrapper"
-  >
-    <el-tab-pane
-      v-for="graph in graphs"
-      :key="graph"
-      :label="graph"
-    >
-      <graph-tab
-        :graph="graph"
-        :execution-spans="filterSpans(graph)"
-      />
+  <el-tabs type="border-card" class="wrapper">
+    <el-tab-pane v-for="graph in graphs" :key="graph" :label="graph">
+      <graph-tab :graph="graph" :execution-spans="filterSpans(graph)"/>
     </el-tab-pane>
   </el-tabs>
 </template>

@@ -1,35 +1,24 @@
 <template>
   <div>
-    <el-row class="currentRow">
-      <el-col
-        :span="14"
-        class="query-column"
-        style="text-align: left;"
-      >
-        <i
-          :class="{ 'el-icon-arrow-right': !expand, 'el-icon-arrow-down': expand }"
-          @click="expandLine"
-        />
+    <el-row class="currentRow" :class="{'bordered': !expand, 'highlighted': expand}">
+      <el-col :span="14" class="query-column" style="text-align: left;">
+        <i :class="{ 'el-icon-arrow-right': !expand, 'el-icon-arrow-down': expand }" @click="expandLine"/>
         <div>{{ query }}</div>
       </el-col>
-      <el-col
-        :span="3"
-      >
+      <el-col :span="3">
         {{ min.duration | fixedMs }} ({{ min.tags.repetition + 1 }})
       </el-col>
       <el-col :span="3">
         {{ med | fixedMs }}
       </el-col>
-      <el-col
-        :span="3"
-      >
+      <el-col :span="3">
         {{ max.duration | fixedMs }} ({{ max.tags.repetition + 1 }})
       </el-col>
       <el-col :span="1">
         {{ reps }}
       </el-col>
     </el-row>
-    <el-row v-if="expand">
+    <el-row v-if="expand" :class="{'bordered': expand}">
       <step-line
         v-for="stepNumber in stepNumbers"
         :key="stepNumber"
@@ -43,6 +32,13 @@
 .currentRow {
   margin: 5px 0px;
   padding: 5px;
+  font-weight: 300;
+}
+.bordered{
+  border-bottom: 1px solid #ebeef5;
+}
+.highlighted{
+  font-weight: 400;
 }
 .currentRow:hover {
   background-color: #fcdaba;
@@ -135,7 +131,7 @@ export default {
     attachRepetition(childrenSpans) {
       // Children spans don't have the tags repetition and repetitions, so we attach them here taking the values from parent
       return childrenSpans.map((span) => {
-        const parentTag = this.spans.filter(parent => parent.id == span.parentId)[0].tags;
+        const parentTag = this.spans.filter(parent => parent.id === span.parentId)[0].tags;
         return Object.assign({ repetition: parentTag.repetition, repetitions: parentTag.repetitions }, span);
       });
     },

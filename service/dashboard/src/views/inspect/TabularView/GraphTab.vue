@@ -8,7 +8,7 @@
         </div>
       </div>
     </el-row>
-    <el-row class="queries">
+    <el-row class="header" type="flex" align="center">
       <el-col :span="14">Query</el-col>
       <el-col :span="3">Min (rep)</el-col>
       <el-col :span="3">Med</el-col>
@@ -25,7 +25,7 @@
   </div>
 </template>
 <script>
-import BenchmarkClient from '@/util/BenchmarkClient.js';
+import BenchmarkClient from '@/util/BenchmarkClient';
 import QueryLine from './QueryLine.vue';
 
 export default {
@@ -85,9 +85,10 @@ function uniqueQueriesSortedArray(querySpans) {
 }
 </script>
 <style scoped>
-.queries {
+.header {
   font-weight: bold;
   margin-top: 10px;
+  margin-bottom: 10px;
 }
 .scale-tab {
   padding-bottom: 5px;
