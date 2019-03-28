@@ -37,7 +37,7 @@ function getExecutionsSpans(executions) {
     executions.map(exec => getSpans(
       `{ executionSpans( executionName: "${
         exec.id
-      }"){ id name duration tags { graphType executionName graphScale }} }`,
+      }"){ id name duration tags { graphType executionName graphScale description configurationName }} }`,
     ).then(res => res.data.executionSpans)),
   ).then(nestedSpans => nestedSpans.flatMap(x => x));
 }

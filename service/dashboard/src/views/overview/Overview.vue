@@ -26,7 +26,7 @@ export default {
   components: { OverviewCommitsChart },
   data() {
     return {
-      numberOfCompletedExecutions: 3,
+      numberOfCompletedExecutions: 8,
       completedExecutions: null,
       graphTypes: [],
       executionSpans: null,

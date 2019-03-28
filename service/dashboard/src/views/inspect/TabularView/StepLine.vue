@@ -20,9 +20,9 @@
     </el-row>
     <el-row v-if="expand">
       <step-line
-        v-for="stepNumber in stepNumbers"
-        :key="stepNumber"
-        :spans="filterSpansByStep(stepNumber)"
+        v-for="stepName in stepNames"
+        :key="stepName"
+        :spans="filterSpansByStep(stepName)"
         :padding="parseInt(padding)+10"
       />
     </el-row>
@@ -64,7 +64,7 @@ export default {
     return {
       expand: false,
       children: null,
-      stepNumbers: null,
+      stepNames: null,
       styleObject: {
         'padding-left': `${this.padding}px`,
         'text-align': 'left',
@@ -114,11 +114,10 @@ export default {
       BenchmarkClient.getSpans(
         `{ childrenSpans( parentId: [${
           this.spans.map(span => `"${span.id}"`).join()
-        }]){ id name duration parentId tags { childNumber }} }`,
+        }]){ id name duration parentId timestamp tags { childNumber }} }`,
       ).then((resp) => {
         this.children = this.attachRepetition(resp.data.childrenSpans);
-        this.stepNumbers = Array.from(new Set(this.children.map(child => child.tags.childNumber)));
-        this.stepNumbers.sort();
+        this.stepNames = sortStepNames(this.children);
       });
     },
     attachRepetition(childrenSpans) {
@@ -128,9 +127,17 @@ export default {
         return Object.assign({ repetition: parentSpan.repetition, repetitions: parentSpan.repetitions }, span);
       });
     },
-    filterSpansByStep(stepNumber) {
-      return this.children.filter(child => child.tags.childNumber === stepNumber);
+    filterSpansByStep(stepName) {
+      return this.children.filter(child => child.name === stepName);
     },
   },
 };
+
+function sortStepNames(children) {
+  const { parentId } = children[0];
+  return children
+    .filter(c => c.parentId === parentId)
+    .sort((a, b) => a.timestamp > b.timestamp)
+    .map(child => child.name);
+}
 </script>

@@ -1,6 +1,7 @@
 <template>
   <div>
-    <el-row type="flex" justify="end" class="header-row">
+    <el-row type="flex" justify="space-between" align="center" class="header-row">
+      <div class="chart-title">{{name | formatTitle}}</div>
       <scale-selector
         :scales="scales"
         :currentScale="currentScale"
@@ -42,6 +43,12 @@ export default {
       chart: null,
       clickedPointArgs: null,
     };
+  },
+  filters: {
+    formatTitle(name) {
+      const nameWithSpaces = name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1));
+      return nameWithSpaces.join(' ');
+    },
   },
   watch: {
     currentScale(val, previous) {
@@ -145,10 +152,12 @@ async function fetchQuerySpans(executionSpans) {
 .chart-wrapper {
   height: 500px;
 }
-.label {
-  margin-right: 5px;
+.chart-title{
+  font-weight: 700;
+  /* font-style: italic; */
+  font-size: 110%;
 }
 .header-row {
-  padding: 10px;
+  padding: 20px 20px 0px 20px;
 }
 </style>

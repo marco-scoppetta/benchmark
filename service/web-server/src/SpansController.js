@@ -31,7 +31,8 @@ const typeDefs = `
     id: String!
     duration: Int!
     name: String!
-    tags: ChildSpanTag,
+    timestamp: String
+    tags: ChildSpanTag
     parentId: String
   }
 
