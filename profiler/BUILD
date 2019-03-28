@@ -16,7 +16,9 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-exports_files(glob(["scenario/**/*"]) + ["benchmark"] + ["setup.sh"], visibility = ["//visibility:public"])
+exports_files(["benchmark", "setup.sh"], visibility = ["//visibility:public"])
+
+load("@graknlabs_bazel_distribution//common:rules.bzl", "java_deps")
 
 java_binary(
     name = "benchmark-profiler-binary",
@@ -25,5 +27,13 @@ java_binary(
     ],
     main_class = "grakn.benchmark.profiler.GraknBenchmark",
     classpath_resources = ["//profiler/src:logback"],
+    visibility = ["//visibility:public"]
+)
+
+java_deps(
+    name = "profiler-deps",
+    target = "//profiler:benchmark-profiler-binary",
+    java_deps_root = "lib/",
+    version_file = "//:VERSION",
     visibility = ["//visibility:public"]
 )

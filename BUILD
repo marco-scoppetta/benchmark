@@ -18,23 +18,15 @@
 
 exports_files(["VERSION", "deployment.properties"], visibility = ["//visibility:public"])
 
-# TODO: the distribution only includes 'benchmark-profiler'. Need to add 'benchmark-dashboard'.
-load("@graknlabs_bazel_distribution//distribution:rules.bzl", "distribution_structure", "distribution_zip")
+# TODO: Need to add 'benchmark-dashboard' as a distribution.
+load("@graknlabs_bazel_distribution//common:rules.bzl", "assemble_zip")
 
 
-distribution_structure(
-    name="benchmark-binary",
-    targets = {
-        "//profiler:benchmark-profiler-binary": "lib/"
-    },
-    visibility = ["//:__pkg__"]
-)
+assemble_zip(
+    name = "profiler-distribution",
+    targets = ["//profiler:profiler-deps"],
+    output_filename = "profiler",
 
-distribution_zip(
-    name = "distribution",
-    distribution_structures = [
-        "//:benchmark-binary"
-    ],
     additional_files = {
         "//profiler:benchmark": "benchmark",
 
@@ -67,9 +59,33 @@ distribution_zip(
         "@external-dependencies-zipkin//file": "external-dependencies/zipkin.jar",
         "@external-dependencies-elasticsearch//file": "external-dependencies/elasticsearch.zip"
     },
-    output_filename = "benchmark",
+    visibility = ["//visibility:public"]
 )
 
+
+
+assemble_zip(
+    name = "report-generator-distribution",
+    targets = ["//report:report-deps"],
+    additional_files = {
+        "//report:report_generator": "report_generator",
+
+        "//common/configuration/scenario:road_network/queries_read.yml": "scenario/road_network/queries_read.yml",
+        "//common/configuration/scenario:road_network/queries_write.yml": "scenario/road_network/queries_write.yml",
+        "//common/configuration/scenario:road_network/road_config_read.yml": "scenario/road_network/road_config_read.yml",
+        "//common/configuration/scenario:road_network/road_config_write.yml": "scenario/road_network/road_config_write.yml",
+        "//common/configuration/scenario:road_network/road_network.gql": "scenario/road_network/road_network.gql",
+
+        "//common/configuration/scenario:complex/queries_complex_read.yml": "scenario/complex/queries_complex_read.yml",
+        "//common/configuration/scenario:complex/queries_complex_write.yml": "scenario/complex/queries_complex_write.yml",
+        "//common/configuration/scenario:complex/config_read.yml": "scenario/complex/config_read.yml",
+        "//common/configuration/scenario:complex/config_write.yml": "scenario/complex/config_write.yml",
+        "//common/configuration/scenario:complex/schema.gql" : "scenario/complex/schema.gql",
+    },
+    output_filename = "report-generator",
+    visibility = ["//visibility:public"]
+
+)
 
 
 
