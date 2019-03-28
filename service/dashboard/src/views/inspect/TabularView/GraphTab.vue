@@ -1,12 +1,11 @@
 <template>
   <div>
     <el-row type="flex" justify="end">
-      <span class="label">Scale:</span>
-      <div v-for="scale in scales" :key="scale" :span="1">
-        <div class="scale-tab" :class="{ active: scale == currentScale }" @click="currentScale = scale">
-          {{ scale }}
-        </div>
-      </div>
+      <scale-selector
+        :scales="scales"
+        :currentScale="currentScale"
+        v-on:selected-scale="(scale)=>{this.currentScale=scale}">
+      </scale-selector>
     </el-row>
     <el-row class="header" type="flex" align="center">
       <el-col :span="14">Query</el-col>
@@ -18,7 +17,7 @@
     <div v-for="query in queries" :key="query">
       <query-line
         :query="query"
-        :current-scale="currentScale"
+        :isOverviewQuery="query===overviewQuery"
         :spans="filterQuerySpans(query)"
       />
     </div>
@@ -27,11 +26,12 @@
 <script>
 import BenchmarkClient from '@/util/BenchmarkClient';
 import QueryLine from './QueryLine.vue';
+import ScaleSelector from '@/components/ScaleSelector.vue';
 
 export default {
   name: 'GraphTab',
-  components: { QueryLine },
-  props: ['graph', 'executionSpans'],
+  components: { QueryLine, ScaleSelector },
+  props: ['graph', 'executionSpans', 'overviewScale', 'overviewQuery'],
   data() {
     return {
       scales: [],
@@ -49,7 +49,7 @@ export default {
   created() {
     this.scales = [...new Set(this.executionSpans.map(span => span.tags.graphScale))];
     this.scales.sort((a, b) => a - b);
-    this.currentScale = this.scales[0];
+    this.currentScale = (this.overviewScale) ? this.overviewScale : this.scales[0];
   },
   methods: {
     // Filter query spans by query so that each QueryLine component only receives the relevant query spans to compute max min med etc..
@@ -91,23 +91,7 @@ function uniqueQueriesSortedArray(querySpans) {
   margin-top: 10px;
   margin-bottom: 10px;
 }
-.scale-tab {
-  padding-bottom: 5px;
-  cursor: pointer;
-  text-align: center;
-  margin: 0 5px;
-  user-select: none;
-  margin-bottom: 6px;
-}
-.active {
-  border-bottom: 2px solid #409eff;
-  color: #409eff;
-}
 .el-col{
     text-align: center;
-}
-.label{
-  font-weight: bold;
-  margin-right: 5px;
 }
 </style>

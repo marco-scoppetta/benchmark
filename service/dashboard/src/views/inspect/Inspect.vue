@@ -41,7 +41,13 @@
           <el-col :span="4">{{ execution.executionCompletedAt }}</el-col>
         </el-row>
       </el-card>
-      <tabular-view :graphs="graphs" :execution-spans="executionSpans"/>
+      <tabular-view
+        :graphs="graphs"
+        :execution-spans="executionSpans"
+        :currentGraph="currentGraph"
+        :currentScale="currentScale"
+        :currentQuery="currentQuery"
+      />
     </el-main>
   </el-container>
 </template>

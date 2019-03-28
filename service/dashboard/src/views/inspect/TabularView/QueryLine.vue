@@ -68,13 +68,16 @@ export default {
       return `${Number(num / 1000).toFixed(3)} ms`;
     },
   },
-  props: ['query', 'spans', 'currentScale'],
+  props: ['query', 'spans', 'isOverviewQuery'],
   data() {
     return {
       expand: false,
       children: [],
       stepNumbers: null,
     };
+  },
+  created() {
+    if (this.isOverviewQuery) this.expandLine();
   },
   computed: {
     min() {

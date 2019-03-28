@@ -11,15 +11,23 @@ export default {
     this.state.currentScale = scale;
   },
   setQuery(query) {
-    this.state.query = query;
+    this.state.currentQuery = query;
   },
+  // We want to get the values only once and then reset them.
+  // These values should only be used as a transition between Overview and Inspect page.
   getGraph() {
-    return this.state.graphName;
+    const graph = this.state.graphName;
+    this.state.graphName = null;
+    return graph;
   },
   getScale() {
-    return this.state.currentScale;
+    const scale = this.state.currentScale;
+    this.state.currentScale = null;
+    return scale;
   },
   getQuery() {
-    return this.state.query;
+    const query = this.state.currentQuery;
+    this.state.currentQuery = null;
+    return query;
   },
 };

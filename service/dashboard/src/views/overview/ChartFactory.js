@@ -1,7 +1,6 @@
 import echarts from 'echarts';
 
 function mapToSerie(queryTimes, queriesMap) {
-  debugger;
   return {
     name: queriesMap[queryTimes.query],
     type: 'line',
@@ -9,9 +8,9 @@ function mapToSerie(queryTimes, queriesMap) {
       value: Number(x.avgTime).toFixed(3),
       symbolSize: Math.min(x.stdDeviation / 10, 45) + 5,
       symbol: 'circle',
-      stdDeviation: queryTimes.stdDeviation,
-      repetitions: queryTimes.repetitions,
-      executionId: queryTimes.executionId,
+      stdDeviation: x.stdDeviation,
+      repetitions: x.repetitions,
+      executionId: x.executionId,
     })),
     smooth: true,
     emphasis: { label: { show: false }, itemStyle: { color: 'yellow' } },

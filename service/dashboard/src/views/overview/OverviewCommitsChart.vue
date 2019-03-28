@@ -1,14 +1,11 @@
 <template>
   <div>
     <el-row type="flex" justify="end" class="header-row">
-      <span class="label">
-        Scale:
-      </span>
-      <div v-for="scale in scales" :key="scale" :span="1">
-        <div class="scale-tab" :class="{ active: scale == currentScale }" @click="currentScale = scale">
-          {{ scale }}
-        </div>
-      </div>
+      <scale-selector
+        :scales="scales"
+        :currentScale="currentScale"
+        v-on:selected-scale="(scale)=>{this.currentScale=scale}">
+      </scale-selector>
     </el-row>
     <div ref="chart" class="chart-wrapper" @click="clickOnCanvas"/>
     <transition name="el-fade-in-linear">
@@ -25,36 +22,16 @@
     </transition>
   </div>
 </template>
-<style scoped>
-.chart-wrapper {
-  height: 500px;
-}
-.label {
-  margin-right: 5px;
-}
-.header-row {
-  padding: 10px;
-}
-.scale-tab {
-  padding-bottom: 5px;
-  cursor: pointer;
-  text-align: center;
-  margin: 0 5px;
-  user-select: none;
-}
-.active {
-  border-bottom: 2px solid #409eff;
-  color: #409eff;
-}
-</style>
 <script>
 import BenchmarkClient from '@/util/BenchmarkClient';
 import InspectStore from '@/util/InspectSharedStore';
+import ScaleSelector from '@/components/ScaleSelector';
 import ChartFactory from './ChartFactory';
 import QueriesUtil from './QueriesUtil';
 
 export default {
   props: ['name', 'executions', 'executionSpans'],
+  components: { ScaleSelector },
   data() {
     return {
       popoverVisible: false,
@@ -78,10 +55,11 @@ export default {
     this.querySpans = await fetchQuerySpans(this.executionSpans);
     this.queries = uniqueQueriesSortedArray(this.querySpans);
 
+    // queriesLegend will map each full query to a legend identifier, e.g. { "match $x isa person; get;": "matchQuery1", ... }
     this.queriesLegend = QueriesUtil.buildQueriesMap(this.queries);
+
     this.scales = [...new Set(this.executionSpans.map(span => span.tags.graphScale))].sort((a, b) => a - b);
     this.currentScale = this.scales[0];
-    // queriesLegend will map each full query to a legend identifier, e.g. { "match $x isa person; get;": "matchQuery1", ... }
 
     this.$nextTick(() => {
       this.drawChart();
@@ -89,7 +67,7 @@ export default {
       const popover = this.$refs.popover.$el;
       popover.style.position = 'absolute';
       popover.style.display = 'block';
-      attachChartListeners(this.chart, popover);
+      this.attachChartListeners(this.chart, popover);
     });
   },
   methods: {
@@ -125,6 +103,20 @@ export default {
         this.queriesLegend,
       );
     },
+    attachChartListeners(chart, popover) {
+      chart.on('click', (args) => {
+        if (args.targetType) {
+          // TODO: finish this
+        } else {
+          this.clickedPointArgs = args;
+          args.event.event.stopPropagation();
+          popover.style.left = `${args.event.offsetX}px`;
+          popover.style.top = `${args.event.offsetY}px`;
+          popover.childNodes[0].style.transform = `translate(-50%, -${25 + args.data.symbolSize / 2 + 4}px)`;
+          this.popoverVisible = true;
+        }
+      });
+    },
   },
 };
 
@@ -136,20 +128,6 @@ function getQuerySpansRequest(id) {
 }
 function uniqueQueriesSortedArray(querySpans) {
   return [...new Set(querySpans.map(span => span.tags.query))].sort();
-}
-function attachChartListeners(chart, popover) {
-  chart.on('click', (args) => {
-    if (args.targetType) {
-      // TODO: finish this
-    } else {
-      this.clickedPointArgs = args;
-      args.event.event.stopPropagation();
-      popover.style.left = `${args.event.offsetX}px`;
-      popover.style.top = `${args.event.offsetY}px`;
-      popover.childNodes[0].style.transform = `translate(-50%, -${25 + args.data.symbolSize / 2 + 4}px)`;
-      this.popoverVisible = true;
-    }
-  });
 }
 async function fetchQuerySpans(executionSpans) {
   const querySpanPromises = executionSpans
@@ -163,3 +141,14 @@ async function fetchQuerySpans(executionSpans) {
   return responses.reduce((acc, resp) => acc.concat(resp), []);
 }
 </script>
+<style scoped>
+.chart-wrapper {
+  height: 500px;
+}
+.label {
+  margin-right: 5px;
+}
+.header-row {
+  padding: 10px;
+}
+</style>
