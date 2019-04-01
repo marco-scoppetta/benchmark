@@ -52,13 +52,13 @@ git clone https://github.com/graknlabs/benchmark.git
 # build benchmark
 cd benchmark
 
-./dependencies/maven/update.sh
 bazel build //:profiler-distribution
 
 # unzip benchmark
 cd bazel-genfiles
-unzip benchmark.zip
-cd benchmark
+unzip profiler.zip
+
+cd profiler
 
 # --- run zipkin ---
 tmux new-session -d -s zipkin "STORAGE_TYPE=elasticsearch ES_HOSTS=http://$SERVICE_IP:9200 ES_INDEX=benchmark java -jar external-dependencies/zipkin.jar"
