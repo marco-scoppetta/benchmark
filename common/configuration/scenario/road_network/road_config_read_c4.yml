@@ -7,12 +7,12 @@ scales:
   - 4000
   - 8000
 
-repeatsPerQuery: 5
+repeatsPerQuery: 50
 
 queries: "queries_read.yml"
 deleteInsertedConcepts: true
 traceDeleteInsertedConcepts: false
 
 concurrency:
-  clients: 1
-  uniqueKeyspaces: true
+  clients: 4
+  uniqueKeyspaces: false

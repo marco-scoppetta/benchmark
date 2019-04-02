@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.report;
+package grakn.benchmark.report.producer;
 
 
 import grakn.benchmark.common.configuration.parse.BenchmarkArguments;
@@ -31,8 +31,8 @@ import grakn.benchmark.generator.storage.ConceptStorage;
 import grakn.benchmark.generator.storage.IgniteConceptStorage;
 import grakn.benchmark.generator.util.IgniteManager;
 import grakn.benchmark.generator.util.SchemaManager;
-import grakn.benchmark.report.container.QueryExecutionResults;
-import grakn.benchmark.report.container.ReportData;
+import grakn.benchmark.report.producer.container.QueryExecutionResults;
+import grakn.benchmark.report.producer.container.ReportData;
 import grakn.client.GraknClient;
 import grakn.core.concept.type.AttributeType;
 import graql.lang.Graql;
@@ -62,8 +62,8 @@ import java.util.stream.Stream;
 
 import static graql.lang.Graql.parseList;
 
-public class ReportGenerator {
-    private static final Logger LOG = LoggerFactory.getLogger(ReportGenerator.class);
+public class ReportProducer {
+    private static final Logger LOG = LoggerFactory.getLogger(ReportProducer.class);
 
     private final BenchmarkConfiguration config;
     private final ReportData reportData;
@@ -75,8 +75,8 @@ public class ReportGenerator {
             // Parse the configuration for the benchmark
             CommandLine arguments = BenchmarkArguments.parse(args);
 
-            ReportGenerator reportGenerator = new ReportGenerator(arguments);
-            reportGenerator.start();
+            ReportProducer reportProducer = new ReportProducer(arguments);
+            reportProducer.start();
         } catch (DataGeneratorException e) {
             exitCode = 1;
             LOG.error("Error in data generator: ", e);
@@ -89,7 +89,7 @@ public class ReportGenerator {
         }
     }
 
-    public ReportGenerator(CommandLine arguments) {
+    public ReportProducer(CommandLine arguments) {
         config = new BenchmarkConfiguration(arguments);
         reportData = new ReportData();
     }
@@ -110,7 +110,7 @@ public class ReportGenerator {
         DataGenerator dataGenerator = initDataGenerator(client, keyspace);
 
         // write the relevant config metadata to the report
-        reportData.addMetadata(config.configName(), config.concurrentClients(), config.configDescription());
+        reportData.addMetadata(config.configName(), config.concurrentClients(), config.configDescription(), config.dataGenerator());
 
         // alternate between generating data and profiling a queries
         List<GraqlQuery> queries = toGraqlQueries(config.getQueries());
@@ -129,7 +129,7 @@ public class ReportGenerator {
         }
 
         // serialize data to JSON
-        Path file = Paths.get(config.configName() + "_report.json");
+        Path file = Paths.get(config.configName() + "_" + config.concurrentClients() + "_report.json");
         Files.write(file, Arrays.asList(reportData.asJson()), Charset.defaultCharset());
     }
 

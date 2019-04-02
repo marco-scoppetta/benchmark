@@ -1,11 +1,6 @@
 #!/bin/bash
 
-if [ -z "$1" ]
-then
-    SERVER_INSTANCE=performance-report-server
-else
-    SERVER_INSTANCE=$1
-fi
+SERVER_INSTANCE=performance-report-server
 
 ZONE="us-east1-b"
 
@@ -62,7 +57,7 @@ echo "Setting up Report Client on $CLIENT_INSTANCE..."
 # copy script to clone and build benchmark, then execute
 gcloud compute scp gcp_client_server.sh ubuntu@$CLIENT_INSTANCE:~ --zone=$ZONE
 gcloud compute ssh ubuntu@$CLIENT_INSTANCE --zone=$ZONE --command="chmod +x ~/gcp_client_server.sh"
-gcloud compute ssh ubuntu@$CLIENT_INSTANCE --zone=$ZONE --command="tmux new -d -s report_client \"~/gcp_client_server.sh $SERVER_INSTANCE 2>&1 | tee -a log.tx \" "
+gcloud compute ssh ubuntu@$CLIENT_INSTANCE --zone=$ZONE --command="tmux new -d -s report_client \"~/gcp_client_server.sh $SERVER_INSTANCE 2>&1 | tee -a log.txt \" "
 
 
 echo "Polling Client Server for report.json"

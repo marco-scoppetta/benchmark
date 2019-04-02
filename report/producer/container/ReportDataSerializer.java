@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.report.container;
+package grakn.benchmark.report.producer.container;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -35,6 +35,7 @@ public class ReportDataSerializer extends StdSerializer<ReportData> {
         gen.writeStartObject();
         gen.writeObjectFieldStart("metadata");
         gen.writeStringField("configName", value.configName());
+        gen.writeStringField("dataGenerator", value.dataGenerator());
         gen.writeNumberField("concurrentClients", value.concurrentClients());
         gen.writeStringField("configDescription", value.description());
         gen.writeEndObject();

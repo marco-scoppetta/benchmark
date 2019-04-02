@@ -16,53 +16,32 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-exports_files(["report_generator"], visibility = ["//visibility:public"])
+exports_files(["report_formatter"], visibility = ["//visibility:public"])
 load("@graknlabs_bazel_distribution//common:rules.bzl", "java_deps")
 
 java_library(
-    name = "report-generator",
-    srcs = glob(["*.java", "container/*.java"]),
+    name = "report-formatter",
+    srcs = glob(["*.java"]),
     deps = [
-        "//generator:data-generator",
-        "//common/configuration:benchmark-configuration",
-        "//common/exception:benchmark-exception",
-
-        "@graknlabs_client_java//:client-java",
-        "@graknlabs_grakn_core//api:api",
-        "@graknlabs_graql//java:graql",
-        "@graknlabs_grakn_core//concept:concept",
-
-        "//dependencies/maven/artifacts/org/apache/ignite:ignite-core",
-
         "//dependencies/maven/artifacts/commons-cli",
         "//dependencies/maven/artifacts/org/slf4j:slf4j-api",
-
-        "//dependencies/maven/artifacts/com/fasterxml/jackson/core:jackson-core",
-        "//dependencies/maven/artifacts/com/fasterxml/jackson/core:jackson-databind",
+        "//dependencies/maven/artifacts/org/sharegov:mjson"
     ],
     visibility = ["//visibility:public"]
 )
 
 java_binary(
-    name = "report-generator-binary",
-    main_class = "grakn.benchmark.report.ReportGenerator",
+    name = "report-formatter-binary",
+    main_class = "grakn.benchmark.report.formatter.ReportFormatter",
     runtime_deps = [
-        "//report:report-generator",
+        ":report-formatter",
     ],
     classpath_resources = [":logback"],
     visibility = ["//visibility:public"]
 )
 
-java_deps(
-    name = "report-deps",
-    target = "//report:report-generator-binary",
-    java_deps_root = "lib/",
-    version_file = "//:VERSION",
-    visibility = ["//visibility:public"]
-)
-
 filegroup(
     name = "logback",
-    srcs = ["//report:logback.xml"],
+    srcs = ["//report/formatter:logback.xml"],
     visibility = ["//visibility:public"]
 )

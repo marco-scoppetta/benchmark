@@ -16,16 +16,14 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package grakn.benchmark.report.container;
+package grakn.benchmark.report.producer.container;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import graql.lang.query.GraqlQuery;
-import org.apache.ignite.internal.processors.query.property.QueryReadOnlyMethodsAccessor;
 
-import javax.management.Query;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,6 +43,7 @@ public class ReportData {
     private int concurrentClients;
     private String configName;
     private String description;
+    private String dataGenerator;
 
 
     public ReportData() {
@@ -52,10 +51,11 @@ public class ReportData {
         multiScaleQueryExecutionResultsLookup = new HashMap<>();
     }
 
-    public void addMetadata(String configName, int concurrentClients, String description) {
+    public void addMetadata(String configName, int concurrentClients, String description, String dataGenerator) {
         this.configName = configName;
         this.concurrentClients = concurrentClients;
         this.description = description;
+        this.dataGenerator = dataGenerator;
     }
 
     public void recordTimesAtScale(int scale, List<Map<GraqlQuery, QueryExecutionResults>> results) {
@@ -139,6 +139,10 @@ public class ReportData {
 
     public String description() {
         return description;
+    }
+
+    public String dataGenerator() {
+        return dataGenerator;
     }
 
     public Map<String, List<MultiScaleResults>> queryExecutionData() {
