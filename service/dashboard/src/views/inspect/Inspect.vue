@@ -67,7 +67,6 @@ export default {
   data() {
     return {
       executionId: this.$route.params.executionId,
-      // TODO inject following 3 variables down to TabularView
       currentGraph: InspectStore.getGraph(), // used when coming from Overview page to investigate a particularly slow query
       currentScale: InspectStore.getScale(), // used when coming from Overview page to investigate a particularly slow query
       currentQuery: InspectStore.getQuery(), // used when coming from Overview page to investigate a particularly slow query

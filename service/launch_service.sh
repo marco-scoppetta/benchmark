@@ -14,6 +14,7 @@ gcloud compute instances create $INSTANCE_NAME          \
     --image-family grakn-benchmark-service              \
     --image-project grakn-dev                           \
     --machine-type n1-standard-1                        \
+    --boot-disk-size 500GB                              \
     --zone $ZONE                                        \
     --tags elastic-tcp-9200,benchmark-service-tcp-4567  \
     --service-account grakn-benchmark-189@grakn-dev.iam.gserviceaccount.com \
