@@ -144,6 +144,8 @@ public class ServerTracing {
      * that IS thread-local AND has been started.
      * Store the scopedSpan in map associated to a unique ID.
      *
+     * This also checks if tracing is active, if not, do nothing.
+     *
      * @param spanName
      * @return unique ID that will be used to finish the span
      */
@@ -159,6 +161,9 @@ public class ServerTracing {
 
     /**
      * Finishes scopedSpan associated to spanId and removes it from in-memory map
+     *
+     * This also checks if tracing is active, if not, do nothing.
+     *
      * @param spanId unique ID that will be used to finish the span
      */
 

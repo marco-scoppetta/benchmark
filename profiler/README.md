@@ -43,16 +43,11 @@ On the Grakn Server, tracing is exposed via the `ServerTracing` class,
 and should be used as follows:
 
 ```
-ScopedSpan span = null;
-if (ServerTracing.tracingActive()) {
-    childSpan = ServerTracing.startScopedChildSpan("name");
-}
+int spanId = ServerTracing.startScopedChildSpan("name");
 ...
 ... code to time/instrument further ...
 ...
-if (span != null) {
-    span.finish();
-}
+ServerTracing.closeScopedChildSpan(spanId);
 ```
 
 It's important not to forget to call `span.finish()` on all possible exit paths, otherwise
