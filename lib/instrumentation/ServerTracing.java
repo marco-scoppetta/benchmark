@@ -18,16 +18,19 @@
 
 package grakn.benchmark.lib.instrumentation;
 
-import grakn.benchmark.lib.util.GrpcMessageConversion;
 import brave.ScopedSpan;
+import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
 import brave.propagation.TraceContext;
-import brave.Span;
+import grakn.benchmark.lib.util.GrpcMessageConversion;
+import grakn.core.protocol.SessionProto;
 import zipkin2.reporter.AsyncReporter;
 import zipkin2.reporter.urlconnection.URLConnectionSender;
 
-import grakn.core.protocol.SessionProto;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -35,6 +38,9 @@ import grakn.core.protocol.SessionProto;
  * whereas the others may be used my multiple threads in the case of concurrent transactions
  */
 public class ServerTracing {
+
+    private static final Map<Integer, ScopedSpan> openSpans = new ConcurrentHashMap<>();
+    private static final AtomicInteger currentSpanId = new AtomicInteger();
 
     public static void initInstrumentation(String tracingServiceName) {
         // create a Zipkin reporter for the whole server
@@ -51,6 +57,7 @@ public class ServerTracing {
 
     /**
      * Determine if tracing is enabled at all on the server
+     *
      * @return
      */
     public static boolean tracingEnabled() {
@@ -59,6 +66,7 @@ public class ServerTracing {
 
     /**
      * Retrieves the current active Span (thread-local)
+     *
      * @return
      */
     public static Span currentSpan() {
@@ -75,6 +83,7 @@ public class ServerTracing {
     /**
      * Determine if tracing is enabled on the server
      * and the received message contains a TraceContext transmitted in the metadata fields
+     *
      * @param message
      * @return
      */
@@ -95,9 +104,7 @@ public class ServerTracing {
     }
 
 
-
     /**
-     *
      * @param spanName
      * @param parentContext
      * @return A new Span with the given parent Context, NOT thread-local and NOT `.start()`-ed
@@ -110,7 +117,6 @@ public class ServerTracing {
     }
 
     /**
-     *
      * @param spanName
      * @param parentContext
      * @return A new started ScopedSpan with the given parent Context (ie. one that is thread-local, `.start()` already has been called on it)
@@ -124,6 +130,7 @@ public class ServerTracing {
     /**
      * Looks up the current Span in thread-local storage, then creates a new child span on it with the given name
      * that is NOT thread-local nor started.
+     *
      * @param spanName
      * @return
      */
@@ -135,11 +142,38 @@ public class ServerTracing {
     /**
      * Looks up the current Span in thread-local storage, create a new scoped child span with the given name
      * that IS thread-local AND has been started.
+     * Store the scopedSpan in map associated to a unique ID.
+     *
      * @param spanName
-     * @return
+     * @return unique ID that will be used to finish the span
      */
-    public static ScopedSpan startScopedChildSpan(String spanName) {
+    public static Integer startScopedChildSpan(String spanName) {
+        if (!tracingActive()) return null;
+
         Span currentSpan = currentSpan();
-        return startScopedChildSpanWithParentContext(spanName, currentSpan.context());
+        ScopedSpan scopedSpan = startScopedChildSpanWithParentContext(spanName, currentSpan.context());
+        int spanId = currentSpanId.incrementAndGet();
+        openSpans.put(spanId, scopedSpan);
+        return spanId;
+    }
+
+    /**
+     * Finishes scopedSpan associated to spanId and removes it from in-memory map
+     * @param spanId unique ID that will be used to finish the span
+     */
+
+    public static void closeScopedChildSpan(int spanId) {
+        if (!tracingActive()) return;
+
+        ScopedSpan scopedSpan = openSpans.remove(spanId);
+        scopedSpan.finish();
+    }
+
+    /**
+     * This will be used by tests to verify that there are no spans unfinished.
+     * @return true if all spans have been finished, else otherwise
+     */
+    public boolean allSpansFinished(){
+        return openSpans.isEmpty();
     }
 }
