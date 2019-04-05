@@ -128,6 +128,24 @@ public class ServerTracing {
     }
 
     /**
+     * Build child span using the parent context when the parent is already present in openSpan map
+     * @param spanName
+     * @param parentSpanId
+     * @return A new started ScopedSpan with the given parent Context (ie. one that is thread-local, `.start()` already has been called on it)
+     */
+    public static Integer startScopedChildSpanWithParentContext(String spanName, int parentSpanId) {
+        if(!tracingActive()) return null;
+
+        Tracer tracing = Tracing.currentTracer();
+        ScopedSpan parent = openSpans.get(parentSpanId);
+        ScopedSpan child = tracing.startScopedSpanWithParent(spanName, parent.context());
+        int spanId = currentSpanId.incrementAndGet();
+        openSpans.put(spanId, child);
+        return spanId;
+    }
+
+
+    /**
      * Looks up the current Span in thread-local storage, then creates a new child span on it with the given name
      * that is NOT thread-local nor started.
      *
