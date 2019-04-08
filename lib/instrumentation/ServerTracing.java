@@ -131,10 +131,11 @@ public class ServerTracing {
      * Build child span using the parent context when the parent is already present in openSpan map
      * @param spanName
      * @param parentSpanId
-     * @return A new started ScopedSpan with the given parent Context (ie. one that is thread-local, `.start()` already has been called on it)
+     * @return The Id associated to a new started ScopedSpan with the given parent Context (ie. one that is thread-local, `.start()` already has been called on it)
+     *         This returns -1 if tracing is not enabled.
      */
-    public static Integer startScopedChildSpanWithParentContext(String spanName, int parentSpanId) {
-        if(!tracingActive()) return null;
+    public static int startScopedChildSpanWithParentContext(String spanName, int parentSpanId) {
+        if(!tracingActive()) return -1;
 
         Tracer tracing = Tracing.currentTracer();
         ScopedSpan parent = openSpans.get(parentSpanId);
@@ -165,10 +166,10 @@ public class ServerTracing {
      * This also checks if tracing is active, if not, do nothing.
      *
      * @param spanName
-     * @return unique ID that will be used to finish the span
+     * @return unique ID that will be used to finish the span. This returns -1 if tracing is not enabled.
      */
-    public static Integer startScopedChildSpan(String spanName) {
-        if (!tracingActive()) return null;
+    public static int startScopedChildSpan(String spanName) {
+        if (!tracingActive()) return -1;
 
         Span currentSpan = currentSpan();
         ScopedSpan scopedSpan = startScopedChildSpanWithParentContext(spanName, currentSpan.context());
