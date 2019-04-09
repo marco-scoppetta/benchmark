@@ -26,9 +26,9 @@ java_library(
         "//generator:data-generator",
 
         "@graknlabs_client_java//:client-java",
+        "@graknlabs_graql//java:graql",
         "@graknlabs_grakn_core//api:api",
         "@graknlabs_grakn_core//common:common",
-        "@graknlabs_graql//java:graql",
         "@graknlabs_grakn_core//concept:concept",
 
         # together these can be used to create clients with tracing enabled
@@ -40,7 +40,6 @@ java_library(
         "//dependencies/maven/artifacts/org/slf4j:slf4j-api",
         "//dependencies/maven/artifacts/org/elasticsearch/client:elasticsearch-rest-client",
         "//dependencies/maven/artifacts/org/apache/httpcomponents:httpcore",
-        "//dependencies/maven/artifacts/org/apache/httpcomponents:httpclient",
 
         "//dependencies/maven/artifacts/org/apache/ignite:ignite-core",
 

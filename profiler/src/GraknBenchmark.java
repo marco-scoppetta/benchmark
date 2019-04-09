@@ -21,8 +21,8 @@ package grakn.benchmark.profiler;
 import brave.Span;
 import brave.Tracer;
 import brave.Tracing;
-import grakn.benchmark.common.configuration.parse.BenchmarkArguments;
 import grakn.benchmark.common.configuration.BenchmarkConfiguration;
+import grakn.benchmark.common.configuration.parse.BenchmarkArguments;
 import grakn.benchmark.common.exception.BootupException;
 import grakn.benchmark.generator.DataGenerator;
 import grakn.benchmark.generator.DataGeneratorException;
@@ -43,6 +43,7 @@ import org.apache.ignite.Ignite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -81,7 +82,7 @@ public class GraknBenchmark {
         } catch (DataGeneratorException e) {
             exitCode = 1;
             LOG.error("Error in data generator: ", e);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             exitCode = 1;
             LOG.error("Exception while running Grakn Benchmark:", e);
         } finally {
@@ -225,8 +226,8 @@ public class GraknBenchmark {
         // load schema
         LOG.info("Initialising keyspace `" + session.keyspace() + "`...");
         try (GraknClient.Transaction tx = session.transaction().write()) {
-            Stream<GraqlQuery> query = parseList(schemaQueries.stream().collect(Collectors.joining("\n")));
-            query.forEach(q -> tx.execute(q));
+            Stream<GraqlQuery> query = parseList(String.join("\n", schemaQueries));
+            query.forEach(tx::execute);
             tx.commit();
         }
     }

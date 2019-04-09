@@ -44,19 +44,19 @@ public class ElasticSearchManager {
                     "  \"index_patterns\": [\"benchmark:span-*\"],\n" +
                     "  \"mappings\": {\n" +
                     "    \"span\": { \n" +
-                    "      \"_source\": {\"excludes\": [\"_q\"] },\n"+
+                    "      \"_source\": {\"excludes\": [\"_q\"] },\n" +
                     "      \"properties\": {\n" +
                     "        \"tags\": { \"enabled\": true },\n" +
                     "        \"name\": { \"type\": \"keyword\" }\n" +
                     "}}}}";
 
     public static void putIndexTemplate(CommandLine arguments) throws IOException {
-        String serverURI =  (arguments.hasOption(ELASTIC_URI)) ? arguments.getOptionValue(ELASTIC_URI) : DEFAULT_ES_SERVER_URI;
-        RestClient restClient = RestClient.builder(new HttpHost(serverURI)).build();
+        String serverURI = (arguments.hasOption(ELASTIC_URI)) ? arguments.getOptionValue(ELASTIC_URI) : DEFAULT_ES_SERVER_URI;
+        RestClient restClient = RestClient.builder(HttpHost.create(serverURI)).build();
 
         HttpEntity entity = new StringEntity(INDEX_TEMPLATE, ContentType.APPLICATION_JSON);
 
-        restClient.performRequest("PUT", "/_template/" + ES_INDEX_TEMPLATE_NAME, new HashMap<>(), entity );
+        restClient.performRequest("PUT", "/_template/" + ES_INDEX_TEMPLATE_NAME, new HashMap<>(), entity);
         restClient.close();
     }
 

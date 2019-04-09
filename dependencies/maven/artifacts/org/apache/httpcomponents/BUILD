@@ -15,13 +15,8 @@ java_library(
     exports = [
         "//external:jar/org/apache/httpcomponents/httpclient"
     ],
-    runtime_deps = [
-        "//dependencies/maven/artifacts/commons-codec:commons-codec",
-        "//dependencies/maven/artifacts/commons-logging:commons-logging",
-        ":httpcore"
-    ],
     visibility = [
-        "//visibility:public"
+        "//dependencies/maven/artifacts:__subpackages__"
     ]
 )
 

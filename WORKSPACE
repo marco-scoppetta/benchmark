@@ -61,10 +61,20 @@ com_github_grpc_grpc_deps()
 load("@stackb_rules_proto//java:deps.bzl", "java_grpc_compile")
 java_grpc_compile()
 
+#####################################
+# Load Java dependencies from Maven #
+#####################################
+# Load local dependencies before any other external repo deps
+# so that versions of local deps have higher priority over external versions
+load("//dependencies/maven:dependencies.bzl", "maven_dependencies")
+maven_dependencies()
+
 ################################
 # Load Grakn Core dependencies #
 ################################
 
+# This is not needed but it makes more explicit the fact that grakn core depends on a specific version
+# of Grakn Benchmark and with this we instruct Bazel to pull dependencies for that specific version
 load("@graknlabs_grakn_core//dependencies/graknlabs:dependencies.bzl", "graknlabs_benchmark")
 graknlabs_benchmark()
 
@@ -102,13 +112,6 @@ graknlabs_graql_maven_dependencies()
 # TODO: Figure out why this cannot be loaded at earlier at the top of the file
 load("@com_github_google_bazel_common//:workspace_defs.bzl", "google_common_workspace_rules")
 google_common_workspace_rules()
-
-
-#####################################
-# Load Java dependencies from Maven #
-#####################################
-load("//dependencies/maven:dependencies.bzl", "maven_dependencies")
-maven_dependencies()
 
 
 ##############################################
