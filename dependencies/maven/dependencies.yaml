@@ -31,6 +31,11 @@ options:
 
 dependencies:
 
+  com.google.guava:
+    guava:
+      version: "23.0"
+      lang: java
+
   # -- YAML parsing --
   com.fasterxml.jackson.core:
     jackson-databind:
