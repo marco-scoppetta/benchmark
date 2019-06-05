@@ -208,45 +208,6 @@ public class ReportProducer {
         }
     }
 
-    private Set<String> getRelationTypes() {
-        GraknClient.Session session = client.session(config.getKeyspace());
-        GraknClient.Transaction tx = session.transaction().read();
-        Set<String> relationTypes = tx.getRelationType("relation")
-                .subs()
-                .map(type -> type.label().getValue())
-                .collect(Collectors.toSet());
-        tx.close();
-        session.close();
-        return relationTypes;
-    }
-
-    private Set<String> getEntityTypes() {
-        GraknClient.Session session = client.session(config.getKeyspace());
-        GraknClient.Transaction tx = session.transaction().read();
-        Set<String> entityTypes = tx.getEntityType("entity")
-                .subs()
-                .map(type -> type.label().getValue())
-                .collect(Collectors.toSet());
-        tx.close();
-        session.close();
-        return entityTypes;
-    }
-
-    private HashMap<String, AttributeType.DataType<?>> getAttributeTypes() {
-        GraknClient.Session session = client.session(config.getKeyspace());
-        GraknClient.Transaction tx = session.transaction().read();
-        HashMap<String, AttributeType.DataType<?>> typeLabels = new HashMap<>();
-        HashSet<AttributeType<Object>> types = tx.getAttributeType("attribute").subs().collect(Collectors.toCollection(HashSet::new));
-        for (AttributeType conceptType : types) {
-            String label = conceptType.label().toString();
-            AttributeType.DataType<?> datatype = conceptType.dataType();
-            typeLabels.put(label, datatype);
-        }
-        tx.close();
-        session.close();
-        return typeLabels;
-    }
-
     private static void printAscii() {
         System.out.println();
         System.out.println("========================================================================================================");
