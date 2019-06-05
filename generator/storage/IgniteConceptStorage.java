@@ -19,6 +19,7 @@
 package grakn.benchmark.generator.storage;
 
 import grakn.benchmark.generator.DataGeneratorException;
+import grakn.benchmark.generator.util.KeyspaceSchemaLabels;
 import grakn.core.concept.Concept;
 import grakn.core.concept.ConceptId;
 import grakn.core.concept.Label;
@@ -59,7 +60,7 @@ public class IgniteConceptStorage implements ConceptStorage {
 
     private Set<String> entityTypeLabels;
     private Set<String> relationshipTypeLabels;
-    private HashSet<String> explicitRelationshipTypeLabels;
+    private Set<String> explicitRelationshipTypeLabels;
     private Map<String, AttributeType.DataType<?>> attributeTypeLabels; // typeLabel, datatype
     private HashMap<String, String> labelToSqlNameMap;
 
@@ -87,14 +88,14 @@ public class IgniteConceptStorage implements ConceptStorage {
         DATATYPE_MAPPING = Collections.unmodifiableMap(mapBuilder);
     }
 
-    public IgniteConceptStorage(Set<String> entityTypeLabels, Set<String> relationshipTypeLabels, Map<String, AttributeType.DataType<?>> attributeTypeLabels) {
+    public IgniteConceptStorage(KeyspaceSchemaLabels labels) {
         LOG.info("Initialising ignite...");
         // Read schema concepts and create ignite tables
-        this.entityTypeLabels = entityTypeLabels;
-        this.explicitRelationshipTypeLabels = new HashSet<>(relationshipTypeLabels);
-        this.attributeTypeLabels = attributeTypeLabels;
+        this.entityTypeLabels = labels.entityLabels();
+        this.explicitRelationshipTypeLabels = labels.relationLabels();
+        this.attributeTypeLabels = labels.attributeLabelsDataTypes();
 
-        this.relationshipTypeLabels = relationshipTypeLabels;
+        this.relationshipTypeLabels = labels.relationLabels();
         // add @has-[attribute] relationships as possible relationships
         // sanitize the @has-[attribute] to valid SQL strings
         for (String s : this.attributeTypeLabels.keySet()) {
@@ -177,7 +178,7 @@ public class IgniteConceptStorage implements ConceptStorage {
     }
 
     private String labelToSqlName(String label) {
-        if (!labelToSqlNameMap.containsKey(label)){
+        if (!labelToSqlNameMap.containsKey(label)) {
             LOG.error("No SQL-safe conversion for label: " + label);
         }
         return labelToSqlNameMap.get(label);

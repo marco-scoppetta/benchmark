@@ -31,6 +31,7 @@ import grakn.benchmark.generator.query.QueryProvider;
 import grakn.benchmark.generator.storage.ConceptStorage;
 import grakn.benchmark.generator.storage.IgniteConceptStorage;
 import grakn.benchmark.generator.util.IgniteManager;
+import grakn.benchmark.generator.util.KeyspaceSchemaLabels;
 import grakn.benchmark.report.producer.container.QueryExecutionResults;
 import grakn.benchmark.report.producer.container.ReportData;
 import grakn.client.GraknClient;
@@ -181,13 +182,8 @@ public class ReportProducer {
      */
     private DataGenerator initDataGenerator(String keyspace, BenchmarkingTimer timer) {
         int randomSeed = 0;
-        GraknClient.Session session = client.session(keyspace);
-
-        Set<String> entityTypeLabels = getEntityTypes();
-        Set<String> relationshipTypeLabels = getRelationTypes();
-        Map<String, AttributeType.DataType<?>> attributeTypeLabels = getAttributeTypes();
-        ConceptStorage storage = new IgniteConceptStorage(entityTypeLabels, relationshipTypeLabels, attributeTypeLabels);
-
+        KeyspaceSchemaLabels schemaLabels = new KeyspaceSchemaLabels(client, keyspace);
+        ConceptStorage storage = new IgniteConceptStorage(schemaLabels);
         String dataGenerator = config.dataGenerator();
         DataGeneratorDefinition dataGeneratorDefinition = DefinitionFactory.getDefinition(dataGenerator, new Random(randomSeed), storage);
         QueryProvider queryProvider = new QueryProvider(dataGeneratorDefinition);
