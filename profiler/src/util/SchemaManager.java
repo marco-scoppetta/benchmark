@@ -33,19 +33,17 @@ public class SchemaManager {
     }
 
     private GraknClient.Session traceInitKeyspace(GraknClient client, String keyspace) {
+        if (keyspaceExists(keyspace)) {
+            throw new BootupException("Keyspace " + keyspace + " already exists");
+        }
         // time creation of keyspace and insertion of schema
         LOG.info("Adding schema to keyspace: " + keyspace);
         Span span = Tracing.currentTracer().newTrace().name("New Keyspace + schema: " + keyspace);
         span.start();
-
         GraknClient.Session session;
         try (Tracer.SpanInScope ws = Tracing.currentTracer().withSpanInScope(span)) {
             span.annotate("Opening new session");
             session = client.session(keyspace);
-            span.annotate("Verifying keyspace does not exist");
-            if (!keyspaceExists(keyspace)) {
-                throw new BootupException("Keyspace " + keyspace + " already exists");
-            }
             span.annotate("Loading qraql schema");
             loadSchema(session, config.getGraqlSchema());
         }
