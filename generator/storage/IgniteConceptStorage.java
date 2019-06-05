@@ -57,8 +57,8 @@ import static grakn.core.concept.type.AttributeType.DataType.STRING;
 public class IgniteConceptStorage implements ConceptStorage {
     private static final Logger LOG = LoggerFactory.getLogger(IgniteConceptStorage.class);
 
-    private HashSet<String> entityTypeLabels;
-    private HashSet<String> relationshipTypeLabels;
+    private Set<String> entityTypeLabels;
+    private Set<String> relationshipTypeLabels;
     private HashSet<String> explicitRelationshipTypeLabels;
     private Map<String, AttributeType.DataType<?>> attributeTypeLabels; // typeLabel, datatype
     private HashMap<String, String> labelToSqlNameMap;
@@ -87,7 +87,7 @@ public class IgniteConceptStorage implements ConceptStorage {
         DATATYPE_MAPPING = Collections.unmodifiableMap(mapBuilder);
     }
 
-    public IgniteConceptStorage(HashSet<String> entityTypeLabels, HashSet<String> relationshipTypeLabels, Map<String, AttributeType.DataType<?>> attributeTypeLabels) {
+    public IgniteConceptStorage(Set<String> entityTypeLabels, Set<String> relationshipTypeLabels, Map<String, AttributeType.DataType<?>> attributeTypeLabels) {
         LOG.info("Initialising ignite...");
         // Read schema concepts and create ignite tables
         this.entityTypeLabels = entityTypeLabels;
