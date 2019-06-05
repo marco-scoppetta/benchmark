@@ -10,7 +10,7 @@ public class ProfileExisting implements UseCase {
     private final BenchmarkConfiguration config;
     private final GraknClient client;
 
-    public ProfileExisting(BenchmarkConfiguration config, GraknClient client) {
+    ProfileExisting(BenchmarkConfiguration config, GraknClient client) {
         this.config = config;
         this.client = client;
     }

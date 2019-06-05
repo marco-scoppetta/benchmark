@@ -106,7 +106,7 @@ public class ReportProducer {
         String keyspace = config.getKeyspace();
 
         // error if keyspace not empty
-        if (keyspaceExists(keyspace)) throw new RuntimeException("Keyspace already exists");
+        if (keyspaceExists(keyspace)) throw new BootupException("Keyspace [" + keyspace + "] already exists");
 
         // load schema into keyspace
         loadSchema(keyspace, config.getGraqlSchema());

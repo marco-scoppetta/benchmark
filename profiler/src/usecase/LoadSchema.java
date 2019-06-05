@@ -13,7 +13,7 @@ public class LoadSchema implements UseCase {
     private final GraknClient client;
     private final SchemaManager schemaManager;
 
-    public LoadSchema(BenchmarkConfiguration config, GraknClient client, SchemaManager schemaManager) {
+    LoadSchema(BenchmarkConfiguration config, GraknClient client, SchemaManager schemaManager) {
         this.config = config;
         this.client = client;
         this.schemaManager = schemaManager;
