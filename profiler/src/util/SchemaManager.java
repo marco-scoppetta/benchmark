@@ -28,33 +28,27 @@ public class SchemaManager {
 
     public void loadSchema() {
         String keyspace = config.getKeyspace();
-        GraknClient.Session session = traceInitKeyspace(tracingClient, keyspace);
-        session.close();
-    }
-
-    private GraknClient.Session traceInitKeyspace(GraknClient client, String keyspace) {
         if (keyspaceExists(keyspace)) {
             throw new BootupException("Keyspace " + keyspace + " already exists");
         }
         // time creation of keyspace and insertion of schema
-        LOG.info("Adding schema to keyspace: " + keyspace);
         Span span = Tracing.currentTracer().newTrace().name("New Keyspace + schema: " + keyspace);
         span.start();
         GraknClient.Session session;
         try (Tracer.SpanInScope ws = Tracing.currentTracer().withSpanInScope(span)) {
             span.annotate("Opening new session");
-            session = client.session(keyspace);
+            session = tracingClient.session(keyspace);
             span.annotate("Loading qraql schema");
             loadSchema(session, config.getGraqlSchema());
         }
 
         span.finish();
-        return session;
+        session.close();
     }
 
     private void loadSchema(GraknClient.Session session, List<String> schemaQueries) {
         // load schema
-        LOG.info("Initialising keyspace `" + session.keyspace() + "`...");
+        LOG.info("Loading schema in keyspace [" + session.keyspace() + "]...");
         try (GraknClient.Transaction tx = session.transaction().write()) {
             Stream<GraqlQuery> query = parseList(String.join("\n", schemaQueries));
             query.forEach(tx::execute);
