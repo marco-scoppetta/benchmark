@@ -28,6 +28,9 @@ public class SchemaManager {
 
     public void loadSchema() {
         String keyspace = config.getKeyspace();
+        if(keyspace == null) {
+            throw new BootupException("No keyspace provided. Please specify --keyspace argument or add `dataGenerator` option to config file.");
+        }
         if (keyspaceExists(keyspace)) {
             throw new BootupException("Keyspace " + keyspace + " already exists");
         }
