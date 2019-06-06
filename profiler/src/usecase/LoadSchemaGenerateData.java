@@ -36,6 +36,9 @@ public class LoadSchemaGenerateData implements UseCase {
 
     @Override
     public void run() {
+
+        schemaManager.loadSchema();
+
         Ignite ignite = IgniteManager.initIgnite();
         ThreadedProfiler threadedProfiler = new ThreadedProfiler(client, Collections.singletonList(config.getKeyspace()), config);
         BenchmarkingTimer timer = new BenchmarkingTimer();
@@ -43,7 +46,6 @@ public class LoadSchemaGenerateData implements UseCase {
         List<Integer> numConceptsInRun = config.scalesToProfile();
 
         try {
-            schemaManager.loadSchema();
             timer.startGenerateAndTrack();
             for (int numConcepts : numConceptsInRun) {
                 LOG.info("\n Generating graph to scale... " + numConcepts);

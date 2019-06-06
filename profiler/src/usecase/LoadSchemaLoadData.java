@@ -64,7 +64,7 @@ public class LoadSchemaLoadData implements UseCase {
                             GraknClient.Transaction writeTransaction = session.transaction().write();
                             List<ConceptMap> insertedIds = writeTransaction.execute(insertQuery);
                             writeTransaction.commit();
-                            insertedConcepts += insertedIds.stream().map(map -> map.concepts().size()).reduce((a, b) -> a + b).orElse(0);
+                            insertedConcepts += insertedIds.stream().map(map -> map.concepts().size()).reduce(Integer::sum).orElse(0);
                         }
                         return insertedConcepts;
                     }, executorService);

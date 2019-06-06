@@ -65,6 +65,8 @@ public class ProfilerBootupIT {
 
     @Test
     public void whenKeyspaceAlreadyExists_throwException() {
+        GraknClient.Transaction tx = session.transaction().read();
+        tx.close();
         String[] args = new String[]{"--config", WEB_CONTENT_DATA_GEN_CONFIG_PATH.toAbsolutePath().toString(), "--keyspace", keyspace, "--execution-name", "testing"};
         CommandLine commandLine = BenchmarkArguments.parse(args);
         GraknBenchmark graknBenchmark = new GraknBenchmark(commandLine);
