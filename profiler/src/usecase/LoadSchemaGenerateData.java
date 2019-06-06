@@ -48,7 +48,7 @@ public class LoadSchemaGenerateData implements UseCase {
         try {
             timer.startGenerateAndTrack();
             for (int numConcepts : numConceptsInRun) {
-                LOG.info("\n Generating graph to scale... " + numConcepts);
+                LOG.info("\nGenerating graph to scale... " + numConcepts);
                 dataGenerator.generate(numConcepts);
                 timer.startQueryTimeTracking();
                 threadedProfiler.processQueries(config.numQueryRepetitions(), numConcepts);

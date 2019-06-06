@@ -89,7 +89,7 @@ public class IgniteConceptStorage implements ConceptStorage {
     }
 
     public IgniteConceptStorage(KeyspaceSchemaLabels labels) {
-        LOG.info("Initialising ignite...");
+        LOG.debug("Initialising ignite...");
         // Read schema concepts and create ignite tables
         this.entityTypeLabels = labels.entityLabels();
         this.explicitRelationshipTypeLabels = labels.relationLabels();

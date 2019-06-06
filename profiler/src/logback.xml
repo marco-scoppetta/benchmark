@@ -44,6 +44,7 @@
         <appender-ref ref="STDOUT"/>
     </logger>
     <logger name="grakn.benchmark" level="INFO">
+        <appender-ref ref="STDOUT"/>
         <appender-ref ref="MAIN"/>
     </logger>
     <logger name="org.apache.ignite" level="WARN">
